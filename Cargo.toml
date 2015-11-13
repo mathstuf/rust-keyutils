@@ -1,0 +1,8 @@
+[package]
+name = "keyutils"
+version = "0.0.1"
+authors = ["Ben Boeckel <mathstuf@gmail.com>"]
+license = "BSD"
+description = """
+Rust interface to the Linux keyring.
+"""
