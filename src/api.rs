@@ -15,10 +15,10 @@ pub type Error = errno::Errno;
 pub type Result<T> = result::Result<T, Error>;
 
 fn check_call<T>(res: libc::c_long, value: T) -> Result<T> {
-    match res {
-        0   => Ok(value),
-        -1  => Err(errno::errno()),
-        _   => unreachable!(),
+    if res == -1 {
+        Err(errno::errno())
+    } else {
+        Ok(value)
     }
 }
 
