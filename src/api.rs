@@ -71,10 +71,6 @@ impl Keyring {
         check_call(unsafe { keyctl_link(key.id, self.id) }, ())
     }
 
-    pub fn unlink(&mut self, key: &Key) -> Result<()> {
-        check_call(unsafe { keyctl_unlink(key.id, self.id) }, ())
-    }
-
     pub fn search(&mut self, type_: &str, description: &str) -> Result<Key> {
         let typeptr = CString::new(type_).unwrap().as_ptr();
         let descptr = CString::new(description).unwrap().as_ptr();
@@ -172,6 +168,10 @@ impl Key {
 
     pub fn update(&mut self, data: &[u8]) -> Result<()> {
         check_call(unsafe { keyctl_update(self.id, data.as_ptr() as *const libc::c_void, data.len()) }, ())
+    }
+
+    pub fn unlink(self, keyring: &Keyring) -> Result<()> {
+        check_call(unsafe { keyctl_unlink(self.id, keyring.id) }, ())
     }
 
     pub fn unlink_from(&mut self, keyring: &mut Keyring) -> usize {
