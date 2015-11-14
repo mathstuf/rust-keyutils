@@ -22,9 +22,9 @@ fn check_call<T>(res: libc::c_long, value: T) -> Result<T> {
     }
 }
 
-fn get_keyring_id(id: KeyringSerial, create: bool) -> Result<KeyringSerial> {
+fn get_keyring(id: KeyringSerial, create: bool) -> Result<Keyring> {
     let res = unsafe { keyctl_get_keyring_ID(id, create as libc::c_int) };
-    check_call(res as libc::c_long, res)
+    check_call(res as libc::c_long, Keyring { id: res, })
 }
 
 pub struct Keyring {
@@ -41,21 +41,11 @@ impl Keyring {
     }
 
     pub fn attach(id: KeyringSerial) -> Result<Self> {
-        get_keyring_id(id, false)
-            .map(|id| {
-                Keyring {
-                    id: id,
-                }
-            })
+        get_keyring(id, false)
     }
 
     pub fn attach_or_create(id: KeyringSerial) -> Result<Self> {
-        get_keyring_id(id, true)
-            .map(|id| {
-                Keyring {
-                    id: id,
-                }
-            })
+        get_keyring(id, true)
     }
 
     pub fn join_session(name: Option<&str>) -> Result<Self> {
@@ -130,12 +120,7 @@ pub struct Key {
 
 impl Key {
     pub fn keyring(&self) -> Result<Keyring> {
-        get_keyring_id(self.id, false)
-            .map(|id| {
-                Keyring {
-                    id: id,
-                }
-            })
+        get_keyring(self.id, false)
     }
 
     pub fn update(&mut self, data: &[u8]) -> Result<()> {
