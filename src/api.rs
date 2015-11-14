@@ -9,6 +9,7 @@ use std::ffi::CString;
 use std::os::unix::raw::{gid_t, uid_t};
 use std::ptr;
 use std::result;
+use std::str;
 
 pub type Error = errno::Errno;
 pub type Result<T> = result::Result<T, Error>;
@@ -154,11 +155,30 @@ impl Key {
     }
 
     pub fn description(&self) -> Result<String> {
-        unimplemented!()
+        let sz = unsafe { keyctl_describe(self.id, ptr::null_mut(), 0) };
+        if sz < 0 {
+            return Err(errno::errno());
+        }
+        let mut buffer = Vec::with_capacity(sz as usize);
+        let res = unsafe { keyctl_describe(self.id, buffer.as_mut_ptr() as *mut libc::c_char, sz as usize) };
+        if res < 0 {
+            return Err(errno::errno());
+        }
+        let str_slice = str::from_utf8(&buffer[..]).unwrap();
+        Ok(str_slice.to_owned())
     }
 
     pub fn read(&self) -> Result<Vec<u8>> {
-        unimplemented!()
+        let sz = unsafe { keyctl_read(self.id, ptr::null_mut(), 0) };
+        if sz < 0 {
+            return Err(errno::errno());
+        }
+        let mut buffer = Vec::with_capacity(sz as usize);
+        let res = unsafe { keyctl_read(self.id, buffer.as_mut_ptr() as *mut libc::c_char, sz as usize) };
+        if res < 0 {
+            return Err(errno::errno());
+        }
+        Ok(buffer)
     }
 
     pub fn set_timeout(&mut self, timeout: u32) -> Result<()> {
@@ -166,7 +186,17 @@ impl Key {
     }
 
     pub fn get_security(&self) -> Result<String> {
-        unimplemented!()
+        let sz = unsafe { keyctl_get_security(self.id, ptr::null_mut(), 0) };
+        if sz < 0 {
+            return Err(errno::errno());
+        }
+        let mut buffer = Vec::with_capacity(sz as usize);
+        let res = unsafe { keyctl_get_security(self.id, buffer.as_mut_ptr() as *mut libc::c_char, sz as usize) };
+        if res < 0 {
+            return Err(errno::errno());
+        }
+        let str_slice = str::from_utf8(&buffer[..]).unwrap();
+        Ok(str_slice.to_owned())
     }
 
     pub fn invalidate(self) -> Result<()> {

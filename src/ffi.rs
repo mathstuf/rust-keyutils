@@ -182,19 +182,6 @@ extern {
         id:     key_serial_t)
         -> libc::c_long;
 
-    pub fn keyctl_describe_alloc(
-        id:     key_serial_t,
-        buffer: *mut *mut libc::c_char)
-        -> libc::c_int;
-    pub fn keyctl_read_alloc(
-        id:     key_serial_t,
-        buffer: *mut *mut libc::c_void)
-        -> libc::c_int;
-    pub fn keyctl_get_security_alloc(
-        id:     key_serial_t,
-        buffer: *mut *mut libc::c_char)
-        -> libc::c_int;
-
     pub fn recursive_key_scan(
         key:    key_serial_t,
         func:   recursive_key_scanner_t,
