@@ -220,6 +220,14 @@ impl Key {
     pub fn invalidate(self) -> Result<()> {
         check_call(unsafe { keyctl_invalidate(self.id) }, ())
     }
+
+    pub fn manage(&mut self) -> Result<KeyManager> {
+        check_call(unsafe { keyctl_assume_authority(self.id) }, KeyManager {
+            key: Key {
+                id: self.id,
+            },
+        })
+    }
 }
 
 pub struct KeyDescription {
@@ -233,5 +241,24 @@ pub struct KeyDescription {
 impl KeyDescription {
     fn parse(desc: String) -> KeyDescription {
         unimplemented!()
+    }
+}
+
+pub struct KeyManager {
+    key: Key,
+}
+
+impl KeyManager {
+    pub fn instantiate(self, keyring: &Keyring, payload: &[u8]) -> Result<()> {
+        check_call(unsafe { keyctl_instantiate(self.key.id, payload.as_ptr() as *const libc::c_void, payload.len(), keyring.id) }, ())
+    }
+
+    pub fn reject(self, keyring: &Keyring, timeout: u32, error: errno::Errno) -> Result<()> {
+        let errno::Errno(errval) = error;
+        check_call(unsafe { keyctl_reject(self.key.id, timeout, errval as u32, keyring.id) }, ())
+    }
+
+    pub fn negate(self, keyring: &Keyring, timeout: u32) -> Result<()> {
+        check_call(unsafe { keyctl_negate(self.key.id, timeout, keyring.id) }, ())
     }
 }
