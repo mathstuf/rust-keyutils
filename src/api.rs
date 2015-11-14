@@ -95,12 +95,8 @@ impl Keyring {
         check_call(res, Keyring { id: res as key_serial_t, })
     }
 
-    pub fn add_key(&mut self, type_: &str, description: &str, payload: &[u8]) -> Result<Key> {
-        if type_ == "keyring" {
-            return Err(errno::Errno(libc::EINVAL));
-        }
-
-        let typeptr = CString::new(type_).unwrap().as_ptr();
+    pub fn add_key(&mut self, description: &str, payload: &[u8]) -> Result<Key> {
+        let typeptr = CString::new("user").unwrap().as_ptr();
         let descptr = CString::new(description).unwrap().as_ptr();
         let res = unsafe { add_key(typeptr, descptr, payload.as_ptr() as *const libc::c_void, payload.len(), self.id) };
         check_call(res as libc::c_long, Key { id: res, })
