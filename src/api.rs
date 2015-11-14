@@ -139,6 +139,16 @@ pub struct Key {
     id: KeyringSerial,
 }
 
+extern fn unlink_cb(
+    parent:     key_serial_t,
+    key:        key_serial_t,
+    desc:       *mut libc::c_char,
+    desc_len:   libc::c_int,
+    data:       *mut libc::c_void)
+    -> libc::c_int {
+    unimplemented!()
+}
+
 impl Key {
     pub fn request(type_: &str, description: &str) -> Result<Key> {
         let mut keyring = Keyring { id: 0, };
@@ -166,6 +176,18 @@ impl Key {
 
     pub fn update(&mut self, data: &[u8]) -> Result<()> {
         check_call(unsafe { keyctl_update(self.id, data.as_ptr() as *const libc::c_void, data.len()) }, ())
+    }
+
+    pub fn unlink_from(&mut self, keyring: &mut Keyring) -> usize {
+        let data: *mut KeyringSerial = &mut self.id;
+        let ret = unsafe { recursive_key_scan(keyring.id, unlink_cb, data as *mut libc::c_void) };
+        ret as usize
+    }
+
+    pub fn unlink_from_session(&mut self) -> usize {
+        let data: *mut KeyringSerial = &mut self.id;
+        let ret = unsafe { recursive_session_key_scan(unlink_cb, data as *mut libc::c_void) };
+        ret as usize
     }
 
     pub fn revoke(self) -> Result<()> {
