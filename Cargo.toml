@@ -6,3 +6,6 @@ license = "BSD"
 description = """
 Rust interface to the Linux keyring.
 """
+
+[dependencies]
+libc = "~0.2.2"
