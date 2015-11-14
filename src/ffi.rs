@@ -132,17 +132,17 @@ extern {
         buffer: *mut libc::c_char,
         buflen: libc::size_t)
         -> libc::c_long;
-    pub fn keyctl_instantiate(
-        id:         key_serial_t,
-        payload:    *const libc::c_void,
-        plen:       libc::size_t,
-        ringid:     key_serial_t)
-        -> libc::c_long;
-    pub fn keyctl_negate(
-        id:         key_serial_t,
-        timeout:    libc::c_uint,
-        ringid:     key_serial_t)
-        -> libc::c_long;
+    //pub fn keyctl_instantiate(
+    //    id:         key_serial_t,
+    //    payload:    *const libc::c_void,
+    //    plen:       libc::size_t,
+    //    ringid:     key_serial_t)
+    //    -> libc::c_long;
+    //pub fn keyctl_negate(
+    //    id:         key_serial_t,
+    //    timeout:    libc::c_uint,
+    //    ringid:     key_serial_t)
+    //    -> libc::c_long;
     pub fn keyctl_set_reqkey_keyring(
         reqkey_defl:    libc::c_int)
         -> libc::c_long;
@@ -150,9 +150,9 @@ extern {
         key:        key_serial_t,
         timeout:    libc::c_uint)
         -> libc::c_long;
-    pub fn keyctl_assume_authority(
-        key:    key_serial_t)
-        -> libc::c_long;
+    //pub fn keyctl_assume_authority(
+    //    key:    key_serial_t)
+    //    -> libc::c_long;
     pub fn keyctl_get_security(
         key:    key_serial_t,
         buffer: *mut libc::c_char,
@@ -160,20 +160,20 @@ extern {
         -> libc::c_long;
     pub fn keyctl_session_to_parent()
         -> libc::c_long;
-    pub fn keyctl_reject(
-        id:         key_serial_t,
-        timeout:    libc::c_uint,
-        error:      libc::c_uint,
-        ringid:     key_serial_t)
-        -> libc::c_long;
+    //pub fn keyctl_reject(
+    //    id:         key_serial_t,
+    //    timeout:    libc::c_uint,
+    //    error:      libc::c_uint,
+    //    ringid:     key_serial_t)
+    //    -> libc::c_long;
     //struct iovec;
-    pub fn keyctl_instantiate_iov(
-        id:             key_serial_t,
-        payload_iov:    *const libc::c_void,
-        //payload_iov:    *const struct iovec,
-        ioc:            libc::c_uint,
-        ringid:         key_serial_t)
-        -> libc::c_long;
+    //pub fn keyctl_instantiate_iov(
+    //    id:             key_serial_t,
+    //    payload_iov:    *const libc::c_void,
+    //    //payload_iov:    *const struct iovec,
+    //    ioc:            libc::c_uint,
+    //    ringid:         key_serial_t)
+    //    -> libc::c_long;
     pub fn keyctl_invalidate(
         id: key_serial_t)
         -> libc::c_long;
