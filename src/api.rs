@@ -22,6 +22,14 @@ fn check_call<T>(res: libc::c_long, value: T) -> Result<T> {
     }
 }
 
+fn check_call_ret(res: libc::c_long) -> Result<libc::c_long> {
+    if res == -1 {
+        Err(errno::errno())
+    } else {
+        Ok(res)
+    }
+}
+
 fn get_keyring(id: KeyringSerial, create: bool) -> Result<Keyring> {
     let res = unsafe { keyctl_get_keyring_ID(id, create as libc::c_int) };
     check_call(res as libc::c_long, Keyring { id: res, })
@@ -173,29 +181,17 @@ impl Key {
     }
 
     pub fn description(&self) -> Result<String> {
-        let sz = unsafe { keyctl_describe(self.id, ptr::null_mut(), 0) };
-        if sz < 0 {
-            return Err(errno::errno());
-        }
+        let sz = try!(check_call_ret(unsafe { keyctl_describe(self.id, ptr::null_mut(), 0) }));
         let mut buffer = Vec::with_capacity(sz as usize);
-        let res = unsafe { keyctl_describe(self.id, buffer.as_mut_ptr() as *mut libc::c_char, sz as usize) };
-        if res < 0 {
-            return Err(errno::errno());
-        }
+        try!(check_call_ret(unsafe { keyctl_describe(self.id, buffer.as_mut_ptr() as *mut libc::c_char, sz as usize) }));
         let str_slice = str::from_utf8(&buffer[..]).unwrap();
         Ok(str_slice.to_owned())
     }
 
     pub fn read(&self) -> Result<Vec<u8>> {
-        let sz = unsafe { keyctl_read(self.id, ptr::null_mut(), 0) };
-        if sz < 0 {
-            return Err(errno::errno());
-        }
+        let sz = try!(check_call_ret(unsafe { keyctl_read(self.id, ptr::null_mut(), 0) }));
         let mut buffer = Vec::with_capacity(sz as usize);
-        let res = unsafe { keyctl_read(self.id, buffer.as_mut_ptr() as *mut libc::c_char, sz as usize) };
-        if res < 0 {
-            return Err(errno::errno());
-        }
+        try!(check_call_ret(unsafe { keyctl_read(self.id, buffer.as_mut_ptr() as *mut libc::c_char, sz as usize) }));
         Ok(buffer)
     }
 
@@ -204,15 +200,9 @@ impl Key {
     }
 
     pub fn get_security(&self) -> Result<String> {
-        let sz = unsafe { keyctl_get_security(self.id, ptr::null_mut(), 0) };
-        if sz < 0 {
-            return Err(errno::errno());
-        }
+        let sz = try!(check_call_ret(unsafe { keyctl_get_security(self.id, ptr::null_mut(), 0) }));
         let mut buffer = Vec::with_capacity(sz as usize);
-        let res = unsafe { keyctl_get_security(self.id, buffer.as_mut_ptr() as *mut libc::c_char, sz as usize) };
-        if res < 0 {
-            return Err(errno::errno());
-        }
+        try!(check_call_ret(unsafe { keyctl_get_security(self.id, buffer.as_mut_ptr() as *mut libc::c_char, sz as usize) }));
         let str_slice = str::from_utf8(&buffer[..]).unwrap();
         Ok(str_slice.to_owned())
     }
