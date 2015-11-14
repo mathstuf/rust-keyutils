@@ -104,8 +104,26 @@ impl Keyring {
         check_call(res as libc::c_long, Keyring { id: res, })
     }
 
-    pub fn request_key(&mut self) -> Result<Key> {
-        unimplemented!()
+    pub fn find_key(&mut self, type_: &str, description: &str) -> Result<Key> {
+        let typeptr = CString::new(type_).unwrap().as_ptr();
+        let descptr = CString::new(description).unwrap().as_ptr();
+        let res = unsafe { find_key_by_type_and_desc(typeptr, descptr, self.id) };
+        check_call(res as libc::c_long, Key { id: res, })
+    }
+
+    pub fn request_key(&mut self, type_: &str, description: &str) -> Result<Key> {
+        let typeptr = CString::new(type_).unwrap().as_ptr();
+        let descptr = CString::new(description).unwrap().as_ptr();
+        let res = unsafe { request_key(typeptr, descptr, ptr::null(), self.id) };
+        check_call(res as libc::c_long, Key { id: res, })
+    }
+
+    pub fn request_key_with_fallback(&mut self, type_: &str, description: &str, info: &str) -> Result<Key> {
+        let typeptr = CString::new(type_).unwrap().as_ptr();
+        let descptr = CString::new(description).unwrap().as_ptr();
+        let infoptr = CString::new(info).unwrap().as_ptr();
+        let res = unsafe { request_key(typeptr, descptr, infoptr, self.id) };
+        check_call(res as libc::c_long, Key { id: res, })
     }
 }
 
@@ -114,6 +132,26 @@ pub struct Key {
 }
 
 impl Key {
+    pub fn request(type_: &str, description: &str) -> Result<Key> {
+        let mut keyring = Keyring { id: 0, };
+        keyring.request_key(type_, description)
+    }
+
+    pub fn request_with_fallback(type_: &str, description: &str, info: &str) -> Result<Key> {
+        let mut keyring = Keyring { id: 0, };
+        keyring.request_key_with_fallback(type_, description, info)
+    }
+
+    pub fn find(type_: &str, description: &str) -> Result<Key> {
+        let mut keyring = Keyring { id: 0, };
+        keyring.find_key(type_, description)
+    }
+
+    pub fn search(type_: &str, description: &str) -> Result<Key> {
+        let mut keyring = Keyring { id: 0, };
+        keyring.search(type_, description)
+    }
+
     pub fn keyring(&self) -> Result<Keyring> {
         get_keyring(self.id, false)
     }
