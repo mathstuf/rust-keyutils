@@ -2,7 +2,7 @@
 name = "keyutils"
 version = "0.1.0"
 authors = ["Ben Boeckel <mathstuf@gmail.com>"]
-license = "BSD"
+license = "BSD-3-Clause"
 description = """
 Rust interface to the Linux keyring.
 """
