@@ -172,8 +172,12 @@ impl Key {
         check_call(unsafe { keyctl_revoke(self.id) }, ())
     }
 
-    pub fn chown(&mut self, uid: uid_t, gid: gid_t) -> Result<()> {
-        check_call(unsafe { keyctl_chown(self.id, uid, gid) }, ())
+    pub fn chown(&mut self, uid: uid_t) -> Result<()> {
+        check_call(unsafe { keyctl_chown(self.id, uid, -1) }, ())
+    }
+
+    pub fn chgrp(&mut self, gid: gid_t) -> Result<()> {
+        check_call(unsafe { keyctl_chown(self.id, -1, gid) }, ())
     }
 
     pub fn set_permissions(&mut self, perms: KeyPermissions) -> Result<()> {
