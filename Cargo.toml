@@ -6,6 +6,9 @@ license = "BSD-3-Clause"
 description = """
 Rust interface to the Linux keyring.
 """
+repository = "https://github.com/mathstuf/rust-keyutils.git"
+homepage = "https://github.com/mathstuf/rust-keyutils.git"
+readme = "README.md"
 
 [dependencies]
 bitflags = "~0.3.2"
