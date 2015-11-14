@@ -166,14 +166,6 @@ extern {
     //    error:      libc::c_uint,
     //    ringid:     key_serial_t)
     //    -> libc::c_long;
-    //struct iovec;
-    //pub fn keyctl_instantiate_iov(
-    //    id:             key_serial_t,
-    //    payload_iov:    *const libc::c_void,
-    //    //payload_iov:    *const struct iovec,
-    //    ioc:            libc::c_uint,
-    //    ringid:         key_serial_t)
-    //    -> libc::c_long;
     pub fn keyctl_invalidate(
         id: key_serial_t)
         -> libc::c_long;
