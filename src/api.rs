@@ -71,15 +71,10 @@ impl Keyring {
         check_call(unsafe { keyctl_unlink(key.id, self.id) }, ())
     }
 
-    pub fn search(&self, type_: &str, description: &str, dest: Option<Keyring>) -> Result<Key> {
+    pub fn search(&mut self, type_: &str, description: &str) -> Result<Key> {
         let typeptr = CString::new(type_).unwrap().as_ptr();
         let descptr = CString::new(description).unwrap().as_ptr();
-        let destid = if let Some(dest_ring) = dest {
-                dest_ring.id
-            } else {
-                0
-            };
-        let res = unsafe { keyctl_search(self.id, typeptr, descptr, destid) };
+        let res = unsafe { keyctl_search(self.id, typeptr, descptr, self.id) };
         check_call(res, Key { id: res as key_serial_t, })
     }
 
