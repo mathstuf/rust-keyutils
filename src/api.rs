@@ -48,17 +48,15 @@ impl Keyring {
         get_keyring(id, true)
     }
 
-    pub fn join_session(name: Option<&str>) -> Result<Self> {
-        let nameptr = name.map(|namestr| {
-                CString::new(namestr).unwrap().as_ptr()
-            }).unwrap_or(ptr::null());
+    pub fn join_anonymous_session() -> Result<Self> {
+        let res = unsafe { keyctl_join_session_keyring(ptr::null()) };
+        check_call(res as libc::c_long, Keyring { id: res })
+    }
+
+    pub fn join_session(name: &str) -> Result<Self> {
+        let nameptr = CString::new(name).unwrap().as_ptr();
         let res = unsafe { keyctl_join_session_keyring(nameptr) };
-        check_call(res as libc::c_long, res)
-            .map(|id| {
-                Keyring {
-                    id: id,
-                }
-            })
+        check_call(res as libc::c_long, Keyring { id: res })
     }
 
     pub fn clear(&mut self) -> Result<()> {
