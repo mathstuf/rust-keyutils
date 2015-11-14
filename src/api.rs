@@ -303,3 +303,72 @@ fn test_add_key() {
     // Clean it up.
     key.unlink(&mut keyring);
 }
+
+#[test]
+fn test_clear_keyring() {
+    unimplemented!()
+}
+
+#[test]
+fn test_describe_key() {
+    unimplemented!()
+}
+
+#[test]
+fn test_invalidate_key() {
+    unimplemented!()
+}
+
+#[test]
+fn test_link_keyring() {
+    unimplemented!()
+}
+
+#[test]
+fn test_read_keyring() {
+    unimplemented!()
+}
+
+#[test]
+fn test_read_key() {
+    unimplemented!()
+}
+
+#[test]
+fn test_create_keyring() {
+    unimplemented!()
+}
+
+#[test]
+fn test_chmod_keyring() {
+    unimplemented!()
+}
+
+#[test]
+fn test_request_key() {
+}
+
+#[test]
+fn test_revoke_key() {
+    unimplemented!()
+}
+
+#[test]
+fn test_search_key() {
+    unimplemented!()
+}
+
+#[test]
+fn test_key_timeout() {
+    unimplemented!()
+}
+
+#[test]
+fn test_unlink_key() {
+    unimplemented!()
+}
+
+#[test]
+fn test_update_key() {
+    unimplemented!()
+}
