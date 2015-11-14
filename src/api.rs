@@ -49,11 +49,9 @@ impl Keyring {
     }
 
     pub fn join_session(name: Option<&str>) -> Result<Self> {
-        let nameptr = if let Some(namestr) = name {
+        let nameptr = name.map(|namestr| {
                 CString::new(namestr).unwrap().as_ptr()
-            } else {
-                ptr::null()
-            };
+            }).unwrap_or(ptr::null());
         let res = unsafe { keyctl_join_session_keyring(nameptr) };
         check_call(res as libc::c_long, res)
             .map(|id| {
