@@ -285,3 +285,21 @@ impl KeyManager {
         check_call(unsafe { keyctl_negate(self.key.id, timeout, keyring.id) }, ())
     }
 }
+
+#[test]
+fn test_add_key() {
+    let mut keyring = Keyring::attach_or_create(SpecialKeyring::SessionKeyring.serial()).unwrap();
+
+    // Create the key.
+    let payload = "payload";
+    let key = keyring.add_key("description", payload.as_bytes()).unwrap();
+    assert_eq!(key.read().unwrap(), payload.as_bytes().iter().cloned().collect::<Vec<u8>>());
+
+    // Update the key.
+    let new_payload = "payload";
+    let updated_key = keyring.add_key("description", new_payload.as_bytes()).unwrap();
+    assert_eq!(key.read().unwrap(), new_payload.as_bytes().iter().cloned().collect::<Vec<u8>>());
+
+    // Clean it up.
+    key.unlink(&mut keyring);
+}
