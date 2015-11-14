@@ -9,4 +9,5 @@ Rust interface to the Linux keyring.
 
 [dependencies]
 bitflags = "~0.3.2"
+errno = "~0.1.4"
 libc = "~0.2.2"
