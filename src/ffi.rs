@@ -158,8 +158,8 @@ extern {
         buffer: *mut libc::c_char,
         buflen: libc::size_t)
         -> libc::c_long;
-    pub fn keyctl_session_to_parent()
-        -> libc::c_long;
+    //pub fn keyctl_session_to_parent()
+    //    -> libc::c_long;
     pub fn keyctl_reject(
         id:         key_serial_t,
         timeout:    libc::c_uint,

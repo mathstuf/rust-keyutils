@@ -44,10 +44,6 @@ impl Keyring {
         check_call(unsafe { keyctl_set_reqkey_keyring(keyring.serial()) }, ())
     }
 
-    pub fn export_session_keyring_to_parent() -> Result<()> {
-        check_call(unsafe { keyctl_session_to_parent() }, ())
-    }
-
     pub fn attach(id: KeyringSerial) -> Result<Self> {
         get_keyring(id, false)
     }
