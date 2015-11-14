@@ -83,6 +83,10 @@ impl Keyring {
     }
 
     pub fn read(&self) -> Result<Vec<Key>> {
+        let sz = try!(check_call_ret(unsafe { keyctl_read(self.id, ptr::null_mut(), 0) }));
+        let mut buffer = Vec::with_capacity(sz as usize);
+        try!(check_call_ret(unsafe { keyctl_read(self.id, buffer.as_mut_ptr() as *mut libc::c_char, sz as usize) }));
+        // TODO: turn bytestream into vec of keys
         unimplemented!()
     }
 
