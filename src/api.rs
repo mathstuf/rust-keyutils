@@ -174,14 +174,16 @@ impl Key {
         check_call(unsafe { keyctl_unlink(self.id, keyring.id) }, ())
     }
 
-    pub fn unlink_from(&mut self, keyring: &mut Keyring) -> usize {
-        let data: *mut KeyringSerial = &mut self.id;
+    pub fn unlink_from_all(self, keyring: &mut Keyring) -> usize {
+        let mut id_copy = self.id;
+        let data: *mut KeyringSerial = &mut id_copy;
         let ret = unsafe { recursive_key_scan(keyring.id, unlink_cb, data as *mut libc::c_void) };
         ret as usize
     }
 
-    pub fn unlink_from_session(&mut self) -> usize {
-        let data: *mut KeyringSerial = &mut self.id;
+    pub fn unlink_from_session(self) -> usize {
+        let mut id_copy = self.id;
+        let data: *mut KeyringSerial = &mut id_copy;
         let ret = unsafe { recursive_session_key_scan(unlink_cb, data as *mut libc::c_void) };
         ret as usize
     }
