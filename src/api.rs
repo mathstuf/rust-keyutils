@@ -184,7 +184,13 @@ impl Key {
         check_call(unsafe { keyctl_setperm(self.id, perms) }, ())
     }
 
-    pub fn description(&self) -> Result<String> {
+    pub fn description(&self) -> Result<KeyDescription> {
+        self.description_raw().map(|desc| {
+            KeyDescription::parse(desc)
+        })
+    }
+
+    fn description_raw(&self) -> Result<String> {
         let sz = try!(check_call_ret(unsafe { keyctl_describe(self.id, ptr::null_mut(), 0) }));
         let mut buffer = Vec::with_capacity(sz as usize);
         try!(check_call_ret(unsafe { keyctl_describe(self.id, buffer.as_mut_ptr() as *mut libc::c_char, sz as usize) }));
@@ -213,5 +219,19 @@ impl Key {
 
     pub fn invalidate(self) -> Result<()> {
         check_call(unsafe { keyctl_invalidate(self.id) }, ())
+    }
+}
+
+pub struct KeyDescription {
+    pub type_:          String,
+    pub uid:            uid_t,
+    pub gid:            gid_t,
+    pub perms:          KeyPermissions,
+    pub description:    String,
+}
+
+impl KeyDescription {
+    fn parse(desc: String) -> KeyDescription {
+        unimplemented!()
     }
 }
