@@ -123,9 +123,9 @@ impl Keyring {
         let actual_sz = try!(check_call_ret(unsafe { keyctl_read(self.id, buffer.as_mut_ptr() as *mut libc::c_char, sz as usize) }));
         unsafe { buffer.set_len((actual_sz as usize) / mem::size_of::<KeyringSerial>()) };
         let keys = buffer.iter().map(|&id| { Key { id: id, } }).partition(|key| {
-            key.description().unwrap().type_ == "user"
+            key.description().unwrap().type_ == "keyring"
         });
-        Ok((keys.0, keys.1.iter().map(|key| {
+        Ok((keys.1, keys.0.iter().map(|key| {
             Keyring {
                 id: key.id,
             }
