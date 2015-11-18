@@ -31,6 +31,14 @@ fn check_call_ret(res: libc::c_long) -> Result<libc::c_long> {
     }
 }
 
+fn check_call_ret_serial(res: KeyringSerial) -> Result<KeyringSerial> {
+    if res == -1 {
+        Err(errno::errno())
+    } else {
+        Ok(res)
+    }
+}
+
 fn get_keyring(id: KeyringSerial, create: bool) -> Result<Keyring> {
     let res = unsafe { keyctl_get_keyring_ID(id, create as libc::c_int) };
     check_call(res as libc::c_long, Keyring { id: res, })
@@ -106,17 +114,19 @@ impl Keyring {
         check_call(unsafe { keyctl_unlink(keyring.id, self.id) }, ())
     }
 
-    pub fn search_for_key(&mut self, description: &str) -> Result<Key> {
-        let typeptr = CString::new("user").unwrap().as_ptr();
+    fn search(&self, type_: &str, description: &str) -> Result<libc::c_long> {
+        let typeptr = CString::new(type_).unwrap().as_ptr();
         let descptr = CString::new(description).unwrap().as_ptr();
-        let res = unsafe { keyctl_search(self.id, typeptr, descptr, self.id) };
+        check_call_ret(unsafe { keyctl_search(self.id, typeptr, descptr, self.id) })
+    }
+
+    pub fn search_for_key(&self, description: &str) -> Result<Key> {
+        let res = try!(self.search("user", description));
         check_call(res, Key { id: res as key_serial_t, })
     }
 
-    pub fn search_for_keyring(&mut self, description: &str) -> Result<Self> {
-        let typeptr = CString::new("keyring").unwrap().as_ptr();
-        let descptr = CString::new(description).unwrap().as_ptr();
-        let res = unsafe { keyctl_search(self.id, typeptr, descptr, self.id) };
+    pub fn search_for_keyring(&self, description: &str) -> Result<Self> {
+        let res = try!(self.search("keyring", description));
         check_call(res, Keyring { id: res as key_serial_t, })
     }
 
@@ -154,47 +164,52 @@ impl Keyring {
         check_call(res as libc::c_long, Keyring { id: res, })
     }
 
-    pub fn find_key(&mut self, description: &str) -> Result<Key> {
-        let typeptr = CString::new("user").unwrap().as_ptr();
+    fn find(&self, type_: &str, description: &str) -> Result<KeyringSerial> {
+        let typeptr = CString::new(type_).unwrap().as_ptr();
         let descptr = CString::new(description).unwrap().as_ptr();
-        let res = unsafe { find_key_by_type_and_desc(typeptr, descptr, self.id) };
+        check_call_ret_serial(unsafe { find_key_by_type_and_desc(typeptr, descptr, self.id) })
+    }
+
+    pub fn find_key(&self, description: &str) -> Result<Key> {
+        let res = try!(self.find("user", description));
         check_call(res as libc::c_long, Key { id: res, })
     }
 
-    pub fn find_keyring(&mut self, description: &str) -> Result<Self> {
-        let typeptr = CString::new("keyring").unwrap().as_ptr();
-        let descptr = CString::new(description).unwrap().as_ptr();
-        let res = unsafe { find_key_by_type_and_desc(typeptr, descptr, self.id) };
+    pub fn find_keyring(&self, description: &str) -> Result<Self> {
+        let res = try!(self.find("keyring", description));
         check_call(res as libc::c_long, Keyring { id: res, })
     }
 
-    pub fn request_key(&mut self, description: &str) -> Result<Key> {
-        let typeptr = CString::new("user").unwrap().as_ptr();
+    fn request(&self, type_: &str, description: &str) -> Result<KeyringSerial> {
+        let typeptr = CString::new(type_).unwrap().as_ptr();
         let descptr = CString::new(description).unwrap().as_ptr();
-        let res = unsafe { request_key(typeptr, descptr, ptr::null(), self.id) };
+        check_call_ret_serial(unsafe { request_key(typeptr, descptr, ptr::null(), self.id) })
+    }
+
+    pub fn request_key(&self, description: &str) -> Result<Key> {
+        let res = try!(self.request("user", description));
         check_call(res as libc::c_long, Key { id: res, })
     }
 
-    pub fn request_keyring(&mut self, description: &str) -> Result<Self> {
-        let typeptr = CString::new("keyring").unwrap().as_ptr();
-        let descptr = CString::new(description).unwrap().as_ptr();
-        let res = unsafe { request_key(typeptr, descptr, ptr::null(), self.id) };
+    pub fn request_keyring(&self, description: &str) -> Result<Self> {
+        let res = try!(self.request("keyring", description));
         check_call(res as libc::c_long, Keyring { id: res, })
     }
 
-    pub fn request_key_with_fallback(&mut self, description: &str, info: &str) -> Result<Key> {
-        let typeptr = CString::new("user").unwrap().as_ptr();
+    fn request_fallback(&self, type_: &str, description: &str, info: &str) -> Result<KeyringSerial> {
+        let typeptr = CString::new(type_).unwrap().as_ptr();
         let descptr = CString::new(description).unwrap().as_ptr();
         let infoptr = CString::new(info).unwrap().as_ptr();
-        let res = unsafe { request_key(typeptr, descptr, infoptr, self.id) };
+        check_call_ret_serial(unsafe { request_key(typeptr, descptr, infoptr, self.id) })
+    }
+
+    pub fn request_key_with_fallback(&self, description: &str, info: &str) -> Result<Key> {
+        let res = try!(self.request_fallback("user", description, info));
         check_call(res as libc::c_long, Key { id: res, })
     }
 
-    pub fn request_keyring_with_fallback(&mut self, description: &str, info: &str) -> Result<Self> {
-        let typeptr = CString::new("keyring").unwrap().as_ptr();
-        let descptr = CString::new(description).unwrap().as_ptr();
-        let infoptr = CString::new(info).unwrap().as_ptr();
-        let res = unsafe { request_key(typeptr, descptr, infoptr, self.id) };
+    pub fn request_keyring_with_fallback(&self, description: &str, info: &str) -> Result<Self> {
+        let res = try!(self.request_fallback("keyring", description, info));
         check_call(res as libc::c_long, Keyring { id: res, })
     }
 
