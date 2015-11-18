@@ -224,14 +224,14 @@ impl Key {
         check_call(unsafe { keyctl_update(self.id, data.as_ptr() as *const libc::c_void, data.len()) }, ())
     }
 
-    pub fn unlink_from_all(self, keyring: &mut Keyring) -> usize {
+    pub fn unlink_from_all(&self, keyring: &mut Keyring) -> usize {
         let mut id_copy = self.id;
         let data: *mut KeyringSerial = &mut id_copy;
         let ret = unsafe { recursive_key_scan(keyring.id, unlink_cb, data as *mut libc::c_void) };
         ret as usize
     }
 
-    pub fn unlink_from_session(self) -> usize {
+    pub fn unlink_from_session(&self) -> usize {
         let mut id_copy = self.id;
         let data: *mut KeyringSerial = &mut id_copy;
         let ret = unsafe { recursive_session_key_scan(unlink_cb, data as *mut libc::c_void) };
