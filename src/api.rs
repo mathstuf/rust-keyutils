@@ -360,9 +360,10 @@ fn test_add_key() {
     let new_payload = "payload";
     let updated_key = keyring.add_key("description", new_payload.as_bytes()).unwrap();
     assert_eq!(key.read().unwrap(), new_payload.as_bytes().iter().cloned().collect::<Vec<u8>>());
+    assert_eq!(updated_key.read().unwrap(), new_payload.as_bytes().iter().cloned().collect::<Vec<u8>>());
 
     // Clean it up.
-    key.unlink(&mut keyring);
+    key.unlink(&mut keyring).unwrap();
 }
 
 #[test]
