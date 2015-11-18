@@ -41,8 +41,9 @@ pub struct Keyring {
 }
 
 impl Keyring {
-    pub fn set_default(keyring: DefaultKeyring) -> Result<()> {
-        check_call(unsafe { keyctl_set_reqkey_keyring(keyring.serial()) }, ())
+    pub fn set_default(keyring: DefaultKeyring) -> Result<DefaultKeyring> {
+        let ret = try!(check_call_ret(unsafe { keyctl_set_reqkey_keyring(keyring.serial()) }));
+        Ok(DefaultKeyring::from(ret as i32))
     }
 
     pub fn attach(id: KeyringSerial) -> Result<Self> {
