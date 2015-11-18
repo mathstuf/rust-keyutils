@@ -6,6 +6,7 @@ use super::constants::*;
 use super::ffi::*;
 
 use std::ffi::CString;
+use std::mem;
 use std::os::unix::raw::{gid_t, uid_t};
 use std::ptr;
 use std::result;
@@ -87,10 +88,10 @@ impl Keyring {
 
     pub fn read(&self) -> Result<Vec<Key>> {
         let sz = try!(check_call_ret(unsafe { keyctl_read(self.id, ptr::null_mut(), 0) }));
-        let mut buffer = Vec::with_capacity(sz as usize);
-        try!(check_call_ret(unsafe { keyctl_read(self.id, buffer.as_mut_ptr() as *mut libc::c_char, sz as usize) }));
-        // TODO: turn bytestream into vec of keys
-        unimplemented!()
+        let mut buffer = Vec::<key_serial_t>::with_capacity((sz as usize) / mem::size_of::<KeyringSerial>());
+        let actual_sz = try!(check_call_ret(unsafe { keyctl_read(self.id, buffer.as_mut_ptr() as *mut libc::c_char, sz as usize) }));
+        unsafe { buffer.set_len((actual_sz as usize) / mem::size_of::<KeyringSerial>()) };
+        Ok(buffer.iter().cloned().map(|id| { Key { id: id, } }).collect::<Vec<_>>())
     }
 
     pub fn attach_persistent(&mut self) -> Result<Keyring> {
