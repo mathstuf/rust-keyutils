@@ -540,6 +540,7 @@ fn test_chmod_keyring() {
 
 #[test]
 fn test_request_key() {
+    unimplemented!()
 }
 
 #[test]
