@@ -57,10 +57,6 @@ impl Keyring {
         Keyring { id: 0, }.request_keyring_with_fallback(description, info)
     }
 
-    pub fn search(description: &str) -> Result<Self> {
-        Keyring { id: 0, }.search_for_keyring(description)
-    }
-
     pub fn set_default(keyring: DefaultKeyring) -> Result<DefaultKeyring> {
         let ret = try!(check_call_ret(unsafe { keyctl_set_reqkey_keyring(keyring.serial()) }));
         Ok(DefaultKeyring::from(ret as i32))
