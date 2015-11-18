@@ -56,6 +56,22 @@ impl DefaultKeyring {
     }
 }
 
+impl From<i32> for DefaultKeyring {
+    fn from(id: i32) -> DefaultKeyring {
+        match id {
+            KEY_REQKEY_DEFL_NO_CHANGE               => DefaultKeyring::NoChange,
+            KEY_REQKEY_DEFL_THREAD_KEYRING          => DefaultKeyring::ThreadKeyring,
+            KEY_REQKEY_DEFL_PROCESS_KEYRING         => DefaultKeyring::ProcessKeyring,
+            KEY_REQKEY_DEFL_SESSION_KEYRING         => DefaultKeyring::SessionKeyring,
+            KEY_REQKEY_DEFL_USER_KEYRING            => DefaultKeyring::UserKeyring,
+            KEY_REQKEY_DEFL_USER_SESSION_KEYRING    => DefaultKeyring::UserSessionKeyring,
+            KEY_REQKEY_DEFL_GROUP_KEYRING           => DefaultKeyring::GroupKeyring,
+            KEY_REQKEY_DEFL_DEFAULT                 => DefaultKeyring::DefaultKeyring,
+            _                                       => panic!("Invalid value for a default keyring: {}", id),
+        }
+    }
+}
+
 pub type KeyPermissions = u32;
 
 bitflags! {
