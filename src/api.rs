@@ -310,11 +310,11 @@ impl Key {
         Keyring { id: 0, }.request_key_with_fallback(description, info)
     }
 
-    pub fn find(description: &str) -> Result<Key> {
+    pub fn find(description: &str) -> Result<Self> {
         Keyring { id: 0, }.find_key(description)
     }
 
-    pub fn search(description: &str) -> Result<Key> {
+    pub fn search(description: &str) -> Result<Self> {
         Keyring { id: 0, }.search_for_key(description)
     }
 
