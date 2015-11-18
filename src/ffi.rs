@@ -183,9 +183,4 @@ extern {
         func:   recursive_key_scanner_t,
         data:   *mut libc::c_void)
         -> libc::c_int;
-    pub fn find_key_by_type_and_desc(
-        type_:      *const libc::c_char,
-        desc:       *const libc::c_char,
-        destringid: key_serial_t)
-        -> key_serial_t;
 }

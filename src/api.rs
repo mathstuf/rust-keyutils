@@ -78,10 +78,6 @@ impl Keyring {
         Keyring { id: 0, }.request_keyring_with_fallback(description, info)
     }
 
-    pub fn find(description: &str) -> Result<Self> {
-        Keyring { id: 0, }.find_keyring(description)
-    }
-
     pub fn search(description: &str) -> Result<Self> {
         Keyring { id: 0, }.search_for_keyring(description)
     }
@@ -177,22 +173,6 @@ impl Keyring {
         let typeptr = CString::new("keyring").unwrap().as_ptr();
         let descptr = CString::new(description).unwrap().as_ptr();
         let res = unsafe { add_key(typeptr, descptr, ptr::null(), 0, self.id) };
-        check_call(res as libc::c_long, Keyring { id: res, })
-    }
-
-    fn _find(&self, type_: &str, description: &str) -> Result<KeyringSerial> {
-        let typeptr = CString::new(type_).unwrap().as_ptr();
-        let descptr = CString::new(description).unwrap().as_ptr();
-        check_call_ret_serial(unsafe { find_key_by_type_and_desc(typeptr, descptr, self.id) })
-    }
-
-    pub fn find_key(&self, description: &str) -> Result<Key> {
-        let res = try!(self._find("user", description));
-        check_call(res as libc::c_long, Key { id: res, })
-    }
-
-    pub fn find_keyring(&self, description: &str) -> Result<Self> {
-        let res = try!(self._find("keyring", description));
         check_call(res as libc::c_long, Keyring { id: res, })
     }
 
@@ -308,14 +288,6 @@ impl Key {
 
     pub fn request_with_fallback(description: &str, info: &str) -> Result<Self> {
         Keyring { id: 0, }.request_key_with_fallback(description, info)
-    }
-
-    pub fn find(description: &str) -> Result<Self> {
-        Keyring { id: 0, }.find_key(description)
-    }
-
-    pub fn search(description: &str) -> Result<Self> {
-        Keyring { id: 0, }.search_for_key(description)
     }
 
     pub fn keyring(&self) -> Result<Keyring> {
