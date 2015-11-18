@@ -126,9 +126,10 @@ impl Keyring {
         check_call(res as libc::c_long, Key { id: res, })
     }
 
-    pub fn add_keyring(&mut self) -> Result<Self> {
+    pub fn add_keyring(&mut self, description: &str) -> Result<Self> {
         let typeptr = CString::new("keyring").unwrap().as_ptr();
-        let res = unsafe { add_key(typeptr, ptr::null(), ptr::null(), 0, self.id) };
+        let descptr = CString::new(description).unwrap().as_ptr();
+        let res = unsafe { add_key(typeptr, descptr, ptr::null(), 0, self.id) };
         check_call(res as libc::c_long, Keyring { id: res, })
     }
 
