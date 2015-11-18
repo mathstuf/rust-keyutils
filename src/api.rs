@@ -94,7 +94,7 @@ impl Keyring {
     }
 
     pub fn attach_persistent(&mut self) -> Result<Keyring> {
-        let res = unsafe { keyctl_get_persistent(-1, self.id) };
+        let res = unsafe { keyctl_get_persistent(!0, self.id) };
         check_call(res, Keyring { id: res as key_serial_t, })
     }
 
@@ -222,11 +222,11 @@ impl Key {
     }
 
     pub fn chown(&mut self, uid: uid_t) -> Result<()> {
-        check_call(unsafe { keyctl_chown(self.id, uid, -1) }, ())
+        check_call(unsafe { keyctl_chown(self.id, uid, !0) }, ())
     }
 
     pub fn chgrp(&mut self, gid: gid_t) -> Result<()> {
-        check_call(unsafe { keyctl_chown(self.id, -1, gid) }, ())
+        check_call(unsafe { keyctl_chown(self.id, !0, gid) }, ())
     }
 
     pub fn set_permissions(&mut self, perms: KeyPermissions) -> Result<()> {
