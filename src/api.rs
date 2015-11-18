@@ -311,6 +311,7 @@ pub struct Key {
     id: KeyringSerial,
 }
 
+/// TODO
 impl Key {
     /// Requests a key with the given description by searching the thread, process, and session
     /// keyrings.
@@ -370,6 +371,7 @@ impl Key {
         Keyring { id: self.id }.description()
     }
 
+    /// TODO
     pub fn read(&self) -> Result<Vec<u8>> {
         let sz = try!(check_call_ret(unsafe { keyctl_read(self.id, ptr::null_mut(), 0) }));
         let mut buffer = Vec::with_capacity(sz as usize);
