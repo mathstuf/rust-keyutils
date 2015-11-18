@@ -36,6 +36,27 @@ fn get_keyring(id: KeyringSerial, create: bool) -> Result<Keyring> {
     check_call(res as libc::c_long, Keyring { id: res, })
 }
 
+extern fn unlink_cb(
+    parent:     key_serial_t,
+    key:        key_serial_t,
+    _:          *mut libc::c_char,
+    _:          libc::c_int,
+    data:       *mut libc::c_void)
+    -> libc::c_int {
+    let target = unsafe { *(data as *mut KeyringSerial) };
+    if target == key {
+        let mut keyring = Keyring { id: parent, };
+        let key = Key { id: key, };
+        if keyring.unlink_key(&key).is_ok() {
+            1
+        } else {
+            0
+        }
+    } else {
+        0
+    }
+}
+
 pub struct Keyring {
     id: KeyringSerial,
 }
@@ -176,60 +197,9 @@ impl Keyring {
         let res = unsafe { request_key(typeptr, descptr, infoptr, self.id) };
         check_call(res as libc::c_long, Keyring { id: res, })
     }
-}
-
-pub struct Key {
-    id: KeyringSerial,
-}
-
-extern fn unlink_cb(
-    parent:     key_serial_t,
-    key:        key_serial_t,
-    _:          *mut libc::c_char,
-    _:          libc::c_int,
-    data:       *mut libc::c_void)
-    -> libc::c_int {
-    let target = unsafe { *(data as *mut KeyringSerial) };
-    if target == key {
-        let mut keyring = Keyring { id: parent, };
-        let key = Key { id: key, };
-        if keyring.unlink_key(&key).is_ok() {
-            1
-        } else {
-            0
-        }
-    } else {
-        0
-    }
-}
-
-impl Key {
-    pub fn request(description: &str) -> Result<Self> {
-        let mut keyring = Keyring { id: 0, };
-        keyring.request_key(description)
-    }
-
-    pub fn request_with_fallback(description: &str, info: &str) -> Result<Self> {
-        let mut keyring = Keyring { id: 0, };
-        keyring.request_key_with_fallback(description, info)
-    }
-
-    pub fn find(description: &str) -> Result<Key> {
-        let mut keyring = Keyring { id: 0, };
-        keyring.find_key(description)
-    }
-
-    pub fn search(description: &str) -> Result<Key> {
-        let mut keyring = Keyring { id: 0, };
-        keyring.search_for_key(description)
-    }
 
     pub fn keyring(&self) -> Result<Keyring> {
         get_keyring(self.id, false)
-    }
-
-    pub fn update(&mut self, data: &[u8]) -> Result<()> {
-        check_call(unsafe { keyctl_update(self.id, data.as_ptr() as *const libc::c_void, data.len()) }, ())
     }
 
     pub fn unlink_from_all(&self, keyring: &mut Keyring) -> usize {
@@ -278,14 +248,6 @@ impl Key {
         Ok(str_slice.to_owned())
     }
 
-    pub fn read(&self) -> Result<Vec<u8>> {
-        let sz = try!(check_call_ret(unsafe { keyctl_read(self.id, ptr::null_mut(), 0) }));
-        let mut buffer = Vec::with_capacity(sz as usize);
-        let actual_sz = try!(check_call_ret(unsafe { keyctl_read(self.id, buffer.as_mut_ptr() as *mut libc::c_char, sz as usize) }));
-        unsafe { buffer.set_len(actual_sz as usize) };
-        Ok(buffer)
-    }
-
     pub fn set_timeout(&mut self, timeout: u32) -> Result<()> {
         check_call(unsafe { keyctl_set_timeout(self.id, timeout) }, ())
     }
@@ -301,6 +263,84 @@ impl Key {
 
     pub fn invalidate(self) -> Result<()> {
         check_call(unsafe { keyctl_invalidate(self.id) }, ())
+    }
+}
+
+pub struct Key {
+    id: KeyringSerial,
+}
+
+impl Key {
+    pub fn request(description: &str) -> Result<Self> {
+        Keyring { id: 0, }.request_key(description)
+    }
+
+    pub fn request_with_fallback(description: &str, info: &str) -> Result<Self> {
+        Keyring { id: 0, }.request_key_with_fallback(description, info)
+    }
+
+    pub fn find(description: &str) -> Result<Key> {
+        Keyring { id: 0, }.find_key(description)
+    }
+
+    pub fn search(description: &str) -> Result<Key> {
+        Keyring { id: 0, }.search_for_key(description)
+    }
+
+    pub fn keyring(&self) -> Result<Keyring> {
+        get_keyring(self.id, false)
+    }
+
+    pub fn update(&mut self, data: &[u8]) -> Result<()> {
+        check_call(unsafe { keyctl_update(self.id, data.as_ptr() as *const libc::c_void, data.len()) }, ())
+    }
+
+    pub fn unlink_from_all(&self, keyring: &mut Keyring) -> usize {
+        Keyring { id: self.id }.unlink_from_all(keyring)
+    }
+
+    pub fn unlink_from_session(&self) -> usize {
+        Keyring { id: self.id }.unlink_from_session()
+    }
+
+    pub fn revoke(self) -> Result<()> {
+        Keyring { id: self.id }.revoke()
+    }
+
+    pub fn chown(&mut self, uid: uid_t) -> Result<()> {
+        Keyring { id: self.id }.chown(uid)
+    }
+
+    pub fn chgrp(&mut self, gid: gid_t) -> Result<()> {
+        Keyring { id: self.id }.chgrp(gid)
+    }
+
+    pub fn set_permissions(&mut self, perms: KeyPermissions) -> Result<()> {
+        Keyring { id: self.id }.set_permissions(perms)
+    }
+
+    pub fn description(&self) -> Result<KeyDescription> {
+        Keyring { id: self.id }.description()
+    }
+
+    pub fn read(&self) -> Result<Vec<u8>> {
+        let sz = try!(check_call_ret(unsafe { keyctl_read(self.id, ptr::null_mut(), 0) }));
+        let mut buffer = Vec::with_capacity(sz as usize);
+        let actual_sz = try!(check_call_ret(unsafe { keyctl_read(self.id, buffer.as_mut_ptr() as *mut libc::c_char, sz as usize) }));
+        unsafe { buffer.set_len(actual_sz as usize) };
+        Ok(buffer)
+    }
+
+    pub fn set_timeout(&mut self, timeout: u32) -> Result<()> {
+        Keyring { id: self.id }.set_timeout(timeout)
+    }
+
+    pub fn get_security(&self) -> Result<String> {
+        Keyring { id: self.id }.get_security()
+    }
+
+    pub fn invalidate(self) -> Result<()> {
+        Keyring { id: self.id }.invalidate()
     }
 
     pub fn manage(&mut self) -> Result<KeyManager> {
