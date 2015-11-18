@@ -46,12 +46,12 @@ impl Keyring {
         Ok(DefaultKeyring::from(ret as i32))
     }
 
-    pub fn attach(id: KeyringSerial) -> Result<Self> {
-        get_keyring(id, false)
+    pub fn attach(id: SpecialKeyring) -> Result<Self> {
+        get_keyring(id.serial(), false)
     }
 
-    pub fn attach_or_create(id: KeyringSerial) -> Result<Self> {
-        get_keyring(id, true)
+    pub fn attach_or_create(id: SpecialKeyring) -> Result<Self> {
+        get_keyring(id.serial(), true)
     }
 
     pub fn join_anonymous_session() -> Result<Self> {
@@ -350,7 +350,7 @@ impl KeyManager {
 
 #[test]
 fn test_add_key() {
-    let mut keyring = Keyring::attach_or_create(SpecialKeyring::SessionKeyring.serial()).unwrap();
+    let mut keyring = Keyring::attach_or_create(SpecialKeyring::SessionKeyring).unwrap();
 
     // Create the key.
     let payload = "payload";
@@ -374,7 +374,7 @@ fn test_clear_keyring() {
 
 #[test]
 fn test_describe_key() {
-    let mut keyring = Keyring::attach_or_create(SpecialKeyring::SessionKeyring.serial()).unwrap();
+    let mut keyring = Keyring::attach_or_create(SpecialKeyring::SessionKeyring).unwrap();
 
     // Create the key.
     let desc = "description for a key";
