@@ -9,7 +9,6 @@ pub enum SpecialKeyring {
     UserKeyring,
     UserSessionKeyring,
     GroupKeyring,
-    RequestKeyAuthKey,
 }
 
 pub type KeyringSerial = i32;
@@ -23,7 +22,6 @@ impl SpecialKeyring {
             SpecialKeyring::UserKeyring         => KEY_SPEC_USER_KEYRING,
             SpecialKeyring::UserSessionKeyring  => KEY_SPEC_USER_SESSION_KEYRING,
             SpecialKeyring::GroupKeyring        => KEY_SPEC_GROUP_KEYRING,
-            SpecialKeyring::RequestKeyAuthKey   => KEY_SPEC_REQKEY_AUTH_KEY,
         }
     }
 }
@@ -124,7 +122,6 @@ fn test_keyring_ids() {
     assert_eq!(SpecialKeyring::UserKeyring.serial(), KEY_SPEC_USER_KEYRING);
     assert_eq!(SpecialKeyring::UserSessionKeyring.serial(), KEY_SPEC_USER_SESSION_KEYRING);
     assert_eq!(SpecialKeyring::GroupKeyring.serial(), KEY_SPEC_GROUP_KEYRING);
-    assert_eq!(SpecialKeyring::RequestKeyAuthKey.serial(), KEY_SPEC_REQKEY_AUTH_KEY);
 }
 
 #[test]

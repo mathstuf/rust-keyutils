@@ -239,6 +239,11 @@ pub struct Key {
 }
 
 impl Key {
+    pub fn request_key_auth_key(create: bool) -> Result<Self> {
+        let res = unsafe { keyctl_get_keyring_ID(KEY_SPEC_REQKEY_AUTH_KEY, create as libc::c_int) };
+        check_call(res as libc::c_long, Key { id: res, })
+    }
+
     pub fn request(description: &str) -> Result<Self> {
         Keyring { id: 0, }.request_key(description)
     }
