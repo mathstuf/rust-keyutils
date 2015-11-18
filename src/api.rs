@@ -246,8 +246,9 @@ impl Key {
     }
 
     pub fn description(&self) -> Result<KeyDescription> {
-        self.description_raw().map(|desc| {
+        self.description_raw().and_then(|desc| {
             KeyDescription::parse(desc)
+                .ok_or(errno::Errno(libc::EINVAL))
         })
     }
 
@@ -255,7 +256,7 @@ impl Key {
         let sz = try!(check_call_ret(unsafe { keyctl_describe(self.id, ptr::null_mut(), 0) }));
         let mut buffer = Vec::with_capacity(sz as usize);
         let actual_sz = try!(check_call_ret(unsafe { keyctl_describe(self.id, buffer.as_mut_ptr() as *mut libc::c_char, sz as usize) }));
-        unsafe { buffer.set_len(actual_sz as usize) };
+        unsafe { buffer.set_len((actual_sz - 1) as usize) };
         let str_slice = str::from_utf8(&buffer[..]).unwrap();
         Ok(str_slice.to_owned())
     }
@@ -303,8 +304,27 @@ pub struct KeyDescription {
 }
 
 impl KeyDescription {
-    fn parse(desc: String) -> KeyDescription {
-        unimplemented!()
+    fn parse(desc: String) -> Option<KeyDescription> {
+        let mut pieces = desc.split(';').collect::<Vec<&str>>();
+        // Reverse the string because the kernel plans to extend it by adding fields to the
+        // beginning of the string. By doing this, the fields are at a constant position in the
+        // split string.
+        pieces.reverse();
+        let len = pieces.len();
+        if len < 5 {
+            None
+        } else {
+            if len > 5 {
+                println!("New fields detected! Please report this upstream to https://github.com/mathstuf/rust-keyutils: {}", desc);
+            }
+            Some(KeyDescription {
+                type_:          pieces[4].to_owned(),
+                uid:            pieces[3].parse::<uid_t>().unwrap(),
+                gid:            pieces[2].parse::<gid_t>().unwrap(),
+                perms:          KeyPermissions::from_str_radix(pieces[1], 16).unwrap(),
+                description:    pieces[0].to_owned(),
+            })
+        }
     }
 }
 
@@ -352,7 +372,18 @@ fn test_clear_keyring() {
 
 #[test]
 fn test_describe_key() {
-    unimplemented!()
+    let mut keyring = Keyring::attach_or_create(SpecialKeyring::SessionKeyring.serial()).unwrap();
+
+    // Create the key.
+    let desc = "description for a key";
+    let payload = "payload";
+    let key = keyring.add_key(desc, payload.as_bytes()).unwrap();
+
+    // Check its description.
+    assert_eq!(key.description().unwrap().description, desc);
+
+    // Clean it up.
+    key.unlink(&mut keyring).unwrap();
 }
 
 #[test]
