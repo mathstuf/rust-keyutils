@@ -39,11 +39,6 @@ fn check_call_ret_serial(res: KeyringSerial) -> Result<KeyringSerial> {
     }
 }
 
-fn get_keyring(id: KeyringSerial, create: bool) -> Result<Keyring> {
-    let res = unsafe { keyctl_get_keyring_ID(id, create as libc::c_int) };
-    check_call(res as libc::c_long, Keyring { id: res, })
-}
-
 pub struct Keyring {
     id: KeyringSerial,
 }
@@ -62,12 +57,17 @@ impl Keyring {
         Ok(DefaultKeyring::from(ret as i32))
     }
 
+    fn get_keyring(id: SpecialKeyring, create: bool) -> Result<Keyring> {
+        let res = unsafe { keyctl_get_keyring_ID(id.serial(), create as libc::c_int) };
+        check_call(res as libc::c_long, Keyring { id: res, })
+    }
+
     pub fn attach(id: SpecialKeyring) -> Result<Self> {
-        get_keyring(id.serial(), false)
+        Self::get_keyring(id, false)
     }
 
     pub fn attach_or_create(id: SpecialKeyring) -> Result<Self> {
-        get_keyring(id.serial(), true)
+        Self::get_keyring(id, true)
     }
 
     pub fn join_anonymous_session() -> Result<Self> {
@@ -184,10 +184,6 @@ impl Keyring {
         check_call(res as libc::c_long, Keyring { id: res, })
     }
 
-    pub fn keyring(&self) -> Result<Keyring> {
-        get_keyring(self.id, false)
-    }
-
     pub fn revoke(self) -> Result<()> {
         check_call(unsafe { keyctl_revoke(self.id) }, ())
     }
@@ -249,10 +245,6 @@ impl Key {
 
     pub fn request_with_fallback(description: &str, info: &str) -> Result<Self> {
         Keyring { id: 0, }.request_key_with_fallback(description, info)
-    }
-
-    pub fn keyring(&self) -> Result<Keyring> {
-        get_keyring(self.id, false)
     }
 
     pub fn update(&mut self, data: &[u8]) -> Result<()> {
