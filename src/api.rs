@@ -164,11 +164,22 @@ pub struct Key {
 extern fn unlink_cb(
     parent:     key_serial_t,
     key:        key_serial_t,
-    desc:       *mut libc::c_char,
-    desc_len:   libc::c_int,
+    _:          *mut libc::c_char,
+    _:          libc::c_int,
     data:       *mut libc::c_void)
     -> libc::c_int {
-    unimplemented!()
+    let target = unsafe { *(data as *mut KeyringSerial) };
+    if target == key {
+        let mut keyring = Keyring { id: parent, };
+        let key = Key { id: key, };
+        if key.unlink(&mut keyring).is_ok() {
+            1
+        } else {
+            0
+        }
+    } else {
+        0
+    }
 }
 
 impl Key {
@@ -200,7 +211,7 @@ impl Key {
         check_call(unsafe { keyctl_update(self.id, data.as_ptr() as *const libc::c_void, data.len()) }, ())
     }
 
-    pub fn unlink(self, keyring: &Keyring) -> Result<()> {
+    pub fn unlink(self, keyring: &mut Keyring) -> Result<()> {
         check_call(unsafe { keyctl_unlink(self.id, keyring.id) }, ())
     }
 
