@@ -44,27 +44,6 @@ fn get_keyring(id: KeyringSerial, create: bool) -> Result<Keyring> {
     check_call(res as libc::c_long, Keyring { id: res, })
 }
 
-extern fn unlink_cb(
-    parent:     key_serial_t,
-    key:        key_serial_t,
-    _:          *mut libc::c_char,
-    _:          libc::c_int,
-    data:       *mut libc::c_void)
-    -> libc::c_int {
-    let target = unsafe { *(data as *mut KeyringSerial) };
-    if target == key {
-        let mut keyring = Keyring { id: parent, };
-        let key = Key { id: key, };
-        if keyring.unlink_key(&key).is_ok() {
-            1
-        } else {
-            0
-        }
-    } else {
-        0
-    }
-}
-
 pub struct Keyring {
     id: KeyringSerial,
 }
@@ -213,20 +192,6 @@ impl Keyring {
         get_keyring(self.id, false)
     }
 
-    pub fn unlink_from_all(&self, keyring: &mut Keyring) -> usize {
-        let mut id_copy = self.id;
-        let data: *mut KeyringSerial = &mut id_copy;
-        let ret = unsafe { recursive_key_scan(keyring.id, unlink_cb, data as *mut libc::c_void) };
-        ret as usize
-    }
-
-    pub fn unlink_from_session(&self) -> usize {
-        let mut id_copy = self.id;
-        let data: *mut KeyringSerial = &mut id_copy;
-        let ret = unsafe { recursive_session_key_scan(unlink_cb, data as *mut libc::c_void) };
-        ret as usize
-    }
-
     pub fn revoke(self) -> Result<()> {
         check_call(unsafe { keyctl_revoke(self.id) }, ())
     }
@@ -296,14 +261,6 @@ impl Key {
 
     pub fn update(&mut self, data: &[u8]) -> Result<()> {
         check_call(unsafe { keyctl_update(self.id, data.as_ptr() as *const libc::c_void, data.len()) }, ())
-    }
-
-    pub fn unlink_from_all(&self, keyring: &mut Keyring) -> usize {
-        Keyring { id: self.id }.unlink_from_all(keyring)
-    }
-
-    pub fn unlink_from_session(&self) -> usize {
-        Keyring { id: self.id }.unlink_from_session()
     }
 
     pub fn revoke(self) -> Result<()> {

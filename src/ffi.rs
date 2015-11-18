@@ -55,16 +55,6 @@ pub const KEY_OTH_LINK:    key_perm_t = 0x00000010;
 pub const KEY_OTH_SETATTR: key_perm_t = 0x00000020;
 pub const KEY_OTH_ALL:     key_perm_t = 0x0000003f;
 
-#[allow(non_camel_case_types)]
-type recursive_key_scanner_t =
-    extern fn(
-        parent:     key_serial_t,
-        key:        key_serial_t,
-        desc:       *mut libc::c_char,
-        desc_len:   libc::c_int,
-        data:       *mut libc::c_void)
-        -> libc::c_int;
-
 #[link(name = "keyutils")]
 extern {
     pub fn add_key(
@@ -173,14 +163,4 @@ extern {
         uid:    libc::uid_t,
         id:     key_serial_t)
         -> libc::c_long;
-
-    pub fn recursive_key_scan(
-        key:    key_serial_t,
-        func:   recursive_key_scanner_t,
-        data:   *mut libc::c_void)
-        -> libc::c_int;
-    pub fn recursive_session_key_scan(
-        func:   recursive_key_scanner_t,
-        data:   *mut libc::c_void)
-        -> libc::c_int;
 }
