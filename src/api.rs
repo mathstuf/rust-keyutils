@@ -71,11 +71,18 @@ impl Keyring {
         check_call(unsafe { keyctl_link(key.id, self.id) }, ())
     }
 
-    pub fn search(&mut self, type_: &str, description: &str) -> Result<Key> {
-        let typeptr = CString::new(type_).unwrap().as_ptr();
+    pub fn search_for_key(&mut self, description: &str) -> Result<Key> {
+        let typeptr = CString::new("user").unwrap().as_ptr();
         let descptr = CString::new(description).unwrap().as_ptr();
         let res = unsafe { keyctl_search(self.id, typeptr, descptr, self.id) };
         check_call(res, Key { id: res as key_serial_t, })
+    }
+
+    pub fn search_for_keyring(&mut self, description: &str) -> Result<Keyring> {
+        let typeptr = CString::new("keyring").unwrap().as_ptr();
+        let descptr = CString::new(description).unwrap().as_ptr();
+        let res = unsafe { keyctl_search(self.id, typeptr, descptr, self.id) };
+        check_call(res, Keyring { id: res as key_serial_t, })
     }
 
     pub fn read(&self) -> Result<Vec<Key>> {
@@ -104,26 +111,48 @@ impl Keyring {
         check_call(res as libc::c_long, Keyring { id: res, })
     }
 
-    pub fn find_key(&mut self, type_: &str, description: &str) -> Result<Key> {
-        let typeptr = CString::new(type_).unwrap().as_ptr();
+    pub fn find_key(&mut self, description: &str) -> Result<Key> {
+        let typeptr = CString::new("user").unwrap().as_ptr();
         let descptr = CString::new(description).unwrap().as_ptr();
         let res = unsafe { find_key_by_type_and_desc(typeptr, descptr, self.id) };
         check_call(res as libc::c_long, Key { id: res, })
     }
 
-    pub fn request_key(&mut self, type_: &str, description: &str) -> Result<Key> {
-        let typeptr = CString::new(type_).unwrap().as_ptr();
+    pub fn find_keyring(&mut self, description: &str) -> Result<Keyring> {
+        let typeptr = CString::new("keyring").unwrap().as_ptr();
+        let descptr = CString::new(description).unwrap().as_ptr();
+        let res = unsafe { find_key_by_type_and_desc(typeptr, descptr, self.id) };
+        check_call(res as libc::c_long, Keyring { id: res, })
+    }
+
+    pub fn request_key(&mut self, description: &str) -> Result<Key> {
+        let typeptr = CString::new("user").unwrap().as_ptr();
         let descptr = CString::new(description).unwrap().as_ptr();
         let res = unsafe { request_key(typeptr, descptr, ptr::null(), self.id) };
         check_call(res as libc::c_long, Key { id: res, })
     }
 
-    pub fn request_key_with_fallback(&mut self, type_: &str, description: &str, info: &str) -> Result<Key> {
-        let typeptr = CString::new(type_).unwrap().as_ptr();
+    pub fn request_keyring(&mut self, description: &str) -> Result<Keyring> {
+        let typeptr = CString::new("keyring").unwrap().as_ptr();
+        let descptr = CString::new(description).unwrap().as_ptr();
+        let res = unsafe { request_key(typeptr, descptr, ptr::null(), self.id) };
+        check_call(res as libc::c_long, Keyring { id: res, })
+    }
+
+    pub fn request_key_with_fallback(&mut self, description: &str, info: &str) -> Result<Key> {
+        let typeptr = CString::new("user").unwrap().as_ptr();
         let descptr = CString::new(description).unwrap().as_ptr();
         let infoptr = CString::new(info).unwrap().as_ptr();
         let res = unsafe { request_key(typeptr, descptr, infoptr, self.id) };
         check_call(res as libc::c_long, Key { id: res, })
+    }
+
+    pub fn request_keyring_with_fallback(&mut self, description: &str, info: &str) -> Result<Keyring> {
+        let typeptr = CString::new("keyring").unwrap().as_ptr();
+        let descptr = CString::new(description).unwrap().as_ptr();
+        let infoptr = CString::new(info).unwrap().as_ptr();
+        let res = unsafe { request_key(typeptr, descptr, infoptr, self.id) };
+        check_call(res as libc::c_long, Keyring { id: res, })
     }
 }
 
@@ -142,24 +171,24 @@ extern fn unlink_cb(
 }
 
 impl Key {
-    pub fn request(type_: &str, description: &str) -> Result<Key> {
+    pub fn request(description: &str) -> Result<Key> {
         let mut keyring = Keyring { id: 0, };
-        keyring.request_key(type_, description)
+        keyring.request_key(description)
     }
 
-    pub fn request_with_fallback(type_: &str, description: &str, info: &str) -> Result<Key> {
+    pub fn request_with_fallback(description: &str, info: &str) -> Result<Key> {
         let mut keyring = Keyring { id: 0, };
-        keyring.request_key_with_fallback(type_, description, info)
+        keyring.request_key_with_fallback(description, info)
     }
 
-    pub fn find(type_: &str, description: &str) -> Result<Key> {
+    pub fn find(description: &str) -> Result<Key> {
         let mut keyring = Keyring { id: 0, };
-        keyring.find_key(type_, description)
+        keyring.find_key(description)
     }
 
-    pub fn search(type_: &str, description: &str) -> Result<Key> {
+    pub fn search(description: &str) -> Result<Key> {
         let mut keyring = Keyring { id: 0, };
-        keyring.search(type_, description)
+        keyring.search_for_key(description)
     }
 
     pub fn keyring(&self) -> Result<Keyring> {
