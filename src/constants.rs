@@ -59,50 +59,38 @@ impl DefaultKeyring {
 pub type KeyPermissions = u32;
 
 bitflags! {
-    flags KeyringAction: key_perm_t {
-        const ACTION_VIEW           = 0b00000001,
-        const ACTION_READ           = 0b00000010,
-        const ACTION_WRITE          = 0b00000100,
-        const ACTION_SEARCH         = 0b00001000,
-        const ACTION_LINK           = 0b00010000,
-        const ACTION_SET_ATTRIBUTE  = 0b00100000,
-        const ACTION_ALL            = 0b00111111,
-    }
-}
-
-bitflags! {
     flags KeyringPermission: key_perm_t {
-        const POSSESSOR_VIEW            = ACTION_VIEW.bits << 24,
-        const POSSESSOR_READ            = ACTION_READ.bits << 24,
-        const POSSESSOR_WRITE           = ACTION_WRITE.bits << 24,
-        const POSSESSOR_SEARCH          = ACTION_SEARCH.bits << 24,
-        const POSSESSOR_LINK            = ACTION_LINK.bits << 24,
-        const POSSESSOR_SET_ATTRIBUTE   = ACTION_SET_ATTRIBUTE.bits << 24,
-        const POSSESSOR_ALL             = ACTION_ALL.bits << 24,
+        const POSSESSOR_VIEW            = KEY_POS_VIEW,
+        const POSSESSOR_READ            = KEY_POS_READ,
+        const POSSESSOR_WRITE           = KEY_POS_WRITE,
+        const POSSESSOR_SEARCH          = KEY_POS_SEARCH,
+        const POSSESSOR_LINK            = KEY_POS_LINK,
+        const POSSESSOR_SET_ATTRIBUTE   = KEY_POS_SETATTR,
+        const POSSESSOR_ALL             = KEY_POS_ALL,
 
-        const USER_VIEW             = ACTION_VIEW.bits << 16,
-        const USER_READ             = ACTION_READ.bits << 16,
-        const USER_WRITE            = ACTION_WRITE.bits << 16,
-        const USER_SEARCH           = ACTION_SEARCH.bits << 16,
-        const USER_LINK             = ACTION_LINK.bits << 16,
-        const USER_SET_ATTRIBUTE    = ACTION_SET_ATTRIBUTE.bits << 16,
-        const USER_ALL              = ACTION_ALL.bits << 16,
+        const USER_VIEW             = KEY_USR_VIEW,
+        const USER_READ             = KEY_USR_READ,
+        const USER_WRITE            = KEY_USR_WRITE,
+        const USER_SEARCH           = KEY_USR_SEARCH,
+        const USER_LINK             = KEY_USR_LINK,
+        const USER_SET_ATTRIBUTE    = KEY_USR_SETATTR,
+        const USER_ALL              = KEY_USR_ALL,
 
-        const GROUP_VIEW            = ACTION_VIEW.bits << 8,
-        const GROUP_READ            = ACTION_READ.bits << 8,
-        const GROUP_WRITE           = ACTION_WRITE.bits << 8,
-        const GROUP_SEARCH          = ACTION_SEARCH.bits << 8,
-        const GROUP_LINK            = ACTION_LINK.bits << 8,
-        const GROUP_SET_ATTRIBUTE   = ACTION_SET_ATTRIBUTE.bits << 8,
-        const GROUP_ALL             = ACTION_ALL.bits << 8,
+        const GROUP_VIEW            = KEY_GRP_VIEW,
+        const GROUP_READ            = KEY_GRP_READ,
+        const GROUP_WRITE           = KEY_GRP_WRITE,
+        const GROUP_SEARCH          = KEY_GRP_SEARCH,
+        const GROUP_LINK            = KEY_GRP_LINK,
+        const GROUP_SET_ATTRIBUTE   = KEY_GRP_SETATTR,
+        const GROUP_ALL             = KEY_GRP_ALL,
 
-        const OTHER_VIEW            = ACTION_VIEW.bits << 0,
-        const OTHER_READ            = ACTION_READ.bits << 0,
-        const OTHER_WRITE           = ACTION_WRITE.bits << 0,
-        const OTHER_SEARCH          = ACTION_SEARCH.bits << 0,
-        const OTHER_LINK            = ACTION_LINK.bits << 0,
-        const OTHER_SET_ATTRIBUTE   = ACTION_SET_ATTRIBUTE.bits << 0,
-        const OTHER_ALL             = ACTION_ALL.bits << 0,
+        const OTHER_VIEW            = KEY_OTH_VIEW,
+        const OTHER_READ            = KEY_OTH_READ,
+        const OTHER_WRITE           = KEY_OTH_WRITE,
+        const OTHER_SEARCH          = KEY_OTH_SEARCH,
+        const OTHER_LINK            = KEY_OTH_LINK,
+        const OTHER_SET_ATTRIBUTE   = KEY_OTH_SETATTR,
+        const OTHER_ALL             = KEY_OTH_ALL,
     }
 }
 
