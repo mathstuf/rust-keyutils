@@ -267,7 +267,7 @@ impl Keyring {
         check_call(unsafe { keyctl_set_timeout(self.id, timeout) }, ())
     }
 
-    pub fn get_security(&self) -> Result<String> {
+    pub fn security(&self) -> Result<String> {
         let sz = try!(check_call_ret(unsafe { keyctl_get_security(self.id, ptr::null_mut(), 0) }));
         let mut buffer = Vec::with_capacity(sz as usize);
         let actual_sz = try!(check_call_ret(unsafe { keyctl_get_security(self.id, buffer.as_mut_ptr() as *mut libc::c_char, sz as usize) }));
@@ -350,8 +350,8 @@ impl Key {
         Keyring { id: self.id }.set_timeout(timeout)
     }
 
-    pub fn get_security(&self) -> Result<String> {
-        Keyring { id: self.id }.get_security()
+    pub fn security(&self) -> Result<String> {
+        Keyring { id: self.id }.security()
     }
 
     pub fn invalidate(self) -> Result<()> {
