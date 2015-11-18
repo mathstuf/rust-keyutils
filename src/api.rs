@@ -91,7 +91,7 @@ impl Keyring {
         let mut buffer = Vec::<key_serial_t>::with_capacity((sz as usize) / mem::size_of::<KeyringSerial>());
         let actual_sz = try!(check_call_ret(unsafe { keyctl_read(self.id, buffer.as_mut_ptr() as *mut libc::c_char, sz as usize) }));
         unsafe { buffer.set_len((actual_sz as usize) / mem::size_of::<KeyringSerial>()) };
-        Ok(buffer.iter().cloned().map(|id| { Key { id: id, } }).collect::<Vec<_>>())
+        Ok(buffer.iter().map(|&id| { Key { id: id, } }).collect::<Vec<_>>())
     }
 
     pub fn attach_persistent(&mut self) -> Result<Keyring> {
