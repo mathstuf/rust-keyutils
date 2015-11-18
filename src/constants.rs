@@ -2,18 +2,27 @@ extern crate bitflags;
 
 use super::ffi::*;
 
+/// Special keyrings predefined for a process.
 pub enum SpecialKeyring {
+    /// A thread-specific keyring.
     ThreadKeyring,
+    /// A process-specific keyring.
     ProcessKeyring,
+    /// A session-specific keyring.
     SessionKeyring,
+    /// TODO
     UserKeyring,
+    /// TODO
     UserSessionKeyring,
+    /// TODO
     GroupKeyring,
 }
 
+/// The kernel type for representing a keyring (or key).
 pub type KeyringSerial = i32;
 
 impl SpecialKeyring {
+    /// Retrieve the serial number for the special keyring.
     pub fn serial(self) -> KeyringSerial {
         match self {
             SpecialKeyring::ThreadKeyring       => KEY_SPEC_THREAD_KEYRING,
@@ -26,20 +35,31 @@ impl SpecialKeyring {
     }
 }
 
+/// An enumeration for the keyrings which may be set as the default.
 pub enum DefaultKeyring {
+    /// TODO
     NoChange,
+    /// TODO
     ThreadKeyring,
+    /// TODO
     ProcessKeyring,
+    /// TODO
     SessionKeyring,
+    /// TODO
     UserKeyring,
+    /// TODO
     UserSessionKeyring,
+    /// TODO
     GroupKeyring,
+    /// TODO
     DefaultKeyring,
 }
 
+/// The kernel type for representing a default keyring.
 pub type KeyringDefaultSerial = i32;
 
 impl DefaultKeyring {
+    /// Retrieve the serial number for the default keyring.
     pub fn serial(self) -> KeyringDefaultSerial {
         match self {
             DefaultKeyring::NoChange            => KEY_REQKEY_DEFL_NO_CHANGE,
@@ -70,6 +90,9 @@ impl From<i32> for DefaultKeyring {
     }
 }
 
+/// The kernel type for representing a keyring's (or key's) permission.
+///
+/// TODO: explain more
 pub type KeyPermissions = u32;
 
 bitflags! {
