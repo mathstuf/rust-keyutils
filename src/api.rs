@@ -44,17 +44,17 @@ pub struct Keyring {
 }
 
 impl Keyring {
+    pub fn set_default(keyring: DefaultKeyring) -> Result<DefaultKeyring> {
+        let ret = try!(check_call_ret(unsafe { keyctl_set_reqkey_keyring(keyring.serial()) }));
+        Ok(DefaultKeyring::from(ret as i32))
+    }
+
     pub fn request(description: &str) -> Result<Self> {
         Keyring { id: 0, }.request_keyring(description)
     }
 
     pub fn request_with_fallback(description: &str, info: &str) -> Result<Self> {
         Keyring { id: 0, }.request_keyring_with_fallback(description, info)
-    }
-
-    pub fn set_default(keyring: DefaultKeyring) -> Result<DefaultKeyring> {
-        let ret = try!(check_call_ret(unsafe { keyctl_set_reqkey_keyring(keyring.serial()) }));
-        Ok(DefaultKeyring::from(ret as i32))
     }
 
     fn get_keyring(id: SpecialKeyring, create: bool) -> Result<Keyring> {
@@ -200,13 +200,6 @@ impl Keyring {
         check_call(unsafe { keyctl_setperm(self.id, perms) }, ())
     }
 
-    pub fn description(&self) -> Result<KeyDescription> {
-        self.description_raw().and_then(|desc| {
-            KeyDescription::parse(desc)
-                .ok_or(errno::Errno(libc::EINVAL))
-        })
-    }
-
     fn description_raw(&self) -> Result<String> {
         let sz = try!(check_call_ret(unsafe { keyctl_describe(self.id, ptr::null_mut(), 0) }));
         let mut buffer = Vec::with_capacity(sz as usize);
@@ -214,6 +207,13 @@ impl Keyring {
         unsafe { buffer.set_len((actual_sz - 1) as usize) };
         let str_slice = str::from_utf8(&buffer[..]).unwrap();
         Ok(str_slice.to_owned())
+    }
+
+    pub fn description(&self) -> Result<KeyDescription> {
+        self.description_raw().and_then(|desc| {
+            KeyDescription::parse(desc)
+                .ok_or(errno::Errno(libc::EINVAL))
+        })
     }
 
     pub fn set_timeout(&mut self, timeout: u32) -> Result<()> {
