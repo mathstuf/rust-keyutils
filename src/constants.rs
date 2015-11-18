@@ -108,12 +108,6 @@ bitflags! {
     }
 }
 
-impl KeyringPermission {
-    pub fn permissions(self) -> KeyPermissions {
-        self.bits
-    }
-}
-
 #[test]
 fn test_keyring_ids() {
     assert_eq!(SpecialKeyring::ThreadKeyring.serial(), KEY_SPEC_THREAD_KEYRING);
