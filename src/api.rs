@@ -69,8 +69,20 @@ impl Keyring {
         check_call(unsafe { keyctl_clear(self.id) }, ())
     }
 
-    pub fn link(&mut self, key: &Key) -> Result<()> {
+    pub fn link_key(&mut self, key: &Key) -> Result<()> {
         check_call(unsafe { keyctl_link(key.id, self.id) }, ())
+    }
+
+    pub fn unlink_key(&mut self, key: &Key) -> Result<()> {
+        check_call(unsafe { keyctl_unlink(key.id, self.id) }, ())
+    }
+
+    pub fn link_keyring(&mut self, keyring: &Keyring) -> Result<()> {
+        check_call(unsafe { keyctl_link(keyring.id, self.id) }, ())
+    }
+
+    pub fn unlink_keyring(&mut self, keyring: &Keyring) -> Result<()> {
+        check_call(unsafe { keyctl_unlink(keyring.id, self.id) }, ())
     }
 
     pub fn search_for_key(&mut self, description: &str) -> Result<Key> {
@@ -173,7 +185,7 @@ extern fn unlink_cb(
     if target == key {
         let mut keyring = Keyring { id: parent, };
         let key = Key { id: key, };
-        if key.unlink(&mut keyring).is_ok() {
+        if keyring.unlink_key(&key).is_ok() {
             1
         } else {
             0
@@ -210,10 +222,6 @@ impl Key {
 
     pub fn update(&mut self, data: &[u8]) -> Result<()> {
         check_call(unsafe { keyctl_update(self.id, data.as_ptr() as *const libc::c_void, data.len()) }, ())
-    }
-
-    pub fn unlink(self, keyring: &mut Keyring) -> Result<()> {
-        check_call(unsafe { keyctl_unlink(self.id, keyring.id) }, ())
     }
 
     pub fn unlink_from_all(self, keyring: &mut Keyring) -> usize {
@@ -364,7 +372,7 @@ fn test_add_key() {
     assert_eq!(updated_key.read().unwrap(), new_payload.as_bytes().iter().cloned().collect::<Vec<u8>>());
 
     // Clean it up.
-    key.unlink(&mut keyring).unwrap();
+    keyring.unlink_key(&key).unwrap();
 }
 
 #[test]
@@ -385,7 +393,7 @@ fn test_describe_key() {
     assert_eq!(key.description().unwrap().description, desc);
 
     // Clean it up.
-    key.unlink(&mut keyring).unwrap();
+    keyring.unlink_key(&key).unwrap();
 }
 
 #[test]
