@@ -497,7 +497,34 @@ fn test_add_key() {
 
 #[test]
 fn test_clear_keyring() {
-    unimplemented!()
+    let mut keyring = Keyring::attach_or_create(SpecialKeyring::ThreadKeyring).unwrap();
+
+    {
+        let (keys, keyrings) = keyring.read().unwrap();
+        assert_eq!(keys.len(), 0);
+        assert_eq!(keyrings.len(), 0);
+    }
+
+    // Create a key.
+    keyring.add_key("description", "payload".as_bytes()).unwrap();
+    keyring.add_keyring("description").unwrap();
+
+    {
+        let (keys, keyrings) = keyring.read().unwrap();
+        assert_eq!(keys.len(), 1);
+        assert_eq!(keyrings.len(), 1);
+    }
+
+    // Clear the keyring.
+    keyring.clear().unwrap();
+
+    {
+        let (keys, keyrings) = keyring.read().unwrap();
+        assert_eq!(keys.len(), 0);
+        assert_eq!(keyrings.len(), 0);
+    }
+
+    keyring.invalidate().unwrap();
 }
 
 #[test]
