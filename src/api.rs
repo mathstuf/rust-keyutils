@@ -490,8 +490,9 @@ fn test_add_key() {
     assert_eq!(key.read().unwrap(), new_payload.as_bytes().iter().cloned().collect::<Vec<u8>>());
     assert_eq!(updated_key.read().unwrap(), new_payload.as_bytes().iter().cloned().collect::<Vec<u8>>());
 
-    // Clean it up.
+    // Clean up.
     keyring.unlink_key(&key).unwrap();
+    keyring.invalidate().unwrap();
 }
 
 #[test]
@@ -511,8 +512,9 @@ fn test_describe_key() {
     // Check its description.
     assert_eq!(key.description().unwrap().description, desc);
 
-    // Clean it up.
+    // Clean up.
     keyring.unlink_key(&key).unwrap();
+    keyring.invalidate().unwrap();
 }
 
 #[test]
