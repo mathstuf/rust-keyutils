@@ -477,7 +477,7 @@ impl KeyManager {
 
 #[test]
 fn test_add_key() {
-    let mut keyring = Keyring::attach_or_create(SpecialKeyring::SessionKeyring).unwrap();
+    let mut keyring = Keyring::attach_or_create(SpecialKeyring::ThreadKeyring).unwrap();
 
     // Create the key.
     let payload = "payload";
@@ -501,7 +501,7 @@ fn test_clear_keyring() {
 
 #[test]
 fn test_describe_key() {
-    let mut keyring = Keyring::attach_or_create(SpecialKeyring::SessionKeyring).unwrap();
+    let mut keyring = Keyring::attach_or_create(SpecialKeyring::ThreadKeyring).unwrap();
 
     // Create the key.
     let desc = "description for a key";
