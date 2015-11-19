@@ -311,7 +311,7 @@ pub struct Key {
     id: KeyringSerial,
 }
 
-/// TODO
+/// Representation of a kernel key.
 impl Key {
     /// Requests a key with the given description by searching the thread, process, and session
     /// keyrings.
@@ -371,7 +371,7 @@ impl Key {
         Keyring { id: self.id }.description()
     }
 
-    /// TODO
+    /// Read the payload of the key. Requires `read` permissions on the key.
     pub fn read(&self) -> Result<Vec<u8>> {
         let sz = try!(check_call_ret(unsafe { keyctl_read(self.id, ptr::null_mut(), 0) }));
         let mut buffer = Vec::with_capacity(sz as usize);
@@ -398,7 +398,7 @@ impl Key {
         Keyring { id: self.id }.invalidate()
     }
 
-    /// TODO
+    /// Create an object to manage a key request.
     pub fn manage(&mut self) -> Result<KeyManager> {
         check_call(unsafe { keyctl_assume_authority(self.id) }, KeyManager {
             key: Key {
@@ -447,24 +447,29 @@ impl KeyDescription {
     }
 }
 
-/// TODO
+/// A manager for a key to respond to instantiate a key request by the kernel.
 pub struct KeyManager {
     key: Key,
 }
 
 impl KeyManager {
-    /// TODO
+    /// Instantiate the key with the given payload.
     pub fn instantiate(self, keyring: &Keyring, payload: &[u8]) -> Result<()> {
         check_call(unsafe { keyctl_instantiate(self.key.id, payload.as_ptr() as *const libc::c_void, payload.len(), keyring.id) }, ())
     }
 
-    /// TODO
+    /// Reject the key with the given `error`. Requests for the key will fail until `timeout`
+    /// seconds have elapsed. This is to prevent a denial-of-service by requesting a non-existant
+    /// key repeatedly. The requester must have `write` permission on the keyring.
+    ///
+    /// TODO: Accept `SpecialKeyring` values here. They are special in that they refer to the
+    /// *requester's* special keyring and not this one.
     pub fn reject(self, keyring: &Keyring, timeout: u32, error: errno::Errno) -> Result<()> {
         let errno::Errno(errval) = error;
         check_call(unsafe { keyctl_reject(self.key.id, timeout, errval as u32, keyring.id) }, ())
     }
 
-    /// TODO
+    /// Reject the key with `ENOKEY`.
     pub fn negate(self, keyring: &Keyring, timeout: u32) -> Result<()> {
         check_call(unsafe { keyctl_negate(self.key.id, timeout, keyring.id) }, ())
     }
