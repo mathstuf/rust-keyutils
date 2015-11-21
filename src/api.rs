@@ -486,7 +486,7 @@ fn test_add_key() {
     assert_eq!(key.read().unwrap(), payload.as_bytes().iter().cloned().collect::<Vec<u8>>());
 
     // Update the key.
-    let new_payload = "payload";
+    let new_payload = "new_payload";
     let updated_key = keyring.add_key(description, new_payload.as_bytes()).unwrap();
     assert_eq!(key.read().unwrap(), new_payload.as_bytes().iter().cloned().collect::<Vec<u8>>());
     assert_eq!(updated_key.read().unwrap(), new_payload.as_bytes().iter().cloned().collect::<Vec<u8>>());
