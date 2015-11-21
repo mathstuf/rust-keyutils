@@ -480,13 +480,14 @@ fn test_add_key() {
     let mut keyring = Keyring::attach_or_create(SpecialKeyring::ThreadKeyring).unwrap();
 
     // Create the key.
+    let description = "test:ruskey:add_key";
     let payload = "payload";
-    let key = keyring.add_key("description", payload.as_bytes()).unwrap();
+    let key = keyring.add_key(description, payload.as_bytes()).unwrap();
     assert_eq!(key.read().unwrap(), payload.as_bytes().iter().cloned().collect::<Vec<u8>>());
 
     // Update the key.
     let new_payload = "payload";
-    let updated_key = keyring.add_key("description", new_payload.as_bytes()).unwrap();
+    let updated_key = keyring.add_key(description, new_payload.as_bytes()).unwrap();
     assert_eq!(key.read().unwrap(), new_payload.as_bytes().iter().cloned().collect::<Vec<u8>>());
     assert_eq!(updated_key.read().unwrap(), new_payload.as_bytes().iter().cloned().collect::<Vec<u8>>());
 
@@ -506,7 +507,7 @@ fn test_clear_keyring() {
     }
 
     // Create a key.
-    keyring.add_key("description", "payload".as_bytes()).unwrap();
+    keyring.add_key("test:ruskey:clear_keyring", "payload".as_bytes()).unwrap();
     keyring.add_keyring("description").unwrap();
 
     {
@@ -532,7 +533,7 @@ fn test_describe_key() {
     let mut keyring = Keyring::attach_or_create(SpecialKeyring::ThreadKeyring).unwrap();
 
     // Create the key.
-    let desc = "description for a key";
+    let desc = "test:ruskey:describe_key";
     let payload = "payload";
     let key = keyring.add_key(desc, payload.as_bytes()).unwrap();
 
