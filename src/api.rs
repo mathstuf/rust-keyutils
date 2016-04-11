@@ -94,8 +94,8 @@ impl Keyring {
     /// If a keyring named `name` exists, attach it as the session keyring (requires the `search`
     /// permission). If a keyring does not exist, create it and attach it as the session keyring.
     pub fn join_session(name: &str) -> Result<Self> {
-        let nameptr = CString::new(name).unwrap().as_ptr();
-        let res = unsafe { keyctl_join_session_keyring(nameptr) };
+        let name_cstr = CString::new(name).unwrap();
+        let res = unsafe { keyctl_join_session_keyring(name_cstr.as_ptr()) };
         check_call(res as libc::c_long, Keyring { id: res })
     }
 
@@ -128,9 +128,9 @@ impl Keyring {
     }
 
     fn _search(&self, type_: &str, description: &str) -> Result<libc::c_long> {
-        let typeptr = CString::new(type_).unwrap().as_ptr();
-        let descptr = CString::new(description).unwrap().as_ptr();
-        check_call_ret(unsafe { keyctl_search(self.id, typeptr, descptr, self.id) })
+        let type_cstr = CString::new(type_).unwrap();
+        let desc_cstr = CString::new(description).unwrap();
+        check_call_ret(unsafe { keyctl_search(self.id, type_cstr.as_ptr(), desc_cstr.as_ptr(), self.id) })
     }
 
     /// Recursively search the keyring for a key with the matching description. If it is found, it
@@ -178,25 +178,25 @@ impl Keyring {
     /// `update` permission, it will be updated, otherwise the link to the old key will be removed.
     /// Requires `write` permission.
     pub fn add_key(&mut self, description: &str, payload: &[u8]) -> Result<Key> {
-        let typeptr = CString::new("user").unwrap().as_ptr();
-        let descptr = CString::new(description).unwrap().as_ptr();
-        let res = unsafe { add_key(typeptr, descptr, payload.as_ptr() as *const libc::c_void, payload.len(), self.id) };
+        let type_cstr = CString::new("user").unwrap();
+        let desc_cstr = CString::new(description).unwrap();
+        let res = unsafe { add_key(type_cstr.as_ptr(), desc_cstr.as_ptr(), payload.as_ptr() as *const libc::c_void, payload.len(), self.id) };
         check_call(res as libc::c_long, Key { id: res, })
     }
 
     /// Adds a keyring to the current keyring. If a keyring with the same description already, the
     /// link to the old keyring will be removed. Requires `write` permission on the keyring.
     pub fn add_keyring(&mut self, description: &str) -> Result<Self> {
-        let typeptr = CString::new("keyring").unwrap().as_ptr();
-        let descptr = CString::new(description).unwrap().as_ptr();
-        let res = unsafe { add_key(typeptr, descptr, ptr::null(), 0, self.id) };
+        let type_cstr = CString::new("keyring").unwrap();
+        let desc_cstr = CString::new(description).unwrap();
+        let res = unsafe { add_key(type_cstr.as_ptr(), desc_cstr.as_ptr(), ptr::null(), 0, self.id) };
         check_call(res as libc::c_long, Keyring { id: res, })
     }
 
     fn _request(&self, type_: &str, description: &str) -> Result<KeyringSerial> {
-        let typeptr = CString::new(type_).unwrap().as_ptr();
-        let descptr = CString::new(description).unwrap().as_ptr();
-        check_call_ret_serial(unsafe { request_key(typeptr, descptr, ptr::null(), self.id) })
+        let type_cstr = CString::new(type_).unwrap();
+        let desc_cstr = CString::new(description).unwrap();
+        check_call_ret_serial(unsafe { request_key(type_cstr.as_ptr(), desc_cstr.as_ptr(), ptr::null(), self.id) })
     }
 
     /// Requests a keyring with the given description by searching the thread, process, and session
@@ -214,10 +214,10 @@ impl Keyring {
     }
 
     fn _request_fallback(&self, type_: &str, description: &str, info: &str) -> Result<KeyringSerial> {
-        let typeptr = CString::new(type_).unwrap().as_ptr();
-        let descptr = CString::new(description).unwrap().as_ptr();
-        let infoptr = CString::new(info).unwrap().as_ptr();
-        check_call_ret_serial(unsafe { request_key(typeptr, descptr, infoptr, self.id) })
+        let type_cstr = CString::new(type_).unwrap();
+        let desc_cstr = CString::new(description).unwrap();
+        let info_cstr = CString::new(info).unwrap();
+        check_call_ret_serial(unsafe { request_key(type_cstr.as_ptr(), desc_cstr.as_ptr(), info_cstr.as_ptr(), self.id) })
     }
 
     /// Requests a key with the given description by searching the thread, process, and session
