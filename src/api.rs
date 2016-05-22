@@ -39,11 +39,11 @@ fn check_call_ret_serial(res: KeyringSerial) -> Result<KeyringSerial> {
     }
 }
 
-/// Representation of a kernel keyring.
 pub struct Keyring {
     id: KeyringSerial,
 }
 
+/// Representation of a kernel keyring.
 impl Keyring {
     /// Set the default keyring to use when implicit requests on the current thread. Returns the
     /// old default keyring.
