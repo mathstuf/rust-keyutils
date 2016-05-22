@@ -366,7 +366,7 @@ impl Key {
     ///
     /// # Panics
     ///
-    /// If the kernel returns malformed data, the the parser will panic.
+    /// If the kernel returns malformed data, the parser will panic.
     pub fn description(&self) -> Result<KeyDescription> {
         Keyring { id: self.id }.description()
     }
