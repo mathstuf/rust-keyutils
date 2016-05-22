@@ -135,4 +135,11 @@ extern "C" {
         uid:    libc::uid_t,
         id:     key_serial_t)
         -> libc::c_long;
+    pub fn keyctl_dh_compute(
+        private:    key_serial_t,
+        prime:      key_serial_t,
+        base:       key_serial_t,
+        buffer:     *mut libc::c_char,
+        buflen:     libc::size_t)
+        -> libc::c_long;
 }

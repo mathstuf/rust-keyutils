@@ -516,6 +516,15 @@ impl Key {
         check_call(unsafe { keyctl_assume_authority(self.id) },
                    KeyManager::new(Key::new(self.id)))
     }
+
+    /// Compute a Diffie-Hellman prime for use as a shared secret or public key.
+    pub fn compute_dh(private: &Key, prime: &Key, base: &Key) -> Result<Vec<u8>> {
+        let sz = try!(check_call_ret(unsafe { keyctl_dh_compute(private.id, prime.id, base.id, ptr::null_mut() as *mut libc::c_char, 0) }));
+        let mut buffer = Vec::with_capacity(sz as usize);
+        let actual_sz = try!(check_call_ret(unsafe { keyctl_dh_compute(private.id, prime.id, base.id, buffer.as_mut_ptr() as *mut libc::c_char, sz as usize) }));
+        unsafe { buffer.set_len(actual_sz as usize) };
+        Ok(buffer)
+    }
 }
 
 /// Structure representing the metadata about a key or keyring.
