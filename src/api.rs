@@ -59,19 +59,19 @@ impl Keyring {
     /// Requests a keyring with the given description by searching the thread, process, and session
     /// keyrings.
     pub fn request(description: &str) -> Result<Self> {
-        Keyring { id: 0, }.request_keyring(description)
+        Keyring { id: 0 }.request_keyring(description)
     }
 
     /// Requests a keyring with the given description by searching the thread, process, and session
     /// keyrings. If it is not found, the `info` string will be handed off to `/sbin/request-key`
     /// to generate the key.
     pub fn request_with_fallback(description: &str, info: &str) -> Result<Self> {
-        Keyring { id: 0, }.request_keyring_with_fallback(description, info)
+        Keyring { id: 0 }.request_keyring_with_fallback(description, info)
     }
 
     fn get_keyring(id: SpecialKeyring, create: bool) -> Result<Keyring> {
         let res = unsafe { keyctl_get_keyring_ID(id.serial(), create as libc::c_int) };
-        check_call(res as libc::c_long, Keyring { id: res, })
+        check_call(res as libc::c_long, Keyring { id: res })
     }
 
     /// Attach to a special keyring. Fails if the keyring does not already exist.
@@ -138,7 +138,7 @@ impl Keyring {
     /// keyrings without the `search` permission are ignored.
     pub fn search_for_key(&self, description: &str) -> Result<Key> {
         let res = try!(self._search("user", description));
-        check_call(res, Key { id: res as key_serial_t, })
+        check_call(res, Key { id: res as key_serial_t })
     }
 
     /// Recursively search the keyring for a keyring with the matching description. If it is found,
@@ -147,7 +147,7 @@ impl Keyring {
     /// Any children keyrings without the `search` permission are ignored.
     pub fn search_for_keyring(&self, description: &str) -> Result<Self> {
         let res = try!(self._search("keyring", description));
-        check_call(res, Keyring { id: res as key_serial_t, })
+        check_call(res, Keyring { id: res as key_serial_t })
     }
 
     /// Return all immediate children of the keyring. Requires `read` permission on the keyring.
@@ -170,7 +170,7 @@ impl Keyring {
     /// exist, it will be created. Requires `write` permission on the keyring.
     pub fn attach_persistent(&mut self) -> Result<Self> {
         let res = unsafe { keyctl_get_persistent(!0, self.id) };
-        check_call(res, Keyring { id: res as key_serial_t, })
+        check_call(res, Keyring { id: res as key_serial_t })
     }
 
     /// Adds a key to the keyring. If a key with the same description already exists and has the
@@ -180,7 +180,7 @@ impl Keyring {
         let type_cstr = CString::new("user").unwrap();
         let desc_cstr = CString::new(description).unwrap();
         let res = unsafe { add_key(type_cstr.as_ptr(), desc_cstr.as_ptr(), payload.as_ptr() as *const libc::c_void, payload.len(), self.id) };
-        check_call(res as libc::c_long, Key { id: res, })
+        check_call(res as libc::c_long, Key { id: res })
     }
 
     /// Adds a keyring to the current keyring. If a keyring with the same description already, the
@@ -189,7 +189,7 @@ impl Keyring {
         let type_cstr = CString::new("keyring").unwrap();
         let desc_cstr = CString::new(description).unwrap();
         let res = unsafe { add_key(type_cstr.as_ptr(), desc_cstr.as_ptr(), ptr::null(), 0, self.id) };
-        check_call(res as libc::c_long, Keyring { id: res, })
+        check_call(res as libc::c_long, Keyring { id: res })
     }
 
     fn _request(&self, type_: &str, description: &str) -> Result<KeyringSerial> {
@@ -202,14 +202,14 @@ impl Keyring {
     /// keyrings. If it is found, it is attached to the keyring.
     pub fn request_key(&self, description: &str) -> Result<Key> {
         let res = try!(self._request("user", description));
-        check_call(res as libc::c_long, Key { id: res, })
+        check_call(res as libc::c_long, Key { id: res })
     }
 
     /// Requests a keyring with the given description by searching the thread, process, and session
     /// keyrings. If it is found, it is attached to the keyring.
     pub fn request_keyring(&self, description: &str) -> Result<Self> {
         let res = try!(self._request("keyring", description));
-        check_call(res as libc::c_long, Keyring { id: res, })
+        check_call(res as libc::c_long, Keyring { id: res })
     }
 
     fn _request_fallback(&self, type_: &str, description: &str, info: &str) -> Result<KeyringSerial> {
@@ -225,7 +225,7 @@ impl Keyring {
     /// permission to the keyring.
     pub fn request_key_with_fallback(&self, description: &str, info: &str) -> Result<Key> {
         let res = try!(self._request_fallback("user", description, info));
-        check_call(res as libc::c_long, Key { id: res, })
+        check_call(res as libc::c_long, Key { id: res })
     }
 
     /// Requests a keyring with the given description by searching the thread, process, and session
@@ -234,7 +234,7 @@ impl Keyring {
     /// permission to the keyring.
     pub fn request_keyring_with_fallback(&self, description: &str, info: &str) -> Result<Self> {
         let res = try!(self._request_fallback("keyring", description, info));
-        check_call(res as libc::c_long, Keyring { id: res, })
+        check_call(res as libc::c_long, Keyring { id: res })
     }
 
     /// Revokes the keyring. Requires `write` permission on the keyring.
@@ -316,20 +316,20 @@ impl Key {
     /// keyrings.
     pub fn request_key_auth_key(create: bool) -> Result<Self> {
         let res = unsafe { keyctl_get_keyring_ID(KEY_SPEC_REQKEY_AUTH_KEY, create as libc::c_int) };
-        check_call(res as libc::c_long, Key { id: res, })
+        check_call(res as libc::c_long, Key { id: res })
     }
 
     /// Requests a key with the given description by searching the thread, process, and session
     /// keyrings.
     pub fn request(description: &str) -> Result<Self> {
-        Keyring { id: 0, }.request_key(description)
+        Keyring { id: 0 }.request_key(description)
     }
 
     /// Requests a key with the given description by searching the thread, process, and session
     /// keyrings. If it is not found, the `info` string will be handed off to `/sbin/request-key`
     /// to generate the key.
     pub fn request_with_fallback(description: &str, info: &str) -> Result<Self> {
-        Keyring { id: 0, }.request_key_with_fallback(description, info)
+        Keyring { id: 0 }.request_key_with_fallback(description, info)
     }
 
     /// Update the payload in the key.
