@@ -7,7 +7,6 @@ use super::ffi::*;
 
 use std::ffi::CString;
 use std::mem;
-use std::os::unix::raw::{gid_t, uid_t};
 use std::ptr;
 use std::result;
 use std::str;
@@ -245,14 +244,14 @@ impl Keyring {
 
     /// Change the user which owns the keyring. Requires the `setattr` permission on the keyring
     /// and the SysAdmin capability to change it to anything other than the current user.
-    pub fn chown(&mut self, uid: uid_t) -> Result<()> {
+    pub fn chown(&mut self, uid: libc::uid_t) -> Result<()> {
         check_call(unsafe { keyctl_chown(self.id, uid, !0) }, ())
     }
 
     /// Change the group which owns the keyring. Requires the `setattr` permission on the keyring
     /// and the SysAdmin capability to change it to anything other than a group of which the
     /// current user is a member.
-    pub fn chgrp(&mut self, gid: gid_t) -> Result<()> {
+    pub fn chgrp(&mut self, gid: libc::gid_t) -> Result<()> {
         check_call(unsafe { keyctl_chown(self.id, !0, gid) }, ())
     }
 
@@ -345,14 +344,14 @@ impl Key {
 
     /// Change the user which owns the key. Requires the `setattr` permission on the key and the
     /// SysAdmin capability to change it to anything other than the current user.
-    pub fn chown(&mut self, uid: uid_t) -> Result<()> {
+    pub fn chown(&mut self, uid: libc::uid_t) -> Result<()> {
         Keyring { id: self.id }.chown(uid)
     }
 
     /// Change the group which owns the key. Requires the `setattr` permission on the key and the
     /// SysAdmin capability to change it to anything other than a group of which the current user
     /// is a member.
-    pub fn chgrp(&mut self, gid: gid_t) -> Result<()> {
+    pub fn chgrp(&mut self, gid: libc::gid_t) -> Result<()> {
         Keyring { id: self.id }.chgrp(gid)
     }
 
@@ -413,9 +412,9 @@ pub struct KeyDescription {
     /// The type of the key.
     pub type_:          String,
     /// The user owner of the key.
-    pub uid:            uid_t,
+    pub uid:            libc::uid_t,
     /// The group owner of the key.
-    pub gid:            gid_t,
+    pub gid:            libc::gid_t,
     /// The permissions of the key.
     pub perms:          KeyPermissions,
     /// The plaintext description of the key.
@@ -438,8 +437,8 @@ impl KeyDescription {
             }
             Some(KeyDescription {
                 type_:          pieces[4].to_owned(),
-                uid:            pieces[3].parse::<uid_t>().unwrap(),
-                gid:            pieces[2].parse::<gid_t>().unwrap(),
+                uid:            pieces[3].parse::<libc::uid_t>().unwrap(),
+                gid:            pieces[2].parse::<libc::gid_t>().unwrap(),
                 perms:          KeyPermissions::from_str_radix(pieces[1], 16).unwrap(),
                 description:    pieces[0].to_owned(),
             })
