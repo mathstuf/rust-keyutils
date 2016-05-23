@@ -56,7 +56,7 @@ pub const KEY_OTH_SETATTR: key_perm_t = 0x00000020;
 pub const KEY_OTH_ALL:     key_perm_t = 0x0000003f;
 
 #[link(name = "keyutils")]
-extern {
+extern "C" {
     pub fn add_key(
         type_:          *const libc::c_char,
         description:    *const libc::c_char,
