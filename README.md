@@ -1,4 +1,4 @@
-# keytils
+# keyutils
 
 Rust FFI bindings to the Linux kernel keyring functionality via the keyutils
 library. It may be used to securely store secrets such as passphrases,
