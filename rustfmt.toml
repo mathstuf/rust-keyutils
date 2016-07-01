@@ -1,0 +1,7 @@
+enum_trailing_comma = true
+fn_args_density = "Compressed"
+fn_args_layout = "Visual"
+match_block_trailing_comma = true
+match_wildcard_trailing_comma = true
+struct_lit_trailing_comma = "Always"
+struct_trailing_comma = "Always"

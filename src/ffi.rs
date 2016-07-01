@@ -1,3 +1,5 @@
+#![cfg_attr(rustfmt, rustfmt_skip)]
+
 extern crate libc;
 
 #[allow(non_camel_case_types)]

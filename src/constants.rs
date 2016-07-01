@@ -25,12 +25,12 @@ impl SpecialKeyring {
     /// Retrieve the serial number for the special keyring.
     pub fn serial(self) -> KeyringSerial {
         match self {
-            SpecialKeyring::ThreadKeyring       => KEY_SPEC_THREAD_KEYRING,
-            SpecialKeyring::ProcessKeyring      => KEY_SPEC_PROCESS_KEYRING,
-            SpecialKeyring::SessionKeyring      => KEY_SPEC_SESSION_KEYRING,
-            SpecialKeyring::UserKeyring         => KEY_SPEC_USER_KEYRING,
-            SpecialKeyring::UserSessionKeyring  => KEY_SPEC_USER_SESSION_KEYRING,
-            SpecialKeyring::GroupKeyring        => KEY_SPEC_GROUP_KEYRING,
+            SpecialKeyring::ThreadKeyring => KEY_SPEC_THREAD_KEYRING,
+            SpecialKeyring::ProcessKeyring => KEY_SPEC_PROCESS_KEYRING,
+            SpecialKeyring::SessionKeyring => KEY_SPEC_SESSION_KEYRING,
+            SpecialKeyring::UserKeyring => KEY_SPEC_USER_KEYRING,
+            SpecialKeyring::UserSessionKeyring => KEY_SPEC_USER_SESSION_KEYRING,
+            SpecialKeyring::GroupKeyring => KEY_SPEC_GROUP_KEYRING,
         }
     }
 }
@@ -62,14 +62,14 @@ impl DefaultKeyring {
     /// Retrieve the serial number for the default keyring.
     pub fn serial(self) -> KeyringDefaultSerial {
         match self {
-            DefaultKeyring::NoChange            => KEY_REQKEY_DEFL_NO_CHANGE,
-            DefaultKeyring::ThreadKeyring       => KEY_REQKEY_DEFL_THREAD_KEYRING,
-            DefaultKeyring::ProcessKeyring      => KEY_REQKEY_DEFL_PROCESS_KEYRING,
-            DefaultKeyring::SessionKeyring      => KEY_REQKEY_DEFL_SESSION_KEYRING,
-            DefaultKeyring::UserKeyring         => KEY_REQKEY_DEFL_USER_KEYRING,
-            DefaultKeyring::UserSessionKeyring  => KEY_REQKEY_DEFL_USER_SESSION_KEYRING,
-            DefaultKeyring::GroupKeyring        => KEY_REQKEY_DEFL_GROUP_KEYRING,
-            DefaultKeyring::DefaultKeyring      => KEY_REQKEY_DEFL_DEFAULT,
+            DefaultKeyring::NoChange => KEY_REQKEY_DEFL_NO_CHANGE,
+            DefaultKeyring::ThreadKeyring => KEY_REQKEY_DEFL_THREAD_KEYRING,
+            DefaultKeyring::ProcessKeyring => KEY_REQKEY_DEFL_PROCESS_KEYRING,
+            DefaultKeyring::SessionKeyring => KEY_REQKEY_DEFL_SESSION_KEYRING,
+            DefaultKeyring::UserKeyring => KEY_REQKEY_DEFL_USER_KEYRING,
+            DefaultKeyring::UserSessionKeyring => KEY_REQKEY_DEFL_USER_SESSION_KEYRING,
+            DefaultKeyring::GroupKeyring => KEY_REQKEY_DEFL_GROUP_KEYRING,
+            DefaultKeyring::DefaultKeyring => KEY_REQKEY_DEFL_DEFAULT,
         }
     }
 }
@@ -77,15 +77,15 @@ impl DefaultKeyring {
 impl From<i32> for DefaultKeyring {
     fn from(id: i32) -> DefaultKeyring {
         match id {
-            KEY_REQKEY_DEFL_NO_CHANGE               => DefaultKeyring::NoChange,
-            KEY_REQKEY_DEFL_THREAD_KEYRING          => DefaultKeyring::ThreadKeyring,
-            KEY_REQKEY_DEFL_PROCESS_KEYRING         => DefaultKeyring::ProcessKeyring,
-            KEY_REQKEY_DEFL_SESSION_KEYRING         => DefaultKeyring::SessionKeyring,
-            KEY_REQKEY_DEFL_USER_KEYRING            => DefaultKeyring::UserKeyring,
-            KEY_REQKEY_DEFL_USER_SESSION_KEYRING    => DefaultKeyring::UserSessionKeyring,
-            KEY_REQKEY_DEFL_GROUP_KEYRING           => DefaultKeyring::GroupKeyring,
-            KEY_REQKEY_DEFL_DEFAULT                 => DefaultKeyring::DefaultKeyring,
-            _                                       => panic!("Invalid value for a default keyring: {}", id),
+            KEY_REQKEY_DEFL_NO_CHANGE => DefaultKeyring::NoChange,
+            KEY_REQKEY_DEFL_THREAD_KEYRING => DefaultKeyring::ThreadKeyring,
+            KEY_REQKEY_DEFL_PROCESS_KEYRING => DefaultKeyring::ProcessKeyring,
+            KEY_REQKEY_DEFL_SESSION_KEYRING => DefaultKeyring::SessionKeyring,
+            KEY_REQKEY_DEFL_USER_KEYRING => DefaultKeyring::UserKeyring,
+            KEY_REQKEY_DEFL_USER_SESSION_KEYRING => DefaultKeyring::UserSessionKeyring,
+            KEY_REQKEY_DEFL_GROUP_KEYRING => DefaultKeyring::GroupKeyring,
+            KEY_REQKEY_DEFL_DEFAULT => DefaultKeyring::DefaultKeyring,
+            _ => panic!("Invalid value for a default keyring: {}", id),
         }
     }
 }
@@ -133,24 +133,36 @@ bitflags! {
 
 #[test]
 fn test_keyring_ids() {
-    assert_eq!(SpecialKeyring::ThreadKeyring.serial(), KEY_SPEC_THREAD_KEYRING);
-    assert_eq!(SpecialKeyring::ProcessKeyring.serial(), KEY_SPEC_PROCESS_KEYRING);
-    assert_eq!(SpecialKeyring::SessionKeyring.serial(), KEY_SPEC_SESSION_KEYRING);
+    assert_eq!(SpecialKeyring::ThreadKeyring.serial(),
+               KEY_SPEC_THREAD_KEYRING);
+    assert_eq!(SpecialKeyring::ProcessKeyring.serial(),
+               KEY_SPEC_PROCESS_KEYRING);
+    assert_eq!(SpecialKeyring::SessionKeyring.serial(),
+               KEY_SPEC_SESSION_KEYRING);
     assert_eq!(SpecialKeyring::UserKeyring.serial(), KEY_SPEC_USER_KEYRING);
-    assert_eq!(SpecialKeyring::UserSessionKeyring.serial(), KEY_SPEC_USER_SESSION_KEYRING);
-    assert_eq!(SpecialKeyring::GroupKeyring.serial(), KEY_SPEC_GROUP_KEYRING);
+    assert_eq!(SpecialKeyring::UserSessionKeyring.serial(),
+               KEY_SPEC_USER_SESSION_KEYRING);
+    assert_eq!(SpecialKeyring::GroupKeyring.serial(),
+               KEY_SPEC_GROUP_KEYRING);
 }
 
 #[test]
 fn test_default_keyring_ids() {
     assert_eq!(DefaultKeyring::NoChange.serial(), KEY_REQKEY_DEFL_NO_CHANGE);
-    assert_eq!(DefaultKeyring::ThreadKeyring.serial(), KEY_REQKEY_DEFL_THREAD_KEYRING);
-    assert_eq!(DefaultKeyring::ProcessKeyring.serial(), KEY_REQKEY_DEFL_PROCESS_KEYRING);
-    assert_eq!(DefaultKeyring::SessionKeyring.serial(), KEY_REQKEY_DEFL_SESSION_KEYRING);
-    assert_eq!(DefaultKeyring::UserKeyring.serial(), KEY_REQKEY_DEFL_USER_KEYRING);
-    assert_eq!(DefaultKeyring::UserSessionKeyring.serial(), KEY_REQKEY_DEFL_USER_SESSION_KEYRING);
-    assert_eq!(DefaultKeyring::GroupKeyring.serial(), KEY_REQKEY_DEFL_GROUP_KEYRING);
-    assert_eq!(DefaultKeyring::DefaultKeyring.serial(), KEY_REQKEY_DEFL_DEFAULT);
+    assert_eq!(DefaultKeyring::ThreadKeyring.serial(),
+               KEY_REQKEY_DEFL_THREAD_KEYRING);
+    assert_eq!(DefaultKeyring::ProcessKeyring.serial(),
+               KEY_REQKEY_DEFL_PROCESS_KEYRING);
+    assert_eq!(DefaultKeyring::SessionKeyring.serial(),
+               KEY_REQKEY_DEFL_SESSION_KEYRING);
+    assert_eq!(DefaultKeyring::UserKeyring.serial(),
+               KEY_REQKEY_DEFL_USER_KEYRING);
+    assert_eq!(DefaultKeyring::UserSessionKeyring.serial(),
+               KEY_REQKEY_DEFL_USER_SESSION_KEYRING);
+    assert_eq!(DefaultKeyring::GroupKeyring.serial(),
+               KEY_REQKEY_DEFL_GROUP_KEYRING);
+    assert_eq!(DefaultKeyring::DefaultKeyring.serial(),
+               KEY_REQKEY_DEFL_DEFAULT);
 }
 
 #[test]
