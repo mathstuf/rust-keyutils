@@ -170,7 +170,7 @@ impl Keyring {
             keys.0
             .iter()
             .map(|key| Keyring { id: key.id, })
-            .collect::<Vec<Keyring>>()))
+            .collect::<Vec<_>>()))
     }
 
     /// Attach the persistent keyring for the current user to the current keyring. If one does not
@@ -459,7 +459,7 @@ pub struct KeyDescription {
 
 impl KeyDescription {
     fn parse(desc: String) -> Option<KeyDescription> {
-        let mut pieces = desc.split(';').collect::<Vec<&str>>();
+        let mut pieces = desc.split(';').collect::<Vec<_>>();
         // Reverse the string because the kernel plans to extend it by adding fields to the
         // beginning of the string. By doing this, the fields are at a constant position in the
         // split string.
@@ -529,15 +529,15 @@ fn test_add_key() {
     let payload = "payload";
     let key = keyring.add_key(description, payload.as_bytes()).unwrap();
     assert_eq!(key.read().unwrap(),
-               payload.as_bytes().iter().cloned().collect::<Vec<u8>>());
+               payload.as_bytes().iter().cloned().collect::<Vec<_>>());
 
     // Update the key.
     let new_payload = "new_payload";
     let updated_key = keyring.add_key(description, new_payload.as_bytes()).unwrap();
     assert_eq!(key.read().unwrap(),
-               new_payload.as_bytes().iter().cloned().collect::<Vec<u8>>());
+               new_payload.as_bytes().iter().cloned().collect::<Vec<_>>());
     assert_eq!(updated_key.read().unwrap(),
-               new_payload.as_bytes().iter().cloned().collect::<Vec<u8>>());
+               new_payload.as_bytes().iter().cloned().collect::<Vec<_>>());
 
     // Clean up.
     keyring.unlink_key(&key).unwrap();
