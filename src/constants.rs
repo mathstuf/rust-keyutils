@@ -96,37 +96,88 @@ impl From<i32> for DefaultKeyring {
 pub type KeyPermissions = u32;
 
 bitflags! {
+    /// Permission bits for keyring objects.
+    ///
+    /// Keyrings and keys contain four sets of permissions. First, there are three permission sets
+    /// used is based on which of the owning user's ID, the group ID associated with the key or
+    /// keyring, and a third set which is used when neither of the other two match.
+    ///
+    /// The fourth set is combined with the permission set used above (priority to user, then
+    /// group, finaly other) where either set granting a permission allows it. This set is,
+    /// however, only used if the caller is a "possessor" of they key or keyring. Generally,
+    /// "possession" requires the `search` permission, association from the calling thread
+    /// (the session, process, and thread keyrings), or is linked to from a possessed keyring. See
+    /// `keyrings(7)` for complete details.
     flags KeyringPermission: key_perm_t {
+        /// Possession allows viewing attributes about the key or keyring.
         const POSSESSOR_VIEW            = KEY_POS_VIEW,
+        /// Possession allows reading a key's contents or a keyring's subkeys.
         const POSSESSOR_READ            = KEY_POS_READ,
+        /// Possession allows writing a key's content, revoking a key, or adding and removing a
+        /// keyring's links.
         const POSSESSOR_WRITE           = KEY_POS_WRITE,
+        /// Possession allows searching within a keyring and the key or keyring may be discovered
+        /// during a search.
         const POSSESSOR_SEARCH          = KEY_POS_SEARCH,
+        /// Possession allows linking to the key from a keyring.
         const POSSESSOR_LINK            = KEY_POS_LINK,
+        /// Possession allows changing ownership details, security labels, and the expiration
+        /// time of a key.
         const POSSESSOR_SET_ATTRIBUTE   = KEY_POS_SETATTR,
+        /// Possession grants all permissions.
         const POSSESSOR_ALL             = KEY_POS_ALL,
 
+        /// A user ID match allows viewing attributes about the key or keyring.
         const USER_VIEW             = KEY_USR_VIEW,
+        /// A user ID match allows reading a key's contents or a keyring's subkeys.
         const USER_READ             = KEY_USR_READ,
+        /// A user ID match allows writing a key's content, revoking a key, or adding and removing
+        /// a keyring's links.
         const USER_WRITE            = KEY_USR_WRITE,
+        /// A user ID match allows searching within a keyring and the key or keyring may be
+        /// discovered during a search.
         const USER_SEARCH           = KEY_USR_SEARCH,
+        /// A user ID match allows linking to the key from a keyring.
         const USER_LINK             = KEY_USR_LINK,
+        /// A user ID match allows changing ownership details, security labels, and the expiration
+        /// time of a key.
         const USER_SET_ATTRIBUTE    = KEY_USR_SETATTR,
+        /// The user is granted all permissions.
         const USER_ALL              = KEY_USR_ALL,
 
+        /// A group ID match allows viewing attributes about the key or keyring.
         const GROUP_VIEW            = KEY_GRP_VIEW,
+        /// A group ID match allows reading a key's contents or a keyring's subkeys.
         const GROUP_READ            = KEY_GRP_READ,
+        /// A group ID match allows writing a key's content, revoking a key, or adding and removing
+        /// a keyring's links.
         const GROUP_WRITE           = KEY_GRP_WRITE,
+        /// A group ID match allows searching within a keyring and the key or keyring may be
+        /// discovered during a search.
         const GROUP_SEARCH          = KEY_GRP_SEARCH,
+        /// A group ID match allows linking to the key from a keyring.
         const GROUP_LINK            = KEY_GRP_LINK,
+        /// A group ID match allows changing ownership details, security labels, and the expiration
+        /// time of a key.
         const GROUP_SET_ATTRIBUTE   = KEY_GRP_SETATTR,
+        /// The group is granted all permissions.
         const GROUP_ALL             = KEY_GRP_ALL,
 
+        /// Allows viewing attributes about the key or keyring.
         const OTHER_VIEW            = KEY_OTH_VIEW,
+        /// Allows reading a key's contents or a keyring's subkeys.
         const OTHER_READ            = KEY_OTH_READ,
+        /// Allows writing a key's content, revoking a key, or adding and removing a keyring's
+        /// links.
         const OTHER_WRITE           = KEY_OTH_WRITE,
+        /// Allows searching within a keyring and the key or keyring may be discovered during a
+        /// search.
         const OTHER_SEARCH          = KEY_OTH_SEARCH,
+        /// Allows linking to the key from a keyring.
         const OTHER_LINK            = KEY_OTH_LINK,
+        /// Allows changing ownership details, security labels, and the expiration time of a key.
         const OTHER_SET_ATTRIBUTE   = KEY_OTH_SETATTR,
+        /// All permissions.
         const OTHER_ALL             = KEY_OTH_ALL,
     }
 }

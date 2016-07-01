@@ -11,6 +11,7 @@ use std::ptr;
 use std::result;
 use std::str;
 
+/// Reexport of `Errno` as `Error`.
 pub type Error = errno::Errno;
 pub type Result<T> = result::Result<T, Error>;
 
@@ -38,11 +39,11 @@ fn check_call_ret_serial(res: KeyringSerial) -> Result<KeyringSerial> {
     }
 }
 
+/// Representation of a kernel keyring.
 pub struct Keyring {
     id: KeyringSerial,
 }
 
-/// Representation of a kernel keyring.
 impl Keyring {
     /// Set the default keyring to use when implicit requests on the current thread. Returns the
     /// old default keyring.
@@ -338,11 +339,11 @@ impl Keyring {
     }
 }
 
+/// Representation of a kernel key.
 pub struct Key {
     id: KeyringSerial,
 }
 
-/// Representation of a kernel key.
 impl Key {
     /// Requests a key with the given description by searching the thread, process, and session
     /// keyrings.

@@ -1,3 +1,4 @@
+// Ignore rustfmt changes in here. The horizontal alignment is too useful to give up.
 #![cfg_attr(rustfmt, rustfmt_skip)]
 
 extern crate libc;
