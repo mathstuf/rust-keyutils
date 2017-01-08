@@ -2,6 +2,27 @@ extern crate bitflags;
 
 use super::ffi::*;
 
+/// Special key types
+pub enum KeyType {
+    /// Keys which can be created, updated and read from userspace
+    /// but are not intended for use by the kernel.
+    User,
+    /// Keys which can only be created and updated from
+    /// userspace but not read back. They are intended to be
+    /// only accessible from kernel space.
+    Logon,
+}
+
+impl KeyType {
+    /// Retrieve the constant value for the key type
+    pub fn value(self) -> &'static str {
+        match self {
+            KeyType::User => KEY_TYPE_USER,
+            KeyType::Logon => KEY_TYPE_LOGON,
+        }
+    }
+}
+
 /// Special keyrings predefined for a process.
 pub enum SpecialKeyring {
     /// A thread-specific keyring.
