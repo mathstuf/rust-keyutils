@@ -1,13 +1,13 @@
 extern crate errno;
 
 extern crate libc;
+use self::libc::{gid_t, uid_t};
 
 use super::constants::*;
 use super::ffi::*;
 
 use std::ffi::CString;
 use std::mem;
-use std::os::unix::raw::{gid_t, uid_t};
 use std::ptr;
 use std::result;
 use std::str;
