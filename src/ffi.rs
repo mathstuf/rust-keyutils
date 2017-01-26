@@ -6,6 +6,9 @@ extern crate libc;
 #[allow(non_camel_case_types)]
 pub type key_serial_t = libc::int32_t;
 
+pub const KEY_TYPE_USER:                    &'static str = "user";
+pub const KEY_TYPE_LOGON:                   &'static str = "logon";
+
 pub const KEY_SPEC_THREAD_KEYRING:          key_serial_t = -1;
 pub const KEY_SPEC_PROCESS_KEYRING:         key_serial_t = -2;
 pub const KEY_SPEC_SESSION_KEYRING:         key_serial_t = -3;
