@@ -13,6 +13,7 @@ use std::str;
 
 /// Reexport of `Errno` as `Error`.
 pub type Error = errno::Errno;
+/// Simpler `Result` type with the error already set.
 pub type Result<T> = result::Result<T, Error>;
 
 fn check_call<T>(res: libc::c_long, value: T) -> Result<T> {
