@@ -1,6 +1,7 @@
 extern crate errno;
 
 extern crate libc;
+use self::libc::{gid_t, uid_t};
 
 use super::constants::*;
 use super::ffi::*;
