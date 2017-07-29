@@ -1,9 +1,10 @@
+use crates::libkeyutils_sys::*;
+
 extern crate errno;
 
 extern crate libc;
 
 use super::constants::*;
-use super::ffi::*;
 
 use std::ffi::CString;
 use std::mem;

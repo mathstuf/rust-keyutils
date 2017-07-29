@@ -1,6 +1,6 @@
 extern crate bitflags;
 
-use super::ffi::*;
+use crates::libkeyutils_sys::*;
 
 /// Special key types
 pub enum KeyType {
