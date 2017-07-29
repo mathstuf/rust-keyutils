@@ -91,14 +91,19 @@ impl Keyring {
 
     /// Requests a keyring with the given description by searching the thread, process, and session
     /// keyrings.
-    pub fn request(description: &str) -> Result<Self> {
+    pub fn request<D>(description: D) -> Result<Self>
+        where D: AsRef<str>,
+    {
         Keyring::new(0).request_keyring(description)
     }
 
     /// Requests a keyring with the given description by searching the thread, process, and session
     /// keyrings. If it is not found, the `info` string will be handed off to `/sbin/request-key`
     /// to generate the key.
-    pub fn request_with_fallback(description: &str, info: &str) -> Result<Self> {
+    pub fn request_with_fallback<D, I>(description: D, info: I) -> Result<Self>
+        where D: AsRef<str>,
+              I: AsRef<str>,
+    {
         Keyring::new(0).request_keyring_with_fallback(description, info)
     }
 
@@ -125,8 +130,10 @@ impl Keyring {
 
     /// If a keyring named `name` exists, attach it as the session keyring (requires the `search`
     /// permission). If a keyring does not exist, create it and attach it as the session keyring.
-    pub fn join_session(name: &str) -> Result<Self> {
-        let name_cstr = CString::new(name).unwrap();
+    pub fn join_session<N>(name: N) -> Result<Self>
+        where N: AsRef<str>,
+    {
+        let name_cstr = CString::new(name.as_ref()).unwrap();
         let res = unsafe { keyctl_join_session_keyring(name_cstr.as_ptr()) };
         check_call(res as libc::c_long, Keyring::new(res))
     }
@@ -159,7 +166,7 @@ impl Keyring {
         check_call(unsafe { keyctl_unlink(keyring.id, self.id) }, ())
     }
 
-    fn _search(&self, type_: &str, description: &str) -> Result<libc::c_long> {
+    fn search_impl(&self, type_: &str, description: &str) -> Result<libc::c_long> {
         let type_cstr = CString::new(type_).unwrap();
         let desc_cstr = CString::new(description).unwrap();
         check_call_ret(unsafe {
@@ -171,8 +178,10 @@ impl Keyring {
     /// is attached to the keyring (if `write` permission to the keyring and `link` permission on
     /// the key exist) and return it. Requires the `search` permission on the keyring. Any children
     /// keyrings without the `search` permission are ignored.
-    pub fn search_for_key(&self, description: &str) -> Result<Key> {
-        let res = try!(self._search("user", description));
+    pub fn search_for_key<D>(&self, description: D) -> Result<Key>
+        where D: AsRef<str>,
+    {
+        let res = try!(self.search_impl("user", description.as_ref()));
         check_call(res, Key::new(res as key_serial_t))
     }
 
@@ -180,8 +189,10 @@ impl Keyring {
     /// it is attached to the keyring (if `write` permission to the keyring and `link` permission
     /// on the found keyring exist) and return it. Requires the `search` permission on the keyring.
     /// Any children keyrings without the `search` permission are ignored.
-    pub fn search_for_keyring(&self, description: &str) -> Result<Self> {
-        let res = try!(self._search("keyring", description));
+    pub fn search_for_keyring<D>(&self, description: D) -> Result<Self>
+        where D: AsRef<str>,
+    {
+        let res = try!(self.search_impl("keyring", description.as_ref()));
         check_call(res, Keyring::new(res as key_serial_t))
     }
 
@@ -217,9 +228,13 @@ impl Keyring {
     /// If a key with the same description already exists and has the
     /// `update` permission, it will be updated, otherwise the link to the old key will be removed.
     /// Requires `write` permission.
-    pub fn add_key(&mut self, keytype: KeyType, description: &str, payload: &[u8]) -> Result<Key> {
+    pub fn add_key<D, P>(&mut self, keytype: KeyType, description: D, payload: P) -> Result<Key>
+        where D: AsRef<str>,
+              P: AsRef<[u8]>,
+    {
         let type_cstr = CString::new(keytype.value()).unwrap();
-        let desc_cstr = CString::new(description).unwrap();
+        let desc_cstr = CString::new(description.as_ref()).unwrap();
+        let payload = payload.as_ref();
         let res = unsafe {
             add_key(type_cstr.as_ptr(),
                     desc_cstr.as_ptr(),
@@ -232,9 +247,11 @@ impl Keyring {
 
     /// Adds a keyring to the current keyring. If a keyring with the same description already, the
     /// link to the old keyring will be removed. Requires `write` permission on the keyring.
-    pub fn add_keyring(&mut self, description: &str) -> Result<Self> {
+    pub fn add_keyring<D>(&mut self, description: D) -> Result<Self>
+        where D: AsRef<str>,
+    {
         let type_cstr = CString::new("keyring").unwrap();
-        let desc_cstr = CString::new(description).unwrap();
+        let desc_cstr = CString::new(description.as_ref()).unwrap();
         let res = unsafe {
             add_key(type_cstr.as_ptr(),
                     desc_cstr.as_ptr(),
@@ -245,7 +262,7 @@ impl Keyring {
         check_call(res as libc::c_long, Keyring::new(res))
     }
 
-    fn _request(&self, type_: &str, description: &str) -> Result<KeyringSerial> {
+    fn request_impl(&self, type_: &str, description: &str) -> Result<KeyringSerial> {
         let type_cstr = CString::new(type_).unwrap();
         let desc_cstr = CString::new(description).unwrap();
         check_call_ret_serial(unsafe {
@@ -255,19 +272,23 @@ impl Keyring {
 
     /// Requests a keyring with the given description by searching the thread, process, and session
     /// keyrings. If it is found, it is attached to the keyring.
-    pub fn request_key(&self, description: &str) -> Result<Key> {
-        let res = try!(self._request("user", description));
+    pub fn request_key<D>(&self, description: D) -> Result<Key>
+        where D: AsRef<str>,
+    {
+        let res = try!(self.request_impl("user", description.as_ref()));
         check_call(res as libc::c_long, Key::new(res))
     }
 
     /// Requests a keyring with the given description by searching the thread, process, and session
     /// keyrings. If it is found, it is attached to the keyring.
-    pub fn request_keyring(&self, description: &str) -> Result<Self> {
-        let res = try!(self._request("keyring", description));
+    pub fn request_keyring<D>(&self, description: D) -> Result<Self>
+        where D: AsRef<str>,
+    {
+        let res = try!(self.request_impl("keyring", description.as_ref()));
         check_call(res as libc::c_long, Keyring::new(res))
     }
 
-    fn _request_fallback(&self, type_: &str, description: &str, info: &str) -> Result<KeyringSerial> {
+    fn request_fallback_impl(&self, type_: &str, description: &str, info: &str) -> Result<KeyringSerial> {
         let type_cstr = CString::new(type_).unwrap();
         let desc_cstr = CString::new(description).unwrap();
         let info_cstr = CString::new(info).unwrap();
@@ -283,8 +304,11 @@ impl Keyring {
     /// keyrings. If it is not found, the `info` string will be handed off to `/sbin/request-key`
     /// to generate the key. If found, it will be attached to the current keyring. Requires `write`
     /// permission to the keyring.
-    pub fn request_key_with_fallback(&self, description: &str, info: &str) -> Result<Key> {
-        let res = try!(self._request_fallback("user", description, info));
+    pub fn request_key_with_fallback<D, I>(&self, description: D, info: I) -> Result<Key>
+        where D: AsRef<str>,
+              I: AsRef<str>,
+    {
+        let res = try!(self.request_fallback_impl("user", description.as_ref(), info.as_ref()));
         check_call(res as libc::c_long, Key::new(res))
     }
 
@@ -292,8 +316,11 @@ impl Keyring {
     /// keyrings. If it is not found, the `info` string will be handed off to `/sbin/request-key`
     /// to generate the key. If found, it will be attached to the current keyring. Requires `write`
     /// permission to the keyring.
-    pub fn request_keyring_with_fallback(&self, description: &str, info: &str) -> Result<Self> {
-        let res = try!(self._request_fallback("keyring", description, info));
+    pub fn request_keyring_with_fallback<D, I>(&self, description: D, info: I) -> Result<Self>
+        where D: AsRef<str>,
+              I: AsRef<str>,
+    {
+        let res = try!(self.request_fallback_impl("keyring", description.as_ref(), info.as_ref()));
         check_call(res as libc::c_long, Keyring::new(res))
     }
 
@@ -393,19 +420,27 @@ impl Key {
 
     /// Requests a key with the given description by searching the thread, process, and session
     /// keyrings.
-    pub fn request(description: &str) -> Result<Self> {
+    pub fn request<D>(description: D) -> Result<Self>
+        where D: AsRef<str>,
+    {
         Keyring::new(0).request_key(description)
     }
 
     /// Requests a key with the given description by searching the thread, process, and session
     /// keyrings. If it is not found, the `info` string will be handed off to `/sbin/request-key`
     /// to generate the key.
-    pub fn request_with_fallback(description: &str, info: &str) -> Result<Self> {
+    pub fn request_with_fallback<D, I>(description: D, info: I) -> Result<Self>
+        where D: AsRef<str>,
+              I: AsRef<str>,
+    {
         Keyring::new(0).request_key_with_fallback(description, info)
     }
 
     /// Update the payload in the key.
-    pub fn update(&mut self, data: &[u8]) -> Result<()> {
+    pub fn update<D>(&mut self, data: D) -> Result<()>
+        where D: AsRef<[u8]>,
+    {
+        let data = data.as_ref();
         check_call(unsafe {
                        keyctl_update(self.id, data.as_ptr() as *const libc::c_void, data.len())
                    },
@@ -537,7 +572,10 @@ impl KeyManager {
     }
 
     /// Instantiate the key with the given payload.
-    pub fn instantiate(self, keyring: &Keyring, payload: &[u8]) -> Result<()> {
+    pub fn instantiate<P>(self, keyring: &Keyring, payload: P) -> Result<()>
+        where P: AsRef<[u8]>,
+    {
+        let payload = payload.as_ref();
         check_call(unsafe {
                        keyctl_instantiate(self.key.id,
                                           payload.as_ptr() as *const libc::c_void,
