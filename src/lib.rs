@@ -26,10 +26,14 @@
 
 #![warn(missing_docs)]
 
-#[macro_use]
-extern crate bitflags;
+#[macro_use] extern crate bitflags;
 
 mod crates {
+    // public
+    pub extern crate libc;
+
+    // private
+    pub extern crate errno;
     pub extern crate libkeyutils_sys;
 }
 
