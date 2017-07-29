@@ -8,6 +8,7 @@ Rust interface to the Linux keyring.
 """
 repository = "https://github.com/mathstuf/rust-keyutils.git"
 homepage = "https://github.com/mathstuf/rust-keyutils.git"
+documentation = "https://docs.rs/keyutils/~0.2"
 readme = "README.md"
 
 [dependencies]
