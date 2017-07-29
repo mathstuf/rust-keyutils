@@ -39,7 +39,7 @@ pub enum KeyType {
 
 impl KeyType {
     /// Retrieve the constant value for the key type
-    pub fn value(self) -> &'static str {
+    pub fn value(self) -> &str {
         match self {
             KeyType::User => KEY_TYPE_USER,
             KeyType::Logon => KEY_TYPE_LOGON,
