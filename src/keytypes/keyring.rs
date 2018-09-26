@@ -24,16 +24,21 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-//! Keytypes
-//!
-//! The Linux kernel supports many types of keys. They may be compiled out or available as
-//! modules. The types provided here try to make it easier to use these keys.
+//! Keyrings
 
-pub mod keyring;
-pub use self::keyring::Keyring;
+use keytype::*;
 
-pub mod logon;
-pub use self::logon::Logon;
+/// Keyrings contain other keys.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub struct Keyring;
 
-pub mod user;
-pub use self::user::User;
+impl KeyType for Keyring {
+    /// Keyring descriptions are free-form.
+    type Description = str;
+    /// Keyring do not have payloads.
+    type Payload = ();
+
+    fn name() -> &'static str {
+        "keyring"
+    }
+}
