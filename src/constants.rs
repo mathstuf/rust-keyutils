@@ -55,11 +55,11 @@ pub enum SpecialKeyring {
     ProcessKeyring,
     /// A session-specific keyring.
     SessionKeyring,
-    /// TODO
+    /// A user-specific keyring.
     UserKeyring,
-    /// TODO
+    /// A user session-specific keyring.
     UserSessionKeyring,
-    /// TODO
+    /// A group-specific keyring.
     GroupKeyring,
 }
 
@@ -81,22 +81,34 @@ impl SpecialKeyring {
 }
 
 /// An enumeration for the keyrings which may be set as the default.
+///
+/// Keys which are implicitly required via syscalls and other operations are placed in the
+/// default keyring.
 pub enum DefaultKeyring {
-    /// TODO
+    /// Do not change the default keyring.
+    ///
+    /// This may be used to get the current default keyring.
     NoChange,
-    /// TODO
+    /// Set the thread-specific keyring as the default.
     ThreadKeyring,
-    /// TODO
+    /// Set the process-specific keyring as the default.
     ProcessKeyring,
-    /// TODO
+    /// Set the session-specific keyring as the default.
     SessionKeyring,
-    /// TODO
+    /// Set the user-specific keyring as the default.
     UserKeyring,
-    /// TODO
+    /// Set the user session-specific keyring as the default.
     UserSessionKeyring,
-    /// TODO
+    /// Set the user session-specific keyring as the default.
     GroupKeyring,
-    /// TODO
+    /// Set the default keyring to the default logic.
+    ///
+    /// Keys will be placed in the first available keyring of:
+    ///
+    ///   - thread-specific
+    ///   - process-specific
+    ///   - session-specific
+    ///   - user-specific
     DefaultKeyring,
 }
 
@@ -137,7 +149,7 @@ impl From<i32> for DefaultKeyring {
 
 /// The kernel type for representing a keyring's (or key's) permission.
 ///
-/// TODO: explain more
+/// See `KeyringPermission`.
 pub type KeyPermissions = u32;
 
 bitflags! {
