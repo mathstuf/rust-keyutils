@@ -617,135 +617,142 @@ impl KeyManager {
     }
 }
 
-#[test]
-fn test_add_key() {
-    let mut keyring = Keyring::attach_or_create(SpecialKeyring::ThreadKeyring).unwrap();
+#[cfg(test)]
+mod tests {
+    use api::Keyring;
+    use constants::SpecialKeyring;
+    use keytypes;
 
-    // Create the key.
-    let description = "test:ruskey:add_key";
-    let payload = "payload";
-    let key = keyring.add_key(KeyType::User, description, payload.as_bytes()).unwrap();
-    assert_eq!(key.read().unwrap(),
-               payload.as_bytes().iter().cloned().collect::<Vec<_>>());
+    #[test]
+    fn test_add_key() {
+        let mut keyring = Keyring::attach_or_create(SpecialKeyring::ThreadKeyring).unwrap();
 
-    // Update the key.
-    let new_payload = "new_payload";
-    let updated_key = keyring.add_key(KeyType::User, description, new_payload.as_bytes()).unwrap();
-    assert_eq!(key.read().unwrap(),
-               new_payload.as_bytes().iter().cloned().collect::<Vec<_>>());
-    assert_eq!(updated_key.read().unwrap(),
-               new_payload.as_bytes().iter().cloned().collect::<Vec<_>>());
+        // Create the key.
+        let description = "test:ruskey:add_key";
+        let payload = "payload";
+        let key = keyring.add_key(KeyType::User, description, payload.as_bytes()).unwrap();
+        assert_eq!(key.read().unwrap(),
+                payload.as_bytes().iter().cloned().collect::<Vec<_>>());
 
-    // Clean up.
-    keyring.unlink_key(&key).unwrap();
-    keyring.invalidate().unwrap();
-}
+        // Update the key.
+        let new_payload = "new_payload";
+        let updated_key = keyring.add_key(KeyType::User, description, new_payload.as_bytes()).unwrap();
+        assert_eq!(key.read().unwrap(),
+                new_payload.as_bytes().iter().cloned().collect::<Vec<_>>());
+        assert_eq!(updated_key.read().unwrap(),
+                new_payload.as_bytes().iter().cloned().collect::<Vec<_>>());
 
-#[test]
-fn test_clear_keyring() {
-    let mut keyring = Keyring::attach_or_create(SpecialKeyring::ThreadKeyring).unwrap();
-
-    {
-        let (keys, keyrings) = keyring.read().unwrap();
-        assert_eq!(keys.len(), 0);
-        assert_eq!(keyrings.len(), 0);
+        // Clean up.
+        keyring.unlink_key(&key).unwrap();
+        keyring.invalidate().unwrap();
     }
 
-    // Create a key.
-    keyring.add_key(KeyType::User, "test:ruskey:clear_keyring", "payload".as_bytes()).unwrap();
-    keyring.add_keyring("description").unwrap();
+    #[test]
+    fn test_clear_keyring() {
+        let mut keyring = Keyring::attach_or_create(SpecialKeyring::ThreadKeyring).unwrap();
 
-    {
-        let (keys, keyrings) = keyring.read().unwrap();
-        assert_eq!(keys.len(), 1);
-        assert_eq!(keyrings.len(), 1);
+        {
+            let (keys, keyrings) = keyring.read().unwrap();
+            assert_eq!(keys.len(), 0);
+            assert_eq!(keyrings.len(), 0);
+        }
+
+        // Create a key.
+        keyring.add_key(KeyType::User, "test:ruskey:clear_keyring", "payload".as_bytes()).unwrap();
+        keyring.add_keyring("description").unwrap();
+
+        {
+            let (keys, keyrings) = keyring.read().unwrap();
+            assert_eq!(keys.len(), 1);
+            assert_eq!(keyrings.len(), 1);
+        }
+
+        // Clear the keyring.
+        keyring.clear().unwrap();
+
+        {
+            let (keys, keyrings) = keyring.read().unwrap();
+            assert_eq!(keys.len(), 0);
+            assert_eq!(keyrings.len(), 0);
+        }
+
+        keyring.invalidate().unwrap();
     }
 
-    // Clear the keyring.
-    keyring.clear().unwrap();
+    #[test]
+    fn test_describe_key() {
+        let mut keyring = Keyring::attach_or_create(SpecialKeyring::ThreadKeyring).unwrap();
 
-    {
-        let (keys, keyrings) = keyring.read().unwrap();
-        assert_eq!(keys.len(), 0);
-        assert_eq!(keyrings.len(), 0);
+        // Create the key.
+        let desc = "test:ruskey:describe_key";
+        let payload = "payload";
+        let key = keyring.add_key(KeyType::User, desc, payload.as_bytes()).unwrap();
+
+        // Check its description.
+        assert_eq!(key.description().unwrap().description, desc);
+
+        // Clean up.
+        keyring.unlink_key(&key).unwrap();
+        keyring.invalidate().unwrap();
     }
 
-    keyring.invalidate().unwrap();
-}
+    #[test]
+    fn test_invalidate_key() {
+        unimplemented!()
+    }
 
-#[test]
-fn test_describe_key() {
-    let mut keyring = Keyring::attach_or_create(SpecialKeyring::ThreadKeyring).unwrap();
+    #[test]
+    fn test_link_keyring() {
+        unimplemented!()
+    }
 
-    // Create the key.
-    let desc = "test:ruskey:describe_key";
-    let payload = "payload";
-    let key = keyring.add_key(KeyType::User, desc, payload.as_bytes()).unwrap();
+    #[test]
+    fn test_read_keyring() {
+        unimplemented!()
+    }
 
-    // Check its description.
-    assert_eq!(key.description().unwrap().description, desc);
+    #[test]
+    fn test_read_key() {
+        unimplemented!()
+    }
 
-    // Clean up.
-    keyring.unlink_key(&key).unwrap();
-    keyring.invalidate().unwrap();
-}
+    #[test]
+    fn test_create_keyring() {
+        unimplemented!()
+    }
 
-#[test]
-fn test_invalidate_key() {
-    unimplemented!()
-}
+    #[test]
+    fn test_chmod_keyring() {
+        unimplemented!()
+    }
 
-#[test]
-fn test_link_keyring() {
-    unimplemented!()
-}
+    #[test]
+    fn test_request_key() {
+        unimplemented!()
+    }
 
-#[test]
-fn test_read_keyring() {
-    unimplemented!()
-}
+    #[test]
+    fn test_revoke_key() {
+        unimplemented!()
+    }
 
-#[test]
-fn test_read_key() {
-    unimplemented!()
-}
+    #[test]
+    fn test_search_key() {
+        unimplemented!()
+    }
 
-#[test]
-fn test_create_keyring() {
-    unimplemented!()
-}
+    #[test]
+    fn test_key_timeout() {
+        unimplemented!()
+    }
 
-#[test]
-fn test_chmod_keyring() {
-    unimplemented!()
-}
+    #[test]
+    fn test_unlink_key() {
+        unimplemented!()
+    }
 
-#[test]
-fn test_request_key() {
-    unimplemented!()
-}
-
-#[test]
-fn test_revoke_key() {
-    unimplemented!()
-}
-
-#[test]
-fn test_search_key() {
-    unimplemented!()
-}
-
-#[test]
-fn test_key_timeout() {
-    unimplemented!()
-}
-
-#[test]
-fn test_unlink_key() {
-    unimplemented!()
-}
-
-#[test]
-fn test_update_key() {
-    unimplemented!()
+    #[test]
+    fn test_update_key() {
+        unimplemented!()
+    }
 }
