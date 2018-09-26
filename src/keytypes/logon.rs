@@ -24,29 +24,42 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-//! Linux keyring bindings for Rust
+//! Logon keys
 //!
-//! This crate provides a high-level API for interacting with the Linux keys subsystem.
+//! Logon keys are arbitrary keys that userspace cannot read once set.
 
-#![warn(missing_docs)]
+use crates::libkeyutils_sys::KEY_TYPE_LOGON;
 
-#[macro_use] extern crate bitflags;
+use keytype::*;
 
-mod crates {
-    // public
-    pub extern crate libc;
+use std::borrow::Cow;
 
-    // private
-    pub extern crate errno;
-    pub extern crate libkeyutils_sys;
+/// Keys which can only be created and updated from userspace but not read back.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub struct Logon;
+
+impl KeyType for Logon {
+    /// Logon key descriptions are free-form.
+    type Description = Description;
+    /// Logon payloads are free-form.
+    type Payload = [u8];
+
+    fn name() -> &'static str {
+        KEY_TYPE_LOGON
+    }
 }
 
-mod constants;
-mod keytype;
-mod api;
+/// The description of a logon key.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Description {
+    /// They subtype of the key.
+    pub subtype: String,
+    /// The description of the key.
+    pub description: String,
+}
 
-pub mod keytypes;
-
-pub use self::api::*;
-pub use self::constants::*;
-pub use self::keytype::*;
+impl KeyDescription for Description {
+    fn description(&self) -> Cow<str> {
+        format!("{}:{}", self.subtype, self.description).into()
+    }
+}

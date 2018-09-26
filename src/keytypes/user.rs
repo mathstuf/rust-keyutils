@@ -24,29 +24,24 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-//! Linux keyring bindings for Rust
-//!
-//! This crate provides a high-level API for interacting with the Linux keys subsystem.
+//! User keys
 
-#![warn(missing_docs)]
+use crates::libkeyutils_sys::KEY_TYPE_USER;
 
-#[macro_use] extern crate bitflags;
+use keytype::*;
 
-mod crates {
-    // public
-    pub extern crate libc;
+/// Keys which can be created, updated, and read from userspace but are not intended for use by the
+/// kernel.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub struct User;
 
-    // private
-    pub extern crate errno;
-    pub extern crate libkeyutils_sys;
+impl KeyType for User {
+    /// User key descriptions are free-form.
+    type Description = str;
+    /// User payloads are free-form.
+    type Payload = [u8];
+
+    fn name() -> &'static str {
+        KEY_TYPE_USER
+    }
 }
-
-mod constants;
-mod keytype;
-mod api;
-
-pub mod keytypes;
-
-pub use self::api::*;
-pub use self::constants::*;
-pub use self::keytype::*;

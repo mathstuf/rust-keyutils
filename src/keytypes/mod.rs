@@ -24,29 +24,13 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-//! Linux keyring bindings for Rust
+//! Keytypes
 //!
-//! This crate provides a high-level API for interacting with the Linux keys subsystem.
+//! The Linux kernel supports many types of keys. They may be compiled out or available as
+//! modules. The types provided here try to make it easier to use these keys.
 
-#![warn(missing_docs)]
+pub mod logon;
+pub use self::logon::Logon;
 
-#[macro_use] extern crate bitflags;
-
-mod crates {
-    // public
-    pub extern crate libc;
-
-    // private
-    pub extern crate errno;
-    pub extern crate libkeyutils_sys;
-}
-
-mod constants;
-mod keytype;
-mod api;
-
-pub mod keytypes;
-
-pub use self::api::*;
-pub use self::constants::*;
-pub use self::keytype::*;
+pub mod user;
+pub use self::user::User;

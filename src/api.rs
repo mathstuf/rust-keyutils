@@ -29,7 +29,10 @@ use crates::libc;
 use crates::libkeyutils_sys::*;
 
 use constants::*;
+use keytype::*;
+use keytypes;
 
+use std::borrow::Borrow;
 use std::ffi::CString;
 use std::mem;
 use std::ptr;
@@ -245,17 +248,27 @@ impl Keyring {
         check_call(res, Keyring::new(res as key_serial_t))
     }
 
-    /// Adds a key of a specific type to the keyring. The type can be either KeyType::Logon or KeyType::User.
-    /// If a key with the same description already exists and has the
-    /// `update` permission, it will be updated, otherwise the link to the old key will be removed.
-    /// Requires `write` permission.
-    pub fn add_key<D, P>(&mut self, keytype: KeyType, description: D, payload: P) -> Result<Key>
-        where D: AsRef<str>,
-              P: AsRef<[u8]>,
+    /// Adds a key of a specific type to the keyring.
+    ///
+    /// If a key with the same description already exists and has the `update` permission, it will
+    /// be updated, otherwise the link to the old key will be removed. Requires `write` permission.
+    pub fn add_key<K, D, P>(&mut self, description: D, payload: P) -> Result<Key>
+    where
+        K: KeyType,
+        D: Borrow<K::Description>,
+        P: Borrow<K::Payload>,
     {
-        let type_cstr = CString::new(keytype.value()).unwrap();
-        let desc_cstr = CString::new(description.as_ref()).unwrap();
-        let payload = payload.as_ref();
+        self.add_key_impl::<K>(description.borrow(), payload.borrow())
+    }
+
+    /// Monomorphization of adding a key.
+    fn add_key_impl<K>(&mut self, description: &K::Description, payload: &K::Payload) -> Result<Key>
+    where
+        K: KeyType,
+    {
+        let type_cstr = CString::new(K::name()).unwrap();
+        let desc_cstr = CString::new(description.description().as_bytes()).unwrap();
+        let payload = payload.payload();
         let res = unsafe {
             add_key(type_cstr.as_ptr(),
                     desc_cstr.as_ptr(),
@@ -271,18 +284,10 @@ impl Keyring {
     /// If a keyring with the same description already, the link to the old keyring will be
     /// removed. Requires `write` permission on the keyring.
     pub fn add_keyring<D>(&mut self, description: D) -> Result<Self>
-        where D: AsRef<str>,
+        where D: Borrow<<keytypes::Keyring as KeyType>::Description>,
     {
-        let type_cstr = CString::new("keyring").unwrap();
-        let desc_cstr = CString::new(description.as_ref()).unwrap();
-        let res = unsafe {
-            add_key(type_cstr.as_ptr(),
-                    desc_cstr.as_ptr(),
-                    ptr::null(),
-                    0,
-                    self.id)
-        };
-        check_call(res as libc::c_long, Keyring::new(res))
+        let key = self.add_key::<keytypes::Keyring, _, _>(description, ())?;
+        Ok(Keyring::new(key.id))
     }
 
     fn request_impl(&self, type_: &str, description: &str) -> Result<KeyringSerial> {
@@ -679,13 +684,13 @@ mod tests {
         // Create the key.
         let description = "test:ruskey:add_key";
         let payload = "payload";
-        let key = keyring.add_key(KeyType::User, description, payload.as_bytes()).unwrap();
+        let key = keyring.add_key::<keytypes::User, _, _>(description, payload.as_bytes()).unwrap();
         assert_eq!(key.read().unwrap(),
                 payload.as_bytes().iter().cloned().collect::<Vec<_>>());
 
         // Update the key.
         let new_payload = "new_payload";
-        let updated_key = keyring.add_key(KeyType::User, description, new_payload.as_bytes()).unwrap();
+        let updated_key = keyring.add_key::<keytypes::User, _, _>(description, new_payload.as_bytes()).unwrap();
         assert_eq!(key.read().unwrap(),
                 new_payload.as_bytes().iter().cloned().collect::<Vec<_>>());
         assert_eq!(updated_key.read().unwrap(),
@@ -707,7 +712,7 @@ mod tests {
         }
 
         // Create a key.
-        keyring.add_key(KeyType::User, "test:ruskey:clear_keyring", "payload".as_bytes()).unwrap();
+        keyring.add_key::<keytypes::User, _, _>("test:ruskey:clear_keyring", "payload".as_bytes()).unwrap();
         keyring.add_keyring("description").unwrap();
 
         {
@@ -735,7 +740,7 @@ mod tests {
         // Create the key.
         let desc = "test:ruskey:describe_key";
         let payload = "payload";
-        let key = keyring.add_key(KeyType::User, desc, payload.as_bytes()).unwrap();
+        let key = keyring.add_key::<keytypes::User, _, _>(desc, payload.as_bytes()).unwrap();
 
         // Check its description.
         assert_eq!(key.description().unwrap().description, desc);
