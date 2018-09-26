@@ -66,6 +66,7 @@ fn check_call_ret_serial(res: KeyringSerial) -> Result<KeyringSerial> {
 }
 
 /// Representation of a kernel keyring.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Keyring {
     id: KeyringSerial,
 }
@@ -400,6 +401,7 @@ impl Keyring {
 }
 
 /// Representation of a kernel key.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Key {
     id: KeyringSerial,
 }
@@ -528,6 +530,7 @@ impl Key {
 }
 
 /// Structure representing the metadata about a key or keyring.
+#[derive(Debug, Clone)]
 pub struct KeyDescription {
     /// The type of the key.
     pub type_: String,
@@ -569,6 +572,7 @@ impl KeyDescription {
 }
 
 /// A manager for a key to respond to instantiate a key request by the kernel.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct KeyManager {
     key: Key,
 }
