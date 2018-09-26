@@ -28,7 +28,7 @@ use crates::errno;
 use crates::libc;
 use crates::libkeyutils_sys::*;
 
-use super::constants::*;
+use constants::*;
 
 use std::ffi::CString;
 use std::mem;
