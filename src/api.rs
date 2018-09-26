@@ -78,8 +78,9 @@ impl Keyring {
         }
     }
 
-    /// Set the default keyring to use when implicit requests on the current thread. Returns the
-    /// old default keyring.
+    /// Set the default keyring to use when implicit requests on the current thread.
+    ///
+    /// Returns the old default keyring.
     ///
     /// # Panics
     ///
@@ -99,8 +100,10 @@ impl Keyring {
     }
 
     /// Requests a keyring with the given description by searching the thread, process, and session
-    /// keyrings. If it is not found, the `info` string will be handed off to `/sbin/request-key`
-    /// to generate the key.
+    /// keyrings.
+    ///
+    /// If it is not found, the `info` string will be handed off to `/sbin/request-key` to generate
+    /// the key.
     pub fn request_with_fallback<D, I>(description: D, info: I) -> Result<Self>
         where D: AsRef<str>,
               I: AsRef<str>,
@@ -129,6 +132,8 @@ impl Keyring {
         check_call(res as libc::c_long, Keyring::new(res))
     }
 
+    /// Attached to a named session keyring.
+    ///
     /// If a keyring named `name` exists, attach it as the session keyring (requires the `search`
     /// permission). If a keyring does not exist, create it and attach it as the session keyring.
     pub fn join_session<N>(name: N) -> Result<Self>
@@ -139,30 +144,39 @@ impl Keyring {
         check_call(res as libc::c_long, Keyring::new(res))
     }
 
-    /// Clears the contents of the keyring. Requires `write` permission on the keyring.
+    /// Clears the contents of the keyring.
+    ///
+    /// Requires `write` permission on the keyring.
     pub fn clear(&mut self) -> Result<()> {
         check_call(unsafe { keyctl_clear(self.id) }, ())
     }
 
-    /// Adds a link to `key` to the keyring. Any link to an existing key with the same description
-    /// is removed. Requires `write` permission on the keyring and `link` permission on the key.
+    /// Adds a link to `key` to the keyring.
+    ///
+    /// Any link to an existing key with the same description is removed. Requires `write`
+    /// permission on the keyring and `link` permission on the key.
     pub fn link_key(&mut self, key: &Key) -> Result<()> {
         check_call(unsafe { keyctl_link(key.id, self.id) }, ())
     }
 
-    /// Removes the link to `key` from the keyring. Requires `write` permission on the keyring.
+    /// Removes the link to `key` from the keyring.
+    ///
+    /// Requires `write` permission on the keyring.
     pub fn unlink_key(&mut self, key: &Key) -> Result<()> {
         check_call(unsafe { keyctl_unlink(key.id, self.id) }, ())
     }
 
-    /// Adds a link to `keyring` to the keyring. Any link to an existing keyring with the same
-    /// description is removed. Requires `write` permission on the current keyring and `link`
-    /// permission on the linked keyring.
+    /// Adds a link to `keyring` to the keyring.
+    ///
+    /// Any link to an existing keyring with the same description is removed. Requires `write`
+    /// permission on the current keyring and `link` permission on the linked keyring.
     pub fn link_keyring(&mut self, keyring: &Keyring) -> Result<()> {
         check_call(unsafe { keyctl_link(keyring.id, self.id) }, ())
     }
 
-    /// Removes the link to `keyring` from the keyring. Requires `write` permission on the keyring.
+    /// Removes the link to `keyring` from the keyring.
+    ///
+    /// Requires `write` permission on the keyring.
     pub fn unlink_keyring(&mut self, keyring: &Keyring) -> Result<()> {
         check_call(unsafe { keyctl_unlink(keyring.id, self.id) }, ())
     }
@@ -175,10 +189,11 @@ impl Keyring {
         })
     }
 
-    /// Recursively search the keyring for a key with the matching description. If it is found, it
-    /// is attached to the keyring (if `write` permission to the keyring and `link` permission on
-    /// the key exist) and return it. Requires the `search` permission on the keyring. Any children
-    /// keyrings without the `search` permission are ignored.
+    /// Recursively search the keyring for a key with the matching description.
+    ///
+    /// If it is found, it is attached to the keyring (if `write` permission to the keyring and
+    /// `link` permission on the key exist) and return it. Requires the `search` permission on the
+    /// keyring. Any children keyrings without the `search` permission are ignored.
     pub fn search_for_key<D>(&self, description: D) -> Result<Key>
         where D: AsRef<str>,
     {
@@ -186,10 +201,12 @@ impl Keyring {
         check_call(res, Key::new(res as key_serial_t))
     }
 
-    /// Recursively search the keyring for a keyring with the matching description. If it is found,
-    /// it is attached to the keyring (if `write` permission to the keyring and `link` permission
-    /// on the found keyring exist) and return it. Requires the `search` permission on the keyring.
-    /// Any children keyrings without the `search` permission are ignored.
+    /// Recursively search the keyring for a keyring with the matching description.
+    ///
+    /// If it is found, it is attached to the keyring (if `write` permission to the keyring and
+    /// `link` permission on the found keyring exist) and return it. Requires the `search`
+    /// permission on the keyring. Any children keyrings without the `search` permission are
+    /// ignored.
     pub fn search_for_keyring<D>(&self, description: D) -> Result<Self>
         where D: AsRef<str>,
     {
@@ -197,7 +214,9 @@ impl Keyring {
         check_call(res, Keyring::new(res as key_serial_t))
     }
 
-    /// Return all immediate children of the keyring. Requires `read` permission on the keyring.
+    /// Return all immediate children of the keyring.
+    ///
+    /// Requires `read` permission on the keyring.
     pub fn read(&self) -> Result<(Vec<Key>, Vec<Keyring>)> {
         let sz = try!(check_call_ret(unsafe { keyctl_read(self.id, ptr::null_mut(), 0) }));
         let mut buffer = Vec::<key_serial_t>::with_capacity((sz as usize) /
@@ -218,8 +237,9 @@ impl Keyring {
             .collect::<Vec<_>>()))
     }
 
-    /// Attach the persistent keyring for the current user to the current keyring. If one does not
-    /// exist, it will be created. Requires `write` permission on the keyring.
+    /// Attach the persistent keyring for the current user to the current keyring.
+    ///
+    /// If one does not exist, it will be created. Requires `write` permission on the keyring.
     pub fn attach_persistent(&mut self) -> Result<Self> {
         let res = unsafe { keyctl_get_persistent(!0, self.id) };
         check_call(res, Keyring::new(res as key_serial_t))
@@ -246,8 +266,10 @@ impl Keyring {
         check_call(res as libc::c_long, Key::new(res))
     }
 
-    /// Adds a keyring to the current keyring. If a keyring with the same description already, the
-    /// link to the old keyring will be removed. Requires `write` permission on the keyring.
+    /// Adds a keyring to the current keyring.
+    ///
+    /// If a keyring with the same description already, the link to the old keyring will be
+    /// removed. Requires `write` permission on the keyring.
     pub fn add_keyring<D>(&mut self, description: D) -> Result<Self>
         where D: AsRef<str>,
     {
@@ -271,8 +293,10 @@ impl Keyring {
         })
     }
 
-    /// Requests a keyring with the given description by searching the thread, process, and session
-    /// keyrings. If it is found, it is attached to the keyring.
+    /// Requests a key with the given description by searching the thread, process, and session
+    /// keyrings.
+    ///
+    /// If it is found, it is attached to the keyring.
     pub fn request_key<D>(&self, description: D) -> Result<Key>
         where D: AsRef<str>,
     {
@@ -281,7 +305,9 @@ impl Keyring {
     }
 
     /// Requests a keyring with the given description by searching the thread, process, and session
-    /// keyrings. If it is found, it is attached to the keyring.
+    /// keyrings.
+    ///
+    /// If it is found, it is attached to the keyring.
     pub fn request_keyring<D>(&self, description: D) -> Result<Self>
         where D: AsRef<str>,
     {
@@ -302,9 +328,11 @@ impl Keyring {
     }
 
     /// Requests a key with the given description by searching the thread, process, and session
-    /// keyrings. If it is not found, the `info` string will be handed off to `/sbin/request-key`
-    /// to generate the key. If found, it will be attached to the current keyring. Requires `write`
-    /// permission to the keyring.
+    /// keyrings.
+    ///
+    /// If it is not found, the `info` string will be handed off to `/sbin/request-key` to generate
+    /// the key. If found, it will be attached to the current keyring. Requires `write` permission
+    /// to the keyring.
     pub fn request_key_with_fallback<D, I>(&self, description: D, info: I) -> Result<Key>
         where D: AsRef<str>,
               I: AsRef<str>,
@@ -314,9 +342,11 @@ impl Keyring {
     }
 
     /// Requests a keyring with the given description by searching the thread, process, and session
-    /// keyrings. If it is not found, the `info` string will be handed off to `/sbin/request-key`
-    /// to generate the key. If found, it will be attached to the current keyring. Requires `write`
-    /// permission to the keyring.
+    /// keyrings.
+    ///
+    /// If it is not found, the `info` string will be handed off to `/sbin/request-key` to generate
+    /// the key. If found, it will be attached to the current keyring. Requires `write` permission
+    /// to the keyring.
     pub fn request_keyring_with_fallback<D, I>(&self, description: D, info: I) -> Result<Self>
         where D: AsRef<str>,
               I: AsRef<str>,
@@ -325,26 +355,33 @@ impl Keyring {
         check_call(res as libc::c_long, Keyring::new(res))
     }
 
-    /// Revokes the keyring. Requires `write` permission on the keyring.
+    /// Revokes the keyring.
+    ///
+    /// Requires `write` permission on the keyring.
     pub fn revoke(self) -> Result<()> {
         check_call(unsafe { keyctl_revoke(self.id) }, ())
     }
 
-    /// Change the user which owns the keyring. Requires the `setattr` permission on the keyring
-    /// and the SysAdmin capability to change it to anything other than the current user.
+    /// Change the user which owns the keyring.
+    ///
+    /// Requires the `setattr` permission on the keyring and the SysAdmin capability to change it
+    /// to anything other than the current user.
     pub fn chown(&mut self, uid: libc::uid_t) -> Result<()> {
         check_call(unsafe { keyctl_chown(self.id, uid, !0) }, ())
     }
 
-    /// Change the group which owns the keyring. Requires the `setattr` permission on the keyring
-    /// and the SysAdmin capability to change it to anything other than a group of which the
-    /// current user is a member.
+    /// Change the group which owns the keyring.
+    ///
+    /// Requires the `setattr` permission on the keyring and the SysAdmin capability to change it
+    /// to anything other than a group of which the current user is a member.
     pub fn chgrp(&mut self, gid: libc::gid_t) -> Result<()> {
         check_call(unsafe { keyctl_chown(self.id, !0, gid) }, ())
     }
 
-    /// Set the permissions on the keyring. Requires the `setattr` permission on the keyring and
-    /// the SysAdmin capability if the current user does not own the keyring.
+    /// Set the permissions on the keyring.
+    ///
+    /// Requires the `setattr` permission on the keyring and the SysAdmin capability if the current
+    /// user does not own the keyring.
     pub fn set_permissions(&mut self, perms: KeyPermissions) -> Result<()> {
         check_call(unsafe { keyctl_setperm(self.id, perms) }, ())
     }
@@ -429,8 +466,10 @@ impl Key {
     }
 
     /// Requests a key with the given description by searching the thread, process, and session
-    /// keyrings. If it is not found, the `info` string will be handed off to `/sbin/request-key`
-    /// to generate the key.
+    /// keyrings.
+    ///
+    /// If it is not found, the `info` string will be handed off to `/sbin/request-key` to generate
+    /// the key.
     pub fn request_with_fallback<D, I>(description: D, info: I) -> Result<Self>
         where D: AsRef<str>,
               I: AsRef<str>,
@@ -454,21 +493,26 @@ impl Key {
         Keyring::new(self.id).revoke()
     }
 
-    /// Change the user which owns the key. Requires the `setattr` permission on the key and the
-    /// SysAdmin capability to change it to anything other than the current user.
+    /// Change the user which owns the key.
+    ///
+    /// Requires the `setattr` permission on the key and the SysAdmin capability to change it to
+    /// anything other than the current user.
     pub fn chown(&mut self, uid: libc::uid_t) -> Result<()> {
         Keyring::new(self.id).chown(uid)
     }
 
-    /// Change the group which owns the key. Requires the `setattr` permission on the key and the
-    /// SysAdmin capability to change it to anything other than a group of which the current user
-    /// is a member.
+    /// Change the group which owns the key.
+    ///
+    /// Requires the `setattr` permission on the key and the SysAdmin capability to change it to
+    /// anything other than a group of which the current user is a member.
     pub fn chgrp(&mut self, gid: libc::gid_t) -> Result<()> {
         Keyring::new(self.id).chgrp(gid)
     }
 
-    /// Set the permissions on the key. Requires the `setattr` permission on the key and the
-    /// SysAdmin capability if the current user does not own the key.
+    /// Set the permissions on the key.
+    ///
+    /// Requires the `setattr` permission on the key and the SysAdmin capability if the current
+    /// user does not own the key.
     pub fn set_permissions(&mut self, perms: KeyPermissions) -> Result<()> {
         Keyring::new(self.id).set_permissions(perms)
     }
@@ -495,20 +539,23 @@ impl Key {
         Ok(buffer)
     }
 
-    /// Set an expiration timer on the key to `timeout` seconds in the future. A timeout of 0 means
-    /// "no expiration". Requires the `setattr` permission on the key.
+    /// Set an expiration timer on the key to `timeout` seconds in the future.
+    ///
+    /// A timeout of `0` means "no expiration". Requires the `setattr` permission on the key.
     pub fn set_timeout(&mut self, timeout: u32) -> Result<()> {
         Keyring::new(self.id).set_timeout(timeout)
     }
 
-    /// The security context of the key. Depends on the security manager loaded into the kernel
-    /// (e.g., SELinux or AppArmor).
+    /// The security context of the key.
+    ///
+    /// Depends on the security manager loaded into the kernel (e.g., SELinux or AppArmor).
     pub fn security(&self) -> Result<String> {
         Keyring::new(self.id).security()
     }
 
-    /// Invalidates the key and schedules it for removal. Requires the `search` permission on the
-    /// key.
+    /// Invalidates the key and schedules it for removal.
+    ///
+    /// Requires the `search` permission on the key.
     pub fn invalidate(self) -> Result<()> {
         Keyring::new(self.id).invalidate()
     }
@@ -598,9 +645,11 @@ impl KeyManager {
                    ())
     }
 
-    /// Reject the key with the given `error`. Requests for the key will fail until `timeout`
-    /// seconds have elapsed. This is to prevent a denial-of-service by requesting a non-existant
-    /// key repeatedly. The requester must have `write` permission on the keyring.
+    /// Reject the key with the given `error`.
+    ///
+    /// Requests for the key will fail until `timeout` seconds have elapsed. This is to prevent a
+    /// denial-of-service by requesting a non-existant key repeatedly. The requester must have
+    /// `write` permission on the keyring.
     ///
     /// TODO: Accept `SpecialKeyring` values here. They are special in that they refer to the
     /// *requester's* special keyring and not this one.
