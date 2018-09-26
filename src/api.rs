@@ -367,9 +367,9 @@ impl Keyring {
     /// # Panics
     ///
     /// If the kernel returns malformed data, the the parser will panic.
-    pub fn description(&self) -> Result<KeyDescription> {
+    pub fn description(&self) -> Result<Description> {
         self.description_raw()
-            .and_then(|desc| KeyDescription::parse(desc).ok_or(errno::Errno(libc::EINVAL)))
+            .and_then(|desc| Description::parse(desc).ok_or(errno::Errno(libc::EINVAL)))
     }
 
     /// Set an expiration timer on the keyring to `timeout` seconds in the future. A timeout of 0
@@ -478,7 +478,7 @@ impl Key {
     /// # Panics
     ///
     /// If the kernel returns malformed data, the parser will panic.
-    pub fn description(&self) -> Result<KeyDescription> {
+    pub fn description(&self) -> Result<Description> {
         Keyring::new(self.id).description()
     }
 
@@ -531,7 +531,7 @@ impl Key {
 
 /// Structure representing the metadata about a key or keyring.
 #[derive(Debug, Clone)]
-pub struct KeyDescription {
+pub struct Description {
     /// The type of the key.
     pub type_: String,
     /// The user owner of the key.
@@ -544,8 +544,8 @@ pub struct KeyDescription {
     pub description: String,
 }
 
-impl KeyDescription {
-    fn parse(desc: String) -> Option<KeyDescription> {
+impl Description {
+    fn parse(desc: String) -> Option<Description> {
         let mut pieces = desc.split(';').collect::<Vec<_>>();
         // Reverse the string because the kernel plans to extend it by adding fields to the
         // beginning of the string. By doing this, the fields are at a constant position in the
@@ -560,7 +560,7 @@ impl KeyDescription {
                           https://github.com/mathstuf/rust-keyutils: {}",
                          desc);
             }
-            Some(KeyDescription {
+            Some(Description {
                 type_: pieces[4].to_owned(),
                 uid: pieces[3].parse::<libc::uid_t>().unwrap(),
                 gid: pieces[2].parse::<libc::gid_t>().unwrap(),
