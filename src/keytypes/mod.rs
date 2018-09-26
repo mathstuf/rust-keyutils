@@ -29,6 +29,23 @@
 //! The Linux kernel supports many types of keys. They may be compiled out or available as
 //! modules. The types provided here try to make it easier to use these keys.
 
+use std::char;
+
+pub mod asymmetric;
+pub use self::asymmetric::Asymmetric;
+
+pub mod big_key;
+pub use self::big_key::BigKey;
+
+pub mod blacklist;
+pub use self::blacklist::Blacklist;
+
+pub mod dns_resolver;
+pub use self::dns_resolver::DnsResolver;
+
+pub mod encrypted;
+pub use self::encrypted::Encrypted;
+
 pub mod keyring;
 pub use self::keyring::Keyring;
 
@@ -37,3 +54,43 @@ pub use self::logon::Logon;
 
 pub mod user;
 pub use self::user::User;
+
+/// A structure for assisting in coverting binary data into hexadecimal.
+///
+/// Many key types take in ASCII hexadecimal input instead of raw binary.
+pub struct AsciiHex;
+
+/// The mask for a nibble.
+const NIBBLE_MASK: u8 = 0x0f;
+
+impl AsciiHex {
+    /// Convert binary data into an ASCII hexadecimal string.
+    pub fn convert(data: &[u8]) -> String {
+        data.iter()
+            .fold(String::with_capacity(data.len() * 2), |mut string, byte| {
+                let hi = (byte >> 4) & NIBBLE_MASK;
+                let lo = byte & NIBBLE_MASK;
+
+                string.push(char::from_digit(hi as u32, 16).unwrap());
+                string.push(char::from_digit(lo as u32, 16).unwrap());
+
+                string
+            })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use keytypes::AsciiHex;
+
+    fn check(input: &[u8], expected: &str) {
+        assert_eq!(AsciiHex::convert(input), expected);
+    }
+
+    #[test]
+    fn test_ascii_hex_convert() {
+        check(&[0], "00");
+        check(&[0, 1], "0001");
+        check(&[222, 173, 190, 239], "deadbeef");
+    }
+}
