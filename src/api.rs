@@ -126,7 +126,7 @@ impl Keyring {
 
     fn get_keyring(id: SpecialKeyring, create: bool) -> Result<Keyring> {
         let res = unsafe { keyctl_get_keyring_ID(id.serial(), create as libc::c_int) };
-        check_call(res as libc::c_long, Keyring::new_impl(res))
+        check_call(i64::from(res), Keyring::new_impl(res))
     }
 
     /// Attach to a special keyring. Fails if the keyring does not already exist.
@@ -142,7 +142,7 @@ impl Keyring {
     /// Create a new anonymous keyring and set it as the session keyring.
     pub fn join_anonymous_session() -> Result<Self> {
         let res = unsafe { keyctl_join_session_keyring(ptr::null()) };
-        check_call(res as libc::c_long, Keyring::new_impl(res))
+        check_call(i64::from(res), Keyring::new_impl(res))
     }
 
     /// Attached to a named session keyring.
@@ -154,7 +154,7 @@ impl Keyring {
     {
         let name_cstr = CString::new(name.as_ref()).unwrap();
         let res = unsafe { keyctl_join_session_keyring(name_cstr.as_ptr()) };
-        check_call(res as libc::c_long, Keyring::new_impl(res))
+        check_call(i64::from(res), Keyring::new_impl(res))
     }
 
     /// Clears the contents of the keyring.
@@ -286,7 +286,7 @@ impl Keyring {
                     payload.len(),
                     self.id)
         };
-        check_call(res as libc::c_long, Key::new_impl(res))
+        check_call(i64::from(res), Key::new_impl(res))
     }
 
     /// Adds a keyring to the current keyring.
@@ -316,7 +316,7 @@ impl Keyring {
         where D: AsRef<str>,
     {
         let res = self.request_impl("user", description.as_ref())?;
-        check_call(res as libc::c_long, Key::new_impl(res))
+        check_call(i64::from(res), Key::new_impl(res))
     }
 
     /// Requests a keyring with the given description by searching the thread, process, and session
@@ -327,7 +327,7 @@ impl Keyring {
         where D: AsRef<str>,
     {
         let res = self.request_impl("keyring", description.as_ref())?;
-        check_call(res as libc::c_long, Keyring::new_impl(res))
+        check_call(i64::from(res), Keyring::new_impl(res))
     }
 
     fn request_fallback_impl(&self, type_: &str, description: &str, info: &str) -> Result<KeyringSerial> {
@@ -353,7 +353,7 @@ impl Keyring {
               I: AsRef<str>,
     {
         let res = self.request_fallback_impl("user", description.as_ref(), info.as_ref())?;
-        check_call(res as libc::c_long, Key::new_impl(res))
+        check_call(i64::from(res), Key::new_impl(res))
     }
 
     /// Requests a keyring with the given description by searching the thread, process, and session
@@ -367,7 +367,7 @@ impl Keyring {
               I: AsRef<str>,
     {
         let res = self.request_fallback_impl("keyring", description.as_ref(), info.as_ref())?;
-        check_call(res as libc::c_long, Keyring::new_impl(res))
+        check_call(i64::from(res), Keyring::new_impl(res))
     }
 
     /// Revokes the keyring.
@@ -478,7 +478,7 @@ impl Key {
     /// keyrings.
     pub fn request_key_auth_key(create: bool) -> Result<Self> {
         let res = unsafe { keyctl_get_keyring_ID(KEY_SPEC_REQKEY_AUTH_KEY, create as libc::c_int) };
-        check_call(res as libc::c_long, Key::new_impl(res))
+        check_call(i64::from(res), Key::new_impl(res))
     }
 
     /// Requests a key with the given description by searching the thread, process, and session

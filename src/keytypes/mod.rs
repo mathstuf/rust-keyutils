@@ -71,8 +71,8 @@ impl AsciiHex {
                 let hi = (byte >> 4) & NIBBLE_MASK;
                 let lo = byte & NIBBLE_MASK;
 
-                string.push(char::from_digit(hi as u32, 16).unwrap());
-                string.push(char::from_digit(lo as u32, 16).unwrap());
+                string.push(char::from_digit(u32::from(hi), 16).unwrap());
+                string.push(char::from_digit(u32::from(lo), 16).unwrap());
 
                 string
             })
