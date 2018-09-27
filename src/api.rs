@@ -254,7 +254,7 @@ impl Keyring {
         let keys = buffer
             .iter()
             .map(|&id| Key::new_impl(id))
-            .partition(|key| key.description().unwrap().type_ == "keyring");
+            .partition(|key| key.description().unwrap().type_ == keytypes::Keyring::name());
         Ok((
             keys.1,
             keys.0
