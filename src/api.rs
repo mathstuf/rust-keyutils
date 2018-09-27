@@ -38,6 +38,7 @@ use std::mem;
 use std::ptr;
 use std::result;
 use std::str;
+use std::time::Duration;
 
 /// Reexport of `Errno` as `Error`.
 pub type Error = errno::Errno;
@@ -423,10 +424,12 @@ impl Keyring {
             .and_then(|desc| Description::parse(desc).ok_or(errno::Errno(libc::EINVAL)))
     }
 
-    /// Set an expiration timer on the keyring to `timeout` seconds in the future. A timeout of 0
-    /// means "no expiration". Requires the `setattr` permission on the keyring.
-    pub fn set_timeout(&mut self, timeout: u32) -> Result<()> {
-        check_call(unsafe { keyctl_set_timeout(self.id, timeout) }, ())
+    /// Set an expiration timer on the keyring to `timeout`.
+    ///
+    /// Any partial seconds are ignored. A timeout of 0 means "no expiration". Requires the
+    /// `setattr` permission on the keyring.
+    pub fn set_timeout(&mut self, timeout: Duration) -> Result<()> {
+        check_call(unsafe { keyctl_set_timeout(self.id, timeout.as_secs() as u32) }, ())
     }
 
     /// The security context of the keyring. Depends on the security manager loaded into the kernel
@@ -560,10 +563,11 @@ impl Key {
         Ok(buffer)
     }
 
-    /// Set an expiration timer on the key to `timeout` seconds in the future.
+    /// Set an expiration timer on the keyring to `timeout`.
     ///
-    /// A timeout of `0` means "no expiration". Requires the `setattr` permission on the key.
-    pub fn set_timeout(&mut self, timeout: u32) -> Result<()> {
+    /// Any partial seconds are ignored. A timeout of 0 means "no expiration". Requires the
+    /// `setattr` permission on the key.
+    pub fn set_timeout(&mut self, timeout: Duration) -> Result<()> {
         Keyring::new_impl(self.id).set_timeout(timeout)
     }
 
@@ -669,21 +673,27 @@ impl KeyManager {
 
     /// Reject the key with the given `error`.
     ///
-    /// Requests for the key will fail until `timeout` seconds have elapsed. This is to prevent a
-    /// denial-of-service by requesting a non-existant key repeatedly. The requester must have
+    /// Requests for the key will fail until `timeout` has elapsed (partial
+    /// seconds are ignored). This is to prevent a denial-of-service by
+    /// requesting a non-existant key repeatedly. The requester must have
     /// `write` permission on the keyring.
     ///
     /// TODO: Accept `SpecialKeyring` values here. They are special in that they refer to the
     /// *requester's* special keyring and not this one.
-    pub fn reject(self, keyring: &Keyring, timeout: u32, error: errno::Errno) -> Result<()> {
+    pub fn reject(self, keyring: &Keyring, timeout: Duration, error: errno::Errno) -> Result<()> {
         let errno::Errno(errval) = error;
-        check_call(unsafe { keyctl_reject(self.key.id, timeout, errval as u32, keyring.id) },
+        check_call(unsafe { keyctl_reject(self.key.id, timeout.as_secs() as u32, errval as u32, keyring.id) },
                    ())
     }
 
     /// Reject the key with `ENOKEY`.
-    pub fn negate(self, keyring: &Keyring, timeout: u32) -> Result<()> {
-        check_call(unsafe { keyctl_negate(self.key.id, timeout, keyring.id) },
+    ///
+    /// Requests for the key will fail until `timeout` has elapsed (partial
+    /// seconds are ignored). This is to prevent a denial-of-service by
+    /// requesting a non-existant key repeatedly. The requester must have
+    /// `write` permission on the keyring.
+    pub fn negate(self, keyring: &Keyring, timeout: Duration) -> Result<()> {
+        check_call(unsafe { keyctl_negate(self.key.id, timeout.as_secs() as u32, keyring.id) },
                    ())
     }
 }
