@@ -705,8 +705,13 @@ impl KeyManager {
 
 #[cfg(test)]
 mod tests {
+    use crates::libc;
+
+    use std::thread;
+    use std::time::Duration;
+
     use api::Keyring;
-    use constants::SpecialKeyring;
+    use constants::{self, SpecialKeyring};
     use keytype::KeyType;
     use keytypes;
 
@@ -774,57 +779,252 @@ mod tests {
 
     #[test]
     fn test_invalidate_key() {
-        unimplemented!()
+        let mut keyring = Keyring::attach_or_create(SpecialKeyring::Thread).unwrap();
+
+        // Create the key.
+        let description = "test:rust-keyutils:invalidate_key";
+        let payload = "payload";
+        let key = keyring.add_key::<keytypes::User, _, _>(description, payload.as_bytes()).unwrap();
+        key.invalidate().unwrap();
+
+        let (keys, keyrings) = keyring.read().unwrap();
+        assert_eq!(keys.len(), 0);
+        assert_eq!(keyrings.len(), 0);
+
+        // Clean up.
+        keyring.invalidate().unwrap();
     }
 
     #[test]
     fn test_link_keyring() {
-        unimplemented!()
+        let mut keyring = Keyring::attach_or_create(SpecialKeyring::Thread).unwrap();
+        let mut new_keyring = keyring.add_keyring("new_keyring").unwrap();
+        let new_inner_keyring = keyring.add_keyring("new_inner_keyring").unwrap();
+
+        new_keyring.link_keyring(&new_inner_keyring).unwrap();
+
+        let (keys, keyrings) = new_keyring.read().unwrap();
+        assert_eq!(keys.len(), 0);
+        assert_eq!(keyrings.len(), 1);
+        assert_eq!(keyrings[0], new_inner_keyring);
+
+        // Clean up.
+        new_inner_keyring.invalidate().unwrap();
+        new_keyring.invalidate().unwrap();
+        keyring.invalidate().unwrap();
     }
 
     #[test]
     fn test_read_keyring() {
-        unimplemented!()
+        let mut keyring = Keyring::attach_or_create(SpecialKeyring::Thread).unwrap();
+
+        let (keys, keyrings) = keyring.read().unwrap();
+        assert_eq!(keys.len(), 0);
+        assert_eq!(keyrings.len(), 0);
+
+        let key = keyring.add_key::<keytypes::User, _, _>("test:rust-keyutils:read_keyring", "payload".as_bytes()).unwrap();
+
+        let (keys, keyrings) = keyring.read().unwrap();
+        assert_eq!(keys.len(), 1);
+        assert_eq!(keys[0], key);
+        assert_eq!(keyrings.len(), 0);
+
+        // Clean up.
+        keyring.unlink_key(&key).unwrap();
+        keyring.invalidate().unwrap();
     }
 
     #[test]
     fn test_read_key() {
-        unimplemented!()
+        let mut keyring = Keyring::attach_or_create(SpecialKeyring::Thread).unwrap();
+
+        // Create the key.
+        let description = "test:rust-keyutils:read_key";
+        let payload = "payload";
+        let key = keyring.add_key::<keytypes::User, _, _>(description, payload.as_bytes()).unwrap();
+        assert_eq!(key.read().unwrap(),
+                payload.as_bytes().iter().cloned().collect::<Vec<_>>());
+
+        // Clean up.
+        keyring.unlink_key(&key).unwrap();
+        keyring.invalidate().unwrap();
     }
 
     #[test]
     fn test_create_keyring() {
-        unimplemented!()
+        let mut keyring = Keyring::attach_or_create(SpecialKeyring::Thread).unwrap();
+        let new_keyring = keyring.add_keyring("new_keyring").unwrap();
+
+        let (keys, keyrings) = keyring.read().unwrap();
+        assert_eq!(keys.len(), 0);
+        assert_eq!(keyrings.len(), 1);
+        assert_eq!(keyrings[0], new_keyring);
+
+        // Clean up.
+        new_keyring.invalidate().unwrap();
+        keyring.invalidate().unwrap();
     }
 
     #[test]
     fn test_chmod_keyring() {
-        unimplemented!()
+        let mut keyring = Keyring::attach_or_create(SpecialKeyring::Thread).unwrap();
+        let description = keyring.description().unwrap();
+        let perms = description.perms;
+        let new_perms = {
+            let mut tmp_perms = perms.clone();
+            let write_bits = constants::POSSESSOR_WRITE | constants::USER_WRITE | constants::GROUP_WRITE | constants::OTHER_WRITE;
+            tmp_perms.remove(write_bits);
+            tmp_perms
+        };
+        keyring.set_permissions(new_perms).unwrap();
+        let err = keyring.add_keyring("new_keyring").unwrap_err();
+        assert_eq!(err.0, libc::EACCES);
+
+        keyring.set_permissions(perms).unwrap();
+        let new_keyring = keyring.add_keyring("new_keyring").unwrap();
+
+        // Clean up.
+        new_keyring.invalidate().unwrap();
+        keyring.invalidate().unwrap();
     }
 
     #[test]
     fn test_request_key() {
-        unimplemented!()
+        let mut keyring = Keyring::attach_or_create(SpecialKeyring::Thread).unwrap();
+
+        // Create the key.
+        let description = "test:rust-keyutils:request_key";
+        let payload = "payload";
+        let key = keyring.add_key::<keytypes::User, _, _>(description, payload.as_bytes()).unwrap();
+
+        let found_key = keyring.request_key(description).unwrap();
+        assert_eq!(found_key, key);
+
+        // Clean up.
+        keyring.unlink_key(&key).unwrap();
+        keyring.invalidate().unwrap();
     }
 
     #[test]
     fn test_revoke_key() {
-        unimplemented!()
+        let mut keyring = Keyring::attach_or_create(SpecialKeyring::Thread).unwrap();
+
+        // Create the key.
+        let description = "test:rust-keyutils:revoke_key";
+        let payload = "payload";
+        let key = keyring.add_key::<keytypes::User, _, _>(description, payload.as_bytes()).unwrap();
+        let key_copy = key.clone();
+
+        key.revoke().unwrap();
+
+        let err = key_copy.read().unwrap_err();
+        assert_eq!(err.0, libc::EKEYREVOKED);
+
+        // Clean up.
+        keyring.unlink_key(&key_copy).unwrap();
+        keyring.invalidate().unwrap();
     }
 
     #[test]
     fn test_search_key() {
-        unimplemented!()
+        let mut keyring = Keyring::attach_or_create(SpecialKeyring::Thread).unwrap();
+        let mut new_keyring = keyring.add_keyring("new_keyring").unwrap();
+        let mut new_inner_keyring = new_keyring.add_keyring("new_inner_keyring").unwrap();
+
+        // Create the key.
+        let description = "test:rust-keyutils:search_key";
+        let payload = "payload";
+        let key = new_inner_keyring.add_key::<keytypes::User, _, _>(description, payload.as_bytes()).unwrap();
+
+        let found_key = keyring.search_for_key(description).unwrap();
+        assert_eq!(found_key, key);
+
+        // Clean up.
+        new_inner_keyring.unlink_key(&key).unwrap();
+        new_inner_keyring.invalidate().unwrap();
+        new_keyring.invalidate().unwrap();
+        keyring.invalidate().unwrap();
     }
 
     #[test]
     fn test_key_timeout() {
-        unimplemented!()
+        let mut keyring = Keyring::attach_or_create(SpecialKeyring::Thread).unwrap();
+
+        // Create the key.
+        let description = "test:rust-keyutils:key_timeout";
+        let payload = "payload";
+        let mut key = keyring.add_key::<keytypes::User, _, _>(description, payload.as_bytes()).unwrap();
+
+        // Set the timeout on the key.
+        let duration = Duration::from_secs(1);
+        let timeout_duration = duration + duration;
+        key.set_timeout(duration).unwrap();
+
+        // Sleep the timeout away.
+        thread::sleep(timeout_duration);
+
+        // Try to read the key.
+        let err = key.read().unwrap_err();
+        assert_eq!(err.0, libc::EKEYEXPIRED);
+
+        // Clean up.
+        keyring.unlink_key(&key).unwrap();
+        keyring.invalidate().unwrap();
+    }
+
+    #[test]
+    fn test_unlink_keyring() {
+        let mut keyring = Keyring::attach_or_create(SpecialKeyring::Thread).unwrap();
+
+        // Create the keyring.
+        let description = "test:rust-keyutils:unlink_keyring";
+        let new_keyring = keyring.add_keyring(description).unwrap();
+
+        let (keys, keyrings) = keyring.read().unwrap();
+        assert_eq!(keys.len(), 0);
+        assert_eq!(keyrings.len(), 1);
+
+        // Unlink the key.
+        keyring.unlink_keyring(&new_keyring).unwrap();
+
+        // Use the keyring.
+        let err = new_keyring.read().unwrap_err();
+        assert_eq!(err.0, libc::EACCES);
+
+        let (keys, keyrings) = keyring.read().unwrap();
+        assert_eq!(keys.len(), 0);
+        assert_eq!(keyrings.len(), 0);
+
+        // Clean up.
+        keyring.invalidate().unwrap();
     }
 
     #[test]
     fn test_unlink_key() {
-        unimplemented!()
+        let mut keyring = Keyring::attach_or_create(SpecialKeyring::Thread).unwrap();
+
+        // Create the key.
+        let description = "test:rust-keyutils:unlink_key";
+        let payload = "payload";
+        let key = keyring.add_key::<keytypes::User, _, _>(description, payload.as_bytes()).unwrap();
+
+        let (keys, keyrings) = keyring.read().unwrap();
+        assert_eq!(keys.len(), 1);
+        assert_eq!(keyrings.len(), 0);
+
+        // Unlink the key.
+        keyring.unlink_key(&key).unwrap();
+
+        // Use the key.
+        let err = key.read().unwrap_err();
+        assert_eq!(err.0, libc::EACCES);
+
+        let (keys, keyrings) = keyring.read().unwrap();
+        assert_eq!(keys.len(), 0);
+        assert_eq!(keyrings.len(), 0);
+
+        // Clean up.
+        keyring.invalidate().unwrap();
     }
 
     #[test]
