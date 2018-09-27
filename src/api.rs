@@ -707,6 +707,7 @@ impl KeyManager {
 mod tests {
     use api::Keyring;
     use constants::SpecialKeyring;
+    use keytype::KeyType;
     use keytypes;
 
     #[test]
@@ -720,14 +721,6 @@ mod tests {
         assert_eq!(key.read().unwrap(),
                 payload.as_bytes().iter().cloned().collect::<Vec<_>>());
 
-        // Update the key.
-        let new_payload = "new_payload";
-        let updated_key = keyring.add_key::<keytypes::User, _, _>(description, new_payload.as_bytes()).unwrap();
-        assert_eq!(key.read().unwrap(),
-                new_payload.as_bytes().iter().cloned().collect::<Vec<_>>());
-        assert_eq!(updated_key.read().unwrap(),
-                new_payload.as_bytes().iter().cloned().collect::<Vec<_>>());
-
         // Clean up.
         keyring.unlink_key(&key).unwrap();
         keyring.invalidate().unwrap();
@@ -737,31 +730,26 @@ mod tests {
     fn test_clear_keyring() {
         let mut keyring = Keyring::attach_or_create(SpecialKeyring::Thread).unwrap();
 
-        {
-            let (keys, keyrings) = keyring.read().unwrap();
-            assert_eq!(keys.len(), 0);
-            assert_eq!(keyrings.len(), 0);
-        }
+        let (keys, keyrings) = keyring.read().unwrap();
+        assert_eq!(keys.len(), 0);
+        assert_eq!(keyrings.len(), 0);
 
         // Create a key.
         keyring.add_key::<keytypes::User, _, _>("test:ruskey:clear_keyring", "payload".as_bytes()).unwrap();
         keyring.add_keyring("description").unwrap();
 
-        {
-            let (keys, keyrings) = keyring.read().unwrap();
-            assert_eq!(keys.len(), 1);
-            assert_eq!(keyrings.len(), 1);
-        }
+        let (keys, keyrings) = keyring.read().unwrap();
+        assert_eq!(keys.len(), 1);
+        assert_eq!(keyrings.len(), 1);
 
         // Clear the keyring.
         keyring.clear().unwrap();
 
-        {
-            let (keys, keyrings) = keyring.read().unwrap();
-            assert_eq!(keys.len(), 0);
-            assert_eq!(keyrings.len(), 0);
-        }
+        let (keys, keyrings) = keyring.read().unwrap();
+        assert_eq!(keys.len(), 0);
+        assert_eq!(keyrings.len(), 0);
 
+        // Clean up.
         keyring.invalidate().unwrap();
     }
 
@@ -775,7 +763,9 @@ mod tests {
         let key = keyring.add_key::<keytypes::User, _, _>(desc, payload.as_bytes()).unwrap();
 
         // Check its description.
-        assert_eq!(key.description().unwrap().description, desc);
+        let description = key.description().unwrap();
+        assert_eq!(&description.type_, keytypes::User::name());
+        assert_eq!(&description.description, desc);
 
         // Clean up.
         keyring.unlink_key(&key).unwrap();
@@ -839,6 +829,22 @@ mod tests {
 
     #[test]
     fn test_update_key() {
-        unimplemented!()
+        let mut keyring = Keyring::attach_or_create(SpecialKeyring::Thread).unwrap();
+
+        // Create the key.
+        let description = "test:ruskey:update_key";
+        let payload = "payload";
+        let key = keyring.add_key::<keytypes::User, _, _>(description, payload.as_bytes()).unwrap();
+
+        // Update the key.
+        let new_payload = "new_payload";
+        let updated_key = keyring.add_key::<keytypes::User, _, _>(description, new_payload.as_bytes()).unwrap();
+        assert_eq!(key, updated_key);
+        assert_eq!(updated_key.read().unwrap(),
+                new_payload.as_bytes().iter().cloned().collect::<Vec<_>>());
+
+        // Clean up.
+        keyring.unlink_key(&key).unwrap();
+        keyring.invalidate().unwrap();
     }
 }
