@@ -345,7 +345,12 @@ impl Keyring {
         check_call(i64::from(res), Keyring::new_impl(res))
     }
 
-    fn request_fallback_impl(&self, type_: &str, description: &str, info: &str) -> Result<KeyringSerial> {
+    fn request_fallback_impl(
+        &self,
+        type_: &str,
+        description: &str,
+        info: &str,
+    ) -> Result<KeyringSerial> {
         let type_cstr = CString::new(type_).unwrap();
         let desc_cstr = CString::new(description).unwrap();
         let info_cstr = CString::new(info).unwrap();
