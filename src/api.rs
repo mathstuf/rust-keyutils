@@ -893,6 +893,31 @@ mod tests {
     }
 
     #[test]
+    fn test_link_key() {
+        let mut keyring = Keyring::attach_or_create(SpecialKeyring::Thread).unwrap();
+        let mut new_keyring = keyring.add_keyring("new_keyring").unwrap();
+
+        // Create the key.
+        let description = "test:rust-keyutils:link_key";
+        let payload = "payload";
+        let key = keyring
+            .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
+            .unwrap();
+
+        new_keyring.link_key(&key).unwrap();
+
+        let (keys, keyrings) = new_keyring.read().unwrap();
+        assert_eq!(keys.len(), 1);
+        assert_eq!(keys[0], key);
+        assert_eq!(keyrings.len(), 0);
+
+        // Clean up.
+        key.invalidate().unwrap();
+        new_keyring.invalidate().unwrap();
+        keyring.invalidate().unwrap();
+    }
+
+    #[test]
     fn test_link_keyring() {
         let mut keyring = Keyring::attach_or_create(SpecialKeyring::Thread).unwrap();
         let mut new_keyring = keyring.add_keyring("new_keyring").unwrap();
@@ -1060,6 +1085,21 @@ mod tests {
 
         // Clean up.
         new_inner_keyring.unlink_key(&key).unwrap();
+        new_inner_keyring.invalidate().unwrap();
+        new_keyring.invalidate().unwrap();
+        keyring.invalidate().unwrap();
+    }
+
+    #[test]
+    fn test_search_keyring() {
+        let mut keyring = Keyring::attach_or_create(SpecialKeyring::Thread).unwrap();
+        let mut new_keyring = keyring.add_keyring("new_keyring").unwrap();
+        let new_inner_keyring = new_keyring.add_keyring("new_inner_keyring").unwrap();
+
+        let found_keyring = keyring.search_for_keyring("new_inner_keyring").unwrap();
+        assert_eq!(found_keyring, new_inner_keyring);
+
+        // Clean up.
         new_inner_keyring.invalidate().unwrap();
         new_keyring.invalidate().unwrap();
         keyring.invalidate().unwrap();
