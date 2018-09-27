@@ -421,7 +421,7 @@ impl Keyring {
     /// If the kernel returns malformed data, the the parser will panic.
     pub fn description(&self) -> Result<Description> {
         self.description_raw()
-            .and_then(|desc| Description::parse(desc).ok_or(errno::Errno(libc::EINVAL)))
+            .and_then(|desc| Description::parse(&desc).ok_or(errno::Errno(libc::EINVAL)))
     }
 
     /// Set an expiration timer on the keyring to `timeout`.
@@ -617,7 +617,7 @@ pub struct Description {
 }
 
 impl Description {
-    fn parse(desc: String) -> Option<Description> {
+    fn parse(desc: &str) -> Option<Description> {
         let mut pieces = desc.split(';').collect::<Vec<_>>();
         // Reverse the string because the kernel plans to extend it by adding fields to the
         // beginning of the string. By doing this, the fields are at a constant position in the
