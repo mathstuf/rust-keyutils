@@ -110,7 +110,7 @@ impl Keyring {
     where
         D: AsRef<str>,
     {
-        Keyring::new_impl(0).request_keyring(description)
+        Keyring::new_impl(0).request_keyring(description.as_ref())
     }
 
     /// Requests a keyring with the given description by searching the thread, process, and session
@@ -120,7 +120,7 @@ impl Keyring {
     /// the key.
     pub fn request_with_fallback<D, I>(description: D, info: I) -> Result<Self>
     where
-        D: AsRef<str>,
+        D: Borrow<<keytypes::Keyring as KeyType>::Description>,
         I: AsRef<str>,
     {
         Keyring::new_impl(0).request_keyring_with_fallback(description, info)
@@ -197,8 +197,11 @@ impl Keyring {
         check_call(unsafe { keyctl_unlink(keyring.id, self.id) }, ())
     }
 
-    fn search_impl(&self, type_: &str, description: &str) -> Result<libc::c_long> {
-        let type_cstr = CString::new(type_).unwrap();
+    fn search_impl<K>(&self, description: &str) -> Result<libc::c_long>
+    where
+        K: KeyType,
+    {
+        let type_cstr = CString::new(K::name()).unwrap();
         let desc_cstr = CString::new(description).unwrap();
         check_call_ret(unsafe {
             keyctl_search(self.id, type_cstr.as_ptr(), desc_cstr.as_ptr(), self.id)
@@ -210,11 +213,12 @@ impl Keyring {
     /// If it is found, it is attached to the keyring (if `write` permission to the keyring and
     /// `link` permission on the key exist) and return it. Requires the `search` permission on the
     /// keyring. Any children keyrings without the `search` permission are ignored.
-    pub fn search_for_key<D>(&self, description: D) -> Result<Key>
+    pub fn search_for_key<K, D>(&self, description: D) -> Result<Key>
     where
-        D: AsRef<str>,
+        K: KeyType,
+        D: Borrow<K::Description>,
     {
-        let res = self.search_impl("user", description.as_ref())?;
+        let res = self.search_impl::<K>(&description.borrow().description())?;
         check_call(res, Key::new_impl(res as key_serial_t))
     }
 
@@ -226,9 +230,9 @@ impl Keyring {
     /// ignored.
     pub fn search_for_keyring<D>(&self, description: D) -> Result<Self>
     where
-        D: AsRef<str>,
+        D: Borrow<<keytypes::Keyring as KeyType>::Description>,
     {
-        let res = self.search_impl("keyring", description.as_ref())?;
+        let res = self.search_impl::<keytypes::Keyring>(&description.borrow().description())?;
         check_call(res, Keyring::new_impl(res as key_serial_t))
     }
 
@@ -313,8 +317,11 @@ impl Keyring {
         Ok(Keyring::new_impl(key.id))
     }
 
-    fn request_impl(&self, type_: &str, description: &str) -> Result<KeyringSerial> {
-        let type_cstr = CString::new(type_).unwrap();
+    fn request_impl<K>(&self, description: &str) -> Result<KeyringSerial>
+    where
+        K: KeyType,
+    {
+        let type_cstr = CString::new(K::name()).unwrap();
         let desc_cstr = CString::new(description).unwrap();
         check_call_ret_serial(unsafe {
             request_key(type_cstr.as_ptr(), desc_cstr.as_ptr(), ptr::null(), self.id)
@@ -325,11 +332,12 @@ impl Keyring {
     /// keyrings.
     ///
     /// If it is found, it is attached to the keyring.
-    pub fn request_key<D>(&self, description: D) -> Result<Key>
+    pub fn request_key<K, D>(&self, description: D) -> Result<Key>
     where
-        D: AsRef<str>,
+        K: KeyType,
+        D: Borrow<K::Description>,
     {
-        let res = self.request_impl("user", description.as_ref())?;
+        let res = self.request_impl::<K>(&description.borrow().description())?;
         check_call(i64::from(res), Key::new_impl(res))
     }
 
@@ -339,19 +347,17 @@ impl Keyring {
     /// If it is found, it is attached to the keyring.
     pub fn request_keyring<D>(&self, description: D) -> Result<Self>
     where
-        D: AsRef<str>,
+        D: Borrow<<keytypes::Keyring as KeyType>::Description>,
     {
-        let res = self.request_impl("keyring", description.as_ref())?;
+        let res = self.request_impl::<keytypes::Keyring>(&description.borrow().description())?;
         check_call(i64::from(res), Keyring::new_impl(res))
     }
 
-    fn request_fallback_impl(
-        &self,
-        type_: &str,
-        description: &str,
-        info: &str,
-    ) -> Result<KeyringSerial> {
-        let type_cstr = CString::new(type_).unwrap();
+    fn request_fallback_impl<K>(&self, description: &str, info: &str) -> Result<KeyringSerial>
+    where
+        K: KeyType,
+    {
+        let type_cstr = CString::new(K::name()).unwrap();
         let desc_cstr = CString::new(description).unwrap();
         let info_cstr = CString::new(info).unwrap();
         check_call_ret_serial(unsafe {
@@ -370,12 +376,14 @@ impl Keyring {
     /// If it is not found, the `info` string will be handed off to `/sbin/request-key` to generate
     /// the key. If found, it will be attached to the current keyring. Requires `write` permission
     /// to the keyring.
-    pub fn request_key_with_fallback<D, I>(&self, description: D, info: I) -> Result<Key>
+    pub fn request_key_with_fallback<K, D, I>(&self, description: D, info: I) -> Result<Key>
     where
-        D: AsRef<str>,
+        K: KeyType,
+        D: Borrow<K::Description>,
         I: AsRef<str>,
     {
-        let res = self.request_fallback_impl("user", description.as_ref(), info.as_ref())?;
+        let res =
+            self.request_fallback_impl::<K>(&description.borrow().description(), info.as_ref())?;
         check_call(i64::from(res), Key::new_impl(res))
     }
 
@@ -387,10 +395,13 @@ impl Keyring {
     /// to the keyring.
     pub fn request_keyring_with_fallback<D, I>(&self, description: D, info: I) -> Result<Self>
     where
-        D: AsRef<str>,
+        D: Borrow<<keytypes::Keyring as KeyType>::Description>,
         I: AsRef<str>,
     {
-        let res = self.request_fallback_impl("keyring", description.as_ref(), info.as_ref())?;
+        let res = self.request_fallback_impl::<keytypes::Keyring>(
+            &description.borrow().description(),
+            info.as_ref(),
+        )?;
         check_call(i64::from(res), Keyring::new_impl(res))
     }
 
@@ -514,11 +525,12 @@ impl Key {
 
     /// Requests a key with the given description by searching the thread, process, and session
     /// keyrings.
-    pub fn request<D>(description: D) -> Result<Self>
+    pub fn request<K, D>(description: D) -> Result<Self>
     where
-        D: AsRef<str>,
+        K: KeyType,
+        D: Borrow<K::Description>,
     {
-        Keyring::new_impl(0).request_key(description)
+        Keyring::new_impl(0).request_key::<K, _>(description)
     }
 
     /// Requests a key with the given description by searching the thread, process, and session
@@ -526,12 +538,13 @@ impl Key {
     ///
     /// If it is not found, the `info` string will be handed off to `/sbin/request-key` to generate
     /// the key.
-    pub fn request_with_fallback<D, I>(description: D, info: I) -> Result<Self>
+    pub fn request_with_fallback<K, D, I>(description: D, info: I) -> Result<Self>
     where
-        D: AsRef<str>,
+        K: KeyType,
+        D: Borrow<K::Description>,
         I: AsRef<str>,
     {
-        Keyring::new_impl(0).request_key_with_fallback(description, info)
+        Keyring::new_impl(0).request_key_with_fallback::<K, _, _>(description, info)
     }
 
     /// Update the payload in the key.
@@ -995,7 +1008,9 @@ mod tests {
             .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
             .unwrap();
 
-        let found_key = keyring.request_key(description).unwrap();
+        let found_key = keyring
+            .request_key::<keytypes::User, _>(description)
+            .unwrap();
         assert_eq!(found_key, key);
 
         // Clean up.
@@ -1038,7 +1053,9 @@ mod tests {
             .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
             .unwrap();
 
-        let found_key = keyring.search_for_key(description).unwrap();
+        let found_key = keyring
+            .search_for_key::<keytypes::User, _>(description)
+            .unwrap();
         assert_eq!(found_key, key);
 
         // Clean up.
