@@ -50,17 +50,17 @@ impl KeyType {
 /// Special keyrings predefined for a process.
 pub enum SpecialKeyring {
     /// A thread-specific keyring.
-    ThreadKeyring,
+    Thread,
     /// A process-specific keyring.
-    ProcessKeyring,
+    Process,
     /// A session-specific keyring.
-    SessionKeyring,
+    Session,
     /// A user-specific keyring.
-    UserKeyring,
+    User,
     /// A user session-specific keyring.
-    UserSessionKeyring,
+    UserSession,
     /// A group-specific keyring.
-    GroupKeyring,
+    Group,
 }
 
 /// The kernel type for representing a keyring (or key).
@@ -70,12 +70,12 @@ impl SpecialKeyring {
     /// Retrieve the serial number for the special keyring.
     pub fn serial(self) -> KeyringSerial {
         match self {
-            SpecialKeyring::ThreadKeyring => KEY_SPEC_THREAD_KEYRING,
-            SpecialKeyring::ProcessKeyring => KEY_SPEC_PROCESS_KEYRING,
-            SpecialKeyring::SessionKeyring => KEY_SPEC_SESSION_KEYRING,
-            SpecialKeyring::UserKeyring => KEY_SPEC_USER_KEYRING,
-            SpecialKeyring::UserSessionKeyring => KEY_SPEC_USER_SESSION_KEYRING,
-            SpecialKeyring::GroupKeyring => KEY_SPEC_GROUP_KEYRING,
+            SpecialKeyring::Thread => KEY_SPEC_THREAD_KEYRING,
+            SpecialKeyring::Process => KEY_SPEC_PROCESS_KEYRING,
+            SpecialKeyring::Session => KEY_SPEC_SESSION_KEYRING,
+            SpecialKeyring::User => KEY_SPEC_USER_KEYRING,
+            SpecialKeyring::UserSession => KEY_SPEC_USER_SESSION_KEYRING,
+            SpecialKeyring::Group => KEY_SPEC_GROUP_KEYRING,
         }
     }
 }
@@ -241,16 +241,16 @@ bitflags! {
 
 #[test]
 fn test_keyring_ids() {
-    assert_eq!(SpecialKeyring::ThreadKeyring.serial(),
+    assert_eq!(SpecialKeyring::Thread.serial(),
                KEY_SPEC_THREAD_KEYRING);
-    assert_eq!(SpecialKeyring::ProcessKeyring.serial(),
+    assert_eq!(SpecialKeyring::Process.serial(),
                KEY_SPEC_PROCESS_KEYRING);
-    assert_eq!(SpecialKeyring::SessionKeyring.serial(),
+    assert_eq!(SpecialKeyring::Session.serial(),
                KEY_SPEC_SESSION_KEYRING);
-    assert_eq!(SpecialKeyring::UserKeyring.serial(), KEY_SPEC_USER_KEYRING);
-    assert_eq!(SpecialKeyring::UserSessionKeyring.serial(),
+    assert_eq!(SpecialKeyring::User.serial(), KEY_SPEC_USER_KEYRING);
+    assert_eq!(SpecialKeyring::UserSession.serial(),
                KEY_SPEC_USER_SESSION_KEYRING);
-    assert_eq!(SpecialKeyring::GroupKeyring.serial(),
+    assert_eq!(SpecialKeyring::Group.serial(),
                KEY_SPEC_GROUP_KEYRING);
 }
 

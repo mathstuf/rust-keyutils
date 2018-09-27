@@ -674,7 +674,7 @@ mod tests {
 
     #[test]
     fn test_add_key() {
-        let mut keyring = Keyring::attach_or_create(SpecialKeyring::ThreadKeyring).unwrap();
+        let mut keyring = Keyring::attach_or_create(SpecialKeyring::Thread).unwrap();
 
         // Create the key.
         let description = "test:ruskey:add_key";
@@ -698,7 +698,7 @@ mod tests {
 
     #[test]
     fn test_clear_keyring() {
-        let mut keyring = Keyring::attach_or_create(SpecialKeyring::ThreadKeyring).unwrap();
+        let mut keyring = Keyring::attach_or_create(SpecialKeyring::Thread).unwrap();
 
         {
             let (keys, keyrings) = keyring.read().unwrap();
@@ -730,7 +730,7 @@ mod tests {
 
     #[test]
     fn test_describe_key() {
-        let mut keyring = Keyring::attach_or_create(SpecialKeyring::ThreadKeyring).unwrap();
+        let mut keyring = Keyring::attach_or_create(SpecialKeyring::Thread).unwrap();
 
         // Create the key.
         let desc = "test:ruskey:describe_key";
