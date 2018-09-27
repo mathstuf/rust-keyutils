@@ -18,5 +18,6 @@ members = ["libkeyutils-sys"]
 bitflags = "~0.9"
 errno = "~0.2"
 libkeyutils-sys = { path = "libkeyutils-sys", version = "~0.3" }
+log = "~0.4"
 
 libc = "~0.2"

@@ -628,11 +628,16 @@ impl Description {
             None
         } else {
             if len > 5 {
-                println!("New fields detected! Please report this upstream to \
-                          https://github.com/mathstuf/rust-keyutils: {}",
-                         desc);
+                error!("New fields detected! Please report this upstream to \
+                        https://github.com/mathstuf/rust-keyutils: {}",
+                       desc);
             }
             let bits = KeyPermissions::from_str_radix(pieces[1], 16).unwrap();
+            if Permission::from_bits(bits).is_none() {
+                error!("New permission bits detected! Please report this upstream to \
+                        https://github.com/mathstuf/rust-keyutils: {}",
+                       bits);
+            }
             Some(Description {
                 type_: pieces[4].to_owned(),
                 uid: pieces[3].parse::<libc::uid_t>().unwrap(),
