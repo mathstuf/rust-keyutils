@@ -396,8 +396,8 @@ impl Keyring {
     ///
     /// Requires the `setattr` permission on the keyring and the SysAdmin capability if the current
     /// user does not own the keyring.
-    pub fn set_permissions(&mut self, perms: KeyPermissions) -> Result<()> {
-        check_call(unsafe { keyctl_setperm(self.id, perms) }, ())
+    pub fn set_permissions(&mut self, perms: Permission) -> Result<()> {
+        check_call(unsafe { keyctl_setperm(self.id, perms.bits()) }, ())
     }
 
     fn description_raw(&self) -> Result<String> {
@@ -534,7 +534,7 @@ impl Key {
     ///
     /// Requires the `setattr` permission on the key and the SysAdmin capability if the current
     /// user does not own the key.
-    pub fn set_permissions(&mut self, perms: KeyPermissions) -> Result<()> {
+    pub fn set_permissions(&mut self, perms: Permission) -> Result<()> {
         Keyring::new_impl(self.id).set_permissions(perms)
     }
 
@@ -607,7 +607,7 @@ pub struct Description {
     /// The group owner of the key.
     pub gid: libc::gid_t,
     /// The permissions of the key.
-    pub perms: KeyPermissions,
+    pub perms: Permission,
     /// The plaintext description of the key.
     pub description: String,
 }
@@ -628,11 +628,12 @@ impl Description {
                           https://github.com/mathstuf/rust-keyutils: {}",
                          desc);
             }
+            let bits = KeyPermissions::from_str_radix(pieces[1], 16).unwrap();
             Some(Description {
                 type_: pieces[4].to_owned(),
                 uid: pieces[3].parse::<libc::uid_t>().unwrap(),
                 gid: pieces[2].parse::<libc::gid_t>().unwrap(),
-                perms: KeyPermissions::from_str_radix(pieces[1], 16).unwrap(),
+                perms: Permission::from_bits_truncate(bits),
                 description: pieces[0].to_owned(),
             })
         }

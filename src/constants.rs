@@ -126,9 +126,9 @@ impl From<i32> for DefaultKeyring {
     }
 }
 
-/// The kernel type for representing a keyring's (or key's) permission.
+/// The kernel type for representing a keyring's or key's permission.
 ///
-/// See `KeyringPermission`.
+/// See `Permission`.
 pub type KeyPermissions = u32;
 
 bitflags! {
@@ -144,7 +144,7 @@ bitflags! {
     /// "possession" requires the `search` permission, association from the calling thread
     /// (the session, process, and thread keyrings), or is linked to from a possessed keyring. See
     /// `keyrings(7)` for complete details.
-    struct KeyringPermission: key_perm_t {
+    pub struct Permission: KeyPermissions {
         /// Possession allows viewing attributes about the key or keyring.
         const POSSESSOR_VIEW            = KEY_POS_VIEW;
         /// Possession allows reading a key's contents or a keyring's subkeys.
