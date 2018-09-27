@@ -1,7 +1,6 @@
-enum_trailing_comma = true
-fn_args_density = "Compressed"
-fn_args_layout = "Visual"
 match_block_trailing_comma = true
-match_wildcard_trailing_comma = true
-struct_lit_trailing_comma = "Always"
-struct_trailing_comma = "Always"
+force_multiline_blocks = true
+report_todo = "Unnumbered"
+report_fixme = "Unnumbered"
+struct_lit_single_line = false
+license_template_path = ".license.template"
