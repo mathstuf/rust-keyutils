@@ -1,6 +1,6 @@
 [package]
 name = "keyutils"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Ben Boeckel <mathstuf@gmail.com>"]
 license = "BSD-3-Clause"
 description = """
@@ -8,7 +8,7 @@ Rust interface to the Linux keyring.
 """
 repository = "https://github.com/mathstuf/rust-keyutils.git"
 homepage = "https://github.com/mathstuf/rust-keyutils.git"
-documentation = "https://docs.rs/keyutils/~0.3"
+documentation = "https://docs.rs/keyutils/~0.4"
 readme = "README.md"
 
 [workspace]
@@ -17,7 +17,10 @@ members = ["libkeyutils-sys"]
 [dependencies]
 bitflags = "~0.9"
 errno = "~0.2"
-libkeyutils-sys = { path = "libkeyutils-sys", version = "~0.3" }
+libkeyutils-sys = { path = "libkeyutils-sys", version = "~0.3.1" }
 log = "~0.4"
 
 libc = "~0.2"
+
+[features]
+nightly = ["itertools"]
