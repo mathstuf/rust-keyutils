@@ -220,36 +220,48 @@ bitflags! {
 
 #[test]
 fn test_keyring_ids() {
-    assert_eq!(SpecialKeyring::Thread.serial(),
-               KEY_SPEC_THREAD_KEYRING);
-    assert_eq!(SpecialKeyring::Process.serial(),
-               KEY_SPEC_PROCESS_KEYRING);
-    assert_eq!(SpecialKeyring::Session.serial(),
-               KEY_SPEC_SESSION_KEYRING);
+    assert_eq!(SpecialKeyring::Thread.serial(), KEY_SPEC_THREAD_KEYRING);
+    assert_eq!(SpecialKeyring::Process.serial(), KEY_SPEC_PROCESS_KEYRING);
+    assert_eq!(SpecialKeyring::Session.serial(), KEY_SPEC_SESSION_KEYRING);
     assert_eq!(SpecialKeyring::User.serial(), KEY_SPEC_USER_KEYRING);
-    assert_eq!(SpecialKeyring::UserSession.serial(),
-               KEY_SPEC_USER_SESSION_KEYRING);
-    assert_eq!(SpecialKeyring::Group.serial(),
-               KEY_SPEC_GROUP_KEYRING);
+    assert_eq!(
+        SpecialKeyring::UserSession.serial(),
+        KEY_SPEC_USER_SESSION_KEYRING
+    );
+    assert_eq!(SpecialKeyring::Group.serial(), KEY_SPEC_GROUP_KEYRING);
 }
 
 #[test]
 fn test_default_keyring_ids() {
     assert_eq!(DefaultKeyring::NoChange.serial(), KEY_REQKEY_DEFL_NO_CHANGE);
-    assert_eq!(DefaultKeyring::ThreadKeyring.serial(),
-               KEY_REQKEY_DEFL_THREAD_KEYRING);
-    assert_eq!(DefaultKeyring::ProcessKeyring.serial(),
-               KEY_REQKEY_DEFL_PROCESS_KEYRING);
-    assert_eq!(DefaultKeyring::SessionKeyring.serial(),
-               KEY_REQKEY_DEFL_SESSION_KEYRING);
-    assert_eq!(DefaultKeyring::UserKeyring.serial(),
-               KEY_REQKEY_DEFL_USER_KEYRING);
-    assert_eq!(DefaultKeyring::UserSessionKeyring.serial(),
-               KEY_REQKEY_DEFL_USER_SESSION_KEYRING);
-    assert_eq!(DefaultKeyring::GroupKeyring.serial(),
-               KEY_REQKEY_DEFL_GROUP_KEYRING);
-    assert_eq!(DefaultKeyring::DefaultKeyring.serial(),
-               KEY_REQKEY_DEFL_DEFAULT);
+    assert_eq!(
+        DefaultKeyring::ThreadKeyring.serial(),
+        KEY_REQKEY_DEFL_THREAD_KEYRING
+    );
+    assert_eq!(
+        DefaultKeyring::ProcessKeyring.serial(),
+        KEY_REQKEY_DEFL_PROCESS_KEYRING
+    );
+    assert_eq!(
+        DefaultKeyring::SessionKeyring.serial(),
+        KEY_REQKEY_DEFL_SESSION_KEYRING
+    );
+    assert_eq!(
+        DefaultKeyring::UserKeyring.serial(),
+        KEY_REQKEY_DEFL_USER_KEYRING
+    );
+    assert_eq!(
+        DefaultKeyring::UserSessionKeyring.serial(),
+        KEY_REQKEY_DEFL_USER_SESSION_KEYRING
+    );
+    assert_eq!(
+        DefaultKeyring::GroupKeyring.serial(),
+        KEY_REQKEY_DEFL_GROUP_KEYRING
+    );
+    assert_eq!(
+        DefaultKeyring::DefaultKeyring.serial(),
+        KEY_REQKEY_DEFL_DEFAULT
+    );
 }
 
 #[test]

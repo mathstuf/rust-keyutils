@@ -81,6 +81,10 @@ pub struct Description {
 
 impl KeyDescription for Description {
     fn description(&self) -> Cow<str> {
-        Cow::Owned(format!("{}:{}", self.hash_type.name(), AsciiHex::convert(&self.hash)))
+        Cow::Owned(format!(
+            "{}:{}",
+            self.hash_type.name(),
+            AsciiHex::convert(&self.hash),
+        ))
     }
 }

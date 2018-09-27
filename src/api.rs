@@ -237,18 +237,21 @@ impl Keyring {
     /// Requires `read` permission on the keyring.
     pub fn read(&self) -> Result<(Vec<Key>, Vec<Keyring>)> {
         let sz = check_call_ret(unsafe { keyctl_read(self.id, ptr::null_mut(), 0) })?;
-        let mut buffer = Vec::<key_serial_t>::with_capacity((sz as usize) /
-                                                            mem::size_of::<KeyringSerial>());
+        let mut buffer =
+            Vec::<key_serial_t>::with_capacity((sz as usize) / mem::size_of::<KeyringSerial>());
         let actual_sz = check_call_ret(unsafe {
-            keyctl_read(self.id,
-                        buffer.as_mut_ptr() as *mut libc::c_char,
-                        sz as usize)
+            keyctl_read(
+                self.id,
+                buffer.as_mut_ptr() as *mut libc::c_char,
+                sz as usize,
+            )
         })?;
         unsafe { buffer.set_len((actual_sz as usize) / mem::size_of::<KeyringSerial>()) };
         let keys = buffer.iter()
             .map(|&id| Key::new_impl(id))
             .partition(|key| key.description().unwrap().type_ == "keyring");
-        Ok((keys.1,
+        Ok((
+            keys.1,
             keys.0
             .iter()
             .map(|key| Keyring::new_impl(key.id))
@@ -285,11 +288,13 @@ impl Keyring {
         let desc_cstr = CString::new(description.description().as_bytes()).unwrap();
         let payload = payload.payload();
         let res = unsafe {
-            add_key(type_cstr.as_ptr(),
-                    desc_cstr.as_ptr(),
-                    payload.as_ptr() as *const libc::c_void,
-                    payload.len(),
-                    self.id)
+            add_key(
+                type_cstr.as_ptr(),
+                desc_cstr.as_ptr(),
+                payload.as_ptr() as *const libc::c_void,
+                payload.len(),
+                self.id,
+            )
         };
         check_call(i64::from(res), Key::new_impl(res))
     }
@@ -343,10 +348,12 @@ impl Keyring {
         let desc_cstr = CString::new(description).unwrap();
         let info_cstr = CString::new(info).unwrap();
         check_call_ret_serial(unsafe {
-            request_key(type_cstr.as_ptr(),
-                        desc_cstr.as_ptr(),
-                        info_cstr.as_ptr(),
-                        self.id)
+            request_key(
+                type_cstr.as_ptr(),
+                desc_cstr.as_ptr(),
+                info_cstr.as_ptr(),
+                self.id,
+            )
         })
     }
 
@@ -415,9 +422,11 @@ impl Keyring {
         let sz = check_call_ret(unsafe { keyctl_describe(self.id, ptr::null_mut(), 0) })?;
         let mut buffer = Vec::with_capacity(sz as usize);
         let actual_sz = check_call_ret(unsafe {
-            keyctl_describe(self.id,
-                            buffer.as_mut_ptr() as *mut libc::c_char,
-                            sz as usize)
+            keyctl_describe(
+                self.id,
+                buffer.as_mut_ptr() as *mut libc::c_char,
+                sz as usize,
+            )
         })?;
         unsafe { buffer.set_len((actual_sz - 1) as usize) };
         let str_slice = str::from_utf8(&buffer[..]).unwrap();
@@ -439,7 +448,10 @@ impl Keyring {
     /// Any partial seconds are ignored. A timeout of 0 means "no expiration". Requires the
     /// `setattr` permission on the keyring.
     pub fn set_timeout(&mut self, timeout: Duration) -> Result<()> {
-        check_call(unsafe { keyctl_set_timeout(self.id, timeout.as_secs() as u32) }, ())
+        check_call(
+            unsafe { keyctl_set_timeout(self.id, timeout.as_secs() as u32) },
+            (),
+        )
     }
 
     /// The security context of the keyring. Depends on the security manager loaded into the kernel
@@ -448,9 +460,11 @@ impl Keyring {
         let sz = check_call_ret(unsafe { keyctl_get_security(self.id, ptr::null_mut(), 0) })?;
         let mut buffer = Vec::with_capacity(sz as usize);
         let actual_sz = check_call_ret(unsafe {
-            keyctl_get_security(self.id,
-                                buffer.as_mut_ptr() as *mut libc::c_char,
-                                sz as usize)
+            keyctl_get_security(
+                self.id,
+                buffer.as_mut_ptr() as *mut libc::c_char,
+                sz as usize,
+            )
         })?;
         unsafe { buffer.set_len(actual_sz as usize) };
         let str_slice = str::from_utf8(&buffer[..]).unwrap();
@@ -519,10 +533,10 @@ impl Key {
         D: AsRef<[u8]>,
     {
         let data = data.as_ref();
-        check_call(unsafe {
-                       keyctl_update(self.id, data.as_ptr() as *const libc::c_void, data.len())
-                   },
-                   ())
+        check_call(
+            unsafe { keyctl_update(self.id, data.as_ptr() as *const libc::c_void, data.len()) },
+            (),
+        )
     }
 
     /// Revokes the key. Requires `write` permission on the key.
@@ -568,9 +582,11 @@ impl Key {
         let sz = check_call_ret(unsafe { keyctl_read(self.id, ptr::null_mut(), 0) })?;
         let mut buffer = Vec::with_capacity(sz as usize);
         let actual_sz = check_call_ret(unsafe {
-            keyctl_read(self.id,
-                        buffer.as_mut_ptr() as *mut libc::c_char,
-                        sz as usize)
+            keyctl_read(
+                self.id,
+                buffer.as_mut_ptr() as *mut libc::c_char,
+                sz as usize,
+            )
         })?;
         unsafe { buffer.set_len(actual_sz as usize) };
         Ok(buffer)
@@ -600,15 +616,33 @@ impl Key {
 
     /// Create an object to manage a key request.
     pub fn manage(&mut self) -> Result<KeyManager> {
-        check_call(unsafe { keyctl_assume_authority(self.id) },
-                   KeyManager::new(Key::new_impl(self.id)))
+        check_call(
+            unsafe { keyctl_assume_authority(self.id) },
+            KeyManager::new(Key::new_impl(self.id)),
+        )
     }
 
     /// Compute a Diffie-Hellman prime for use as a shared secret or public key.
     pub fn compute_dh(private: &Key, prime: &Key, base: &Key) -> Result<Vec<u8>> {
-        let sz = check_call_ret(unsafe { keyctl_dh_compute(private.id, prime.id, base.id, ptr::null_mut() as *mut libc::c_char, 0) })?;
+        let sz = check_call_ret(unsafe {
+            keyctl_dh_compute(
+                private.id,
+                prime.id,
+                base.id,
+                ptr::null_mut() as *mut libc::c_char,
+                0,
+            )
+        })?;
         let mut buffer = Vec::with_capacity(sz as usize);
-        let actual_sz = check_call_ret(unsafe { keyctl_dh_compute(private.id, prime.id, base.id, buffer.as_mut_ptr() as *mut libc::c_char, sz as usize) })?;
+        let actual_sz = check_call_ret(unsafe {
+            keyctl_dh_compute(
+                private.id,
+                prime.id,
+                base.id,
+                buffer.as_mut_ptr() as *mut libc::c_char,
+                sz as usize,
+            )
+        })?;
         unsafe { buffer.set_len(actual_sz as usize) };
         Ok(buffer)
     }
@@ -641,15 +675,19 @@ impl Description {
             None
         } else {
             if len > 5 {
-                error!("New fields detected! Please report this upstream to \
-                        https://github.com/mathstuf/rust-keyutils: {}",
-                       desc);
+                error!(
+                    "New fields detected! Please report this upstream to \
+                     https://github.com/mathstuf/rust-keyutils: {}",
+                    desc,
+                );
             }
             let bits = KeyPermissions::from_str_radix(pieces[1], 16).unwrap();
             if Permission::from_bits(bits).is_none() {
-                error!("New permission bits detected! Please report this upstream to \
-                        https://github.com/mathstuf/rust-keyutils: {}",
-                       bits);
+                error!(
+                    "New permission bits detected! Please report this upstream to \
+                     https://github.com/mathstuf/rust-keyutils: {}",
+                    bits,
+                );
             }
             Some(Description {
                 type_: pieces[4].to_owned(),
@@ -681,13 +719,17 @@ impl KeyManager {
         P: AsRef<[u8]>,
     {
         let payload = payload.as_ref();
-        check_call(unsafe {
-                       keyctl_instantiate(self.key.id,
-                                          payload.as_ptr() as *const libc::c_void,
-                                          payload.len(),
-                                          keyring.id)
-                   },
-                   ())
+        check_call(
+            unsafe {
+                keyctl_instantiate(
+                    self.key.id,
+                    payload.as_ptr() as *const libc::c_void,
+                    payload.len(),
+                    keyring.id,
+                )
+            },
+            (),
+        )
     }
 
     /// Reject the key with the given `error`.
@@ -698,8 +740,17 @@ impl KeyManager {
     /// `write` permission on the keyring.
     pub fn reject(self, keyring: &Keyring, timeout: Duration, error: errno::Errno) -> Result<()> {
         let errno::Errno(errval) = error;
-        check_call(unsafe { keyctl_reject(self.key.id, timeout.as_secs() as u32, errval as u32, keyring.id) },
-                   ())
+        check_call(
+            unsafe {
+                keyctl_reject(
+                    self.key.id,
+                    timeout.as_secs() as u32,
+                    errval as u32,
+                    keyring.id,
+                )
+            },
+            (),
+        )
     }
 
     /// Reject the key with `ENOKEY`.
@@ -709,8 +760,10 @@ impl KeyManager {
     /// requesting a non-existant key repeatedly. The requester must have
     /// `write` permission on the keyring.
     pub fn negate(self, keyring: &Keyring, timeout: Duration) -> Result<()> {
-        check_call(unsafe { keyctl_negate(self.key.id, timeout.as_secs() as u32, keyring.id) },
-                   ())
+        check_call(
+            unsafe { keyctl_negate(self.key.id, timeout.as_secs() as u32, keyring.id) },
+            (),
+        )
     }
 }
 
@@ -734,8 +787,10 @@ mod tests {
         let description = "test:rust-keyutils:add_key";
         let payload = "payload";
         let key = keyring.add_key::<keytypes::User, _, _>(description, payload.as_bytes()).unwrap();
-        assert_eq!(key.read().unwrap(),
-                payload.as_bytes().iter().cloned().collect::<Vec<_>>());
+        assert_eq!(
+            key.read().unwrap(),
+            payload.as_bytes().iter().cloned().collect::<Vec<_>>()
+        );
 
         // Clean up.
         keyring.unlink_key(&key).unwrap();
@@ -853,8 +908,10 @@ mod tests {
         let description = "test:rust-keyutils:read_key";
         let payload = "payload";
         let key = keyring.add_key::<keytypes::User, _, _>(description, payload.as_bytes()).unwrap();
-        assert_eq!(key.read().unwrap(),
-                payload.as_bytes().iter().cloned().collect::<Vec<_>>());
+        assert_eq!(
+            key.read().unwrap(),
+            payload.as_bytes().iter().cloned().collect::<Vec<_>>()
+        );
 
         // Clean up.
         keyring.unlink_key(&key).unwrap();
@@ -1051,8 +1108,10 @@ mod tests {
         let new_payload = "new_payload";
         let updated_key = keyring.add_key::<keytypes::User, _, _>(description, new_payload.as_bytes()).unwrap();
         assert_eq!(key, updated_key);
-        assert_eq!(updated_key.read().unwrap(),
-                new_payload.as_bytes().iter().cloned().collect::<Vec<_>>());
+        assert_eq!(
+            updated_key.read().unwrap(),
+            new_payload.as_bytes().iter().cloned().collect::<Vec<_>>()
+        );
 
         // Clean up.
         keyring.unlink_key(&key).unwrap();
