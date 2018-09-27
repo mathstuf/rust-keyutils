@@ -28,6 +28,7 @@ use crates::libc;
 
 use types::{key_perm_t, key_serial_t};
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 extern "C" {
     pub fn add_key(
         type_:          *const libc::c_char,
