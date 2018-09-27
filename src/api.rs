@@ -75,7 +75,16 @@ pub struct Keyring {
 }
 
 impl Keyring {
-    fn new(id: KeyringSerial) -> Self {
+    /// Instantiate a keyring from an ID.
+    ///
+    /// This is unsafe because no keyring is known to exist with the given ID.
+    pub unsafe fn new(id: KeyringSerial) -> Self {
+        Keyring {
+            id: id,
+        }
+    }
+
+    fn new_impl(id: KeyringSerial) -> Self {
         Keyring {
             id: id,
         }
@@ -99,7 +108,7 @@ impl Keyring {
     pub fn request<D>(description: D) -> Result<Self>
         where D: AsRef<str>,
     {
-        Keyring::new(0).request_keyring(description)
+        Keyring::new_impl(0).request_keyring(description)
     }
 
     /// Requests a keyring with the given description by searching the thread, process, and session
@@ -111,12 +120,12 @@ impl Keyring {
         where D: AsRef<str>,
               I: AsRef<str>,
     {
-        Keyring::new(0).request_keyring_with_fallback(description, info)
+        Keyring::new_impl(0).request_keyring_with_fallback(description, info)
     }
 
     fn get_keyring(id: SpecialKeyring, create: bool) -> Result<Keyring> {
         let res = unsafe { keyctl_get_keyring_ID(id.serial(), create as libc::c_int) };
-        check_call(res as libc::c_long, Keyring::new(res))
+        check_call(res as libc::c_long, Keyring::new_impl(res))
     }
 
     /// Attach to a special keyring. Fails if the keyring does not already exist.
@@ -132,7 +141,7 @@ impl Keyring {
     /// Create a new anonymous keyring and set it as the session keyring.
     pub fn join_anonymous_session() -> Result<Self> {
         let res = unsafe { keyctl_join_session_keyring(ptr::null()) };
-        check_call(res as libc::c_long, Keyring::new(res))
+        check_call(res as libc::c_long, Keyring::new_impl(res))
     }
 
     /// Attached to a named session keyring.
@@ -144,7 +153,7 @@ impl Keyring {
     {
         let name_cstr = CString::new(name.as_ref()).unwrap();
         let res = unsafe { keyctl_join_session_keyring(name_cstr.as_ptr()) };
-        check_call(res as libc::c_long, Keyring::new(res))
+        check_call(res as libc::c_long, Keyring::new_impl(res))
     }
 
     /// Clears the contents of the keyring.
@@ -201,7 +210,7 @@ impl Keyring {
         where D: AsRef<str>,
     {
         let res = self.search_impl("user", description.as_ref())?;
-        check_call(res, Key::new(res as key_serial_t))
+        check_call(res, Key::new_impl(res as key_serial_t))
     }
 
     /// Recursively search the keyring for a keyring with the matching description.
@@ -214,7 +223,7 @@ impl Keyring {
         where D: AsRef<str>,
     {
         let res = self.search_impl("keyring", description.as_ref())?;
-        check_call(res, Keyring::new(res as key_serial_t))
+        check_call(res, Keyring::new_impl(res as key_serial_t))
     }
 
     /// Return all immediate children of the keyring.
@@ -231,12 +240,12 @@ impl Keyring {
         })?;
         unsafe { buffer.set_len((actual_sz as usize) / mem::size_of::<KeyringSerial>()) };
         let keys = buffer.iter()
-            .map(|&id| Key::new(id))
+            .map(|&id| Key::new_impl(id))
             .partition(|key| key.description().unwrap().type_ == "keyring");
         Ok((keys.1,
             keys.0
             .iter()
-            .map(|key| Keyring::new(key.id))
+            .map(|key| Keyring::new_impl(key.id))
             .collect::<Vec<_>>()))
     }
 
@@ -245,7 +254,7 @@ impl Keyring {
     /// If one does not exist, it will be created. Requires `write` permission on the keyring.
     pub fn attach_persistent(&mut self) -> Result<Self> {
         let res = unsafe { keyctl_get_persistent(!0, self.id) };
-        check_call(res, Keyring::new(res as key_serial_t))
+        check_call(res, Keyring::new_impl(res as key_serial_t))
     }
 
     /// Adds a key of a specific type to the keyring.
@@ -276,7 +285,7 @@ impl Keyring {
                     payload.len(),
                     self.id)
         };
-        check_call(res as libc::c_long, Key::new(res))
+        check_call(res as libc::c_long, Key::new_impl(res))
     }
 
     /// Adds a keyring to the current keyring.
@@ -287,7 +296,7 @@ impl Keyring {
         where D: Borrow<<keytypes::Keyring as KeyType>::Description>,
     {
         let key = self.add_key::<keytypes::Keyring, _, _>(description, ())?;
-        Ok(Keyring::new(key.id))
+        Ok(Keyring::new_impl(key.id))
     }
 
     fn request_impl(&self, type_: &str, description: &str) -> Result<KeyringSerial> {
@@ -306,7 +315,7 @@ impl Keyring {
         where D: AsRef<str>,
     {
         let res = self.request_impl("user", description.as_ref())?;
-        check_call(res as libc::c_long, Key::new(res))
+        check_call(res as libc::c_long, Key::new_impl(res))
     }
 
     /// Requests a keyring with the given description by searching the thread, process, and session
@@ -317,7 +326,7 @@ impl Keyring {
         where D: AsRef<str>,
     {
         let res = self.request_impl("keyring", description.as_ref())?;
-        check_call(res as libc::c_long, Keyring::new(res))
+        check_call(res as libc::c_long, Keyring::new_impl(res))
     }
 
     fn request_fallback_impl(&self, type_: &str, description: &str, info: &str) -> Result<KeyringSerial> {
@@ -343,7 +352,7 @@ impl Keyring {
               I: AsRef<str>,
     {
         let res = self.request_fallback_impl("user", description.as_ref(), info.as_ref())?;
-        check_call(res as libc::c_long, Key::new(res))
+        check_call(res as libc::c_long, Key::new_impl(res))
     }
 
     /// Requests a keyring with the given description by searching the thread, process, and session
@@ -357,7 +366,7 @@ impl Keyring {
               I: AsRef<str>,
     {
         let res = self.request_fallback_impl("keyring", description.as_ref(), info.as_ref())?;
-        check_call(res as libc::c_long, Keyring::new(res))
+        check_call(res as libc::c_long, Keyring::new_impl(res))
     }
 
     /// Revokes the keyring.
@@ -449,7 +458,14 @@ pub struct Key {
 }
 
 impl Key {
-    fn new(id: KeyringSerial) -> Self {
+    /// Instantiate a key from an ID.
+    ///
+    /// This is unsafe because no key is known to exist with the given ID.
+    pub unsafe fn new(id: KeyringSerial) -> Self {
+        Self::new_impl(id)
+    }
+
+    fn new_impl(id: KeyringSerial) -> Self {
         Key {
             id: id,
         }
@@ -459,7 +475,7 @@ impl Key {
     /// keyrings.
     pub fn request_key_auth_key(create: bool) -> Result<Self> {
         let res = unsafe { keyctl_get_keyring_ID(KEY_SPEC_REQKEY_AUTH_KEY, create as libc::c_int) };
-        check_call(res as libc::c_long, Key::new(res))
+        check_call(res as libc::c_long, Key::new_impl(res))
     }
 
     /// Requests a key with the given description by searching the thread, process, and session
@@ -467,7 +483,7 @@ impl Key {
     pub fn request<D>(description: D) -> Result<Self>
         where D: AsRef<str>,
     {
-        Keyring::new(0).request_key(description)
+        Keyring::new_impl(0).request_key(description)
     }
 
     /// Requests a key with the given description by searching the thread, process, and session
@@ -479,7 +495,7 @@ impl Key {
         where D: AsRef<str>,
               I: AsRef<str>,
     {
-        Keyring::new(0).request_key_with_fallback(description, info)
+        Keyring::new_impl(0).request_key_with_fallback(description, info)
     }
 
     /// Update the payload in the key.
@@ -495,7 +511,7 @@ impl Key {
 
     /// Revokes the key. Requires `write` permission on the key.
     pub fn revoke(self) -> Result<()> {
-        Keyring::new(self.id).revoke()
+        Keyring::new_impl(self.id).revoke()
     }
 
     /// Change the user which owns the key.
@@ -503,7 +519,7 @@ impl Key {
     /// Requires the `setattr` permission on the key and the SysAdmin capability to change it to
     /// anything other than the current user.
     pub fn chown(&mut self, uid: libc::uid_t) -> Result<()> {
-        Keyring::new(self.id).chown(uid)
+        Keyring::new_impl(self.id).chown(uid)
     }
 
     /// Change the group which owns the key.
@@ -511,7 +527,7 @@ impl Key {
     /// Requires the `setattr` permission on the key and the SysAdmin capability to change it to
     /// anything other than a group of which the current user is a member.
     pub fn chgrp(&mut self, gid: libc::gid_t) -> Result<()> {
-        Keyring::new(self.id).chgrp(gid)
+        Keyring::new_impl(self.id).chgrp(gid)
     }
 
     /// Set the permissions on the key.
@@ -519,7 +535,7 @@ impl Key {
     /// Requires the `setattr` permission on the key and the SysAdmin capability if the current
     /// user does not own the key.
     pub fn set_permissions(&mut self, perms: KeyPermissions) -> Result<()> {
-        Keyring::new(self.id).set_permissions(perms)
+        Keyring::new_impl(self.id).set_permissions(perms)
     }
 
     /// Retrieve metadata about the key.
@@ -528,7 +544,7 @@ impl Key {
     ///
     /// If the kernel returns malformed data, the parser will panic.
     pub fn description(&self) -> Result<Description> {
-        Keyring::new(self.id).description()
+        Keyring::new_impl(self.id).description()
     }
 
     /// Read the payload of the key. Requires `read` permissions on the key.
@@ -548,27 +564,27 @@ impl Key {
     ///
     /// A timeout of `0` means "no expiration". Requires the `setattr` permission on the key.
     pub fn set_timeout(&mut self, timeout: u32) -> Result<()> {
-        Keyring::new(self.id).set_timeout(timeout)
+        Keyring::new_impl(self.id).set_timeout(timeout)
     }
 
     /// The security context of the key.
     ///
     /// Depends on the security manager loaded into the kernel (e.g., SELinux or AppArmor).
     pub fn security(&self) -> Result<String> {
-        Keyring::new(self.id).security()
+        Keyring::new_impl(self.id).security()
     }
 
     /// Invalidates the key and schedules it for removal.
     ///
     /// Requires the `search` permission on the key.
     pub fn invalidate(self) -> Result<()> {
-        Keyring::new(self.id).invalidate()
+        Keyring::new_impl(self.id).invalidate()
     }
 
     /// Create an object to manage a key request.
     pub fn manage(&mut self) -> Result<KeyManager> {
         check_call(unsafe { keyctl_assume_authority(self.id) },
-                   KeyManager::new(Key::new(self.id)))
+                   KeyManager::new(Key::new_impl(self.id)))
     }
 
     /// Compute a Diffie-Hellman prime for use as a shared secret or public key.
