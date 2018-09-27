@@ -715,7 +715,7 @@ mod tests {
         let mut keyring = Keyring::attach_or_create(SpecialKeyring::Thread).unwrap();
 
         // Create the key.
-        let description = "test:ruskey:add_key";
+        let description = "test:rust-keyutils:add_key";
         let payload = "payload";
         let key = keyring.add_key::<keytypes::User, _, _>(description, payload.as_bytes()).unwrap();
         assert_eq!(key.read().unwrap(),
@@ -735,7 +735,7 @@ mod tests {
         assert_eq!(keyrings.len(), 0);
 
         // Create a key.
-        keyring.add_key::<keytypes::User, _, _>("test:ruskey:clear_keyring", "payload".as_bytes()).unwrap();
+        keyring.add_key::<keytypes::User, _, _>("test:rust-keyutils:clear_keyring", "payload".as_bytes()).unwrap();
         keyring.add_keyring("description").unwrap();
 
         let (keys, keyrings) = keyring.read().unwrap();
@@ -758,7 +758,7 @@ mod tests {
         let mut keyring = Keyring::attach_or_create(SpecialKeyring::Thread).unwrap();
 
         // Create the key.
-        let desc = "test:ruskey:describe_key";
+        let desc = "test:rust-keyutils:describe_key";
         let payload = "payload";
         let key = keyring.add_key::<keytypes::User, _, _>(desc, payload.as_bytes()).unwrap();
 
@@ -832,7 +832,7 @@ mod tests {
         let mut keyring = Keyring::attach_or_create(SpecialKeyring::Thread).unwrap();
 
         // Create the key.
-        let description = "test:ruskey:update_key";
+        let description = "test:rust-keyutils:update_key";
         let payload = "payload";
         let key = keyring.add_key::<keytypes::User, _, _>(description, payload.as_bytes()).unwrap();
 
