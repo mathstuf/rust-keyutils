@@ -518,13 +518,6 @@ impl Key {
 
     /// Requests a key with the given description by searching the thread, process, and session
     /// keyrings.
-    pub fn request_key_auth_key(create: bool) -> Result<Self> {
-        let res = unsafe { keyctl_get_keyring_ID(KEY_SPEC_REQKEY_AUTH_KEY, create as libc::c_int) };
-        check_call(i64::from(res), Key::new_impl(res))
-    }
-
-    /// Requests a key with the given description by searching the thread, process, and session
-    /// keyrings.
     pub fn request<K, D>(description: D) -> Result<Self>
     where
         K: KeyType,
@@ -635,6 +628,14 @@ impl Key {
     }
 
     /// Create an object to manage a key request.
+    ///
+    /// Before a key may be managed on a thread, an authorization key must be attached to an
+    /// available thread keyring.
+    ///
+    /// Only one key may be managed on a thread at a time. Managing a second key will
+    /// invalidate any previous `KeyManager` constructions.
+    ///
+    /// See `KeyManager::request_key_auth_key`.
     pub fn manage(&mut self) -> Result<KeyManager> {
         check_call(
             unsafe { keyctl_assume_authority(self.id) },
@@ -721,7 +722,7 @@ impl Description {
 }
 
 /// A manager for a key to respond to instantiate a key request by the kernel.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct KeyManager {
     key: Key,
 }
@@ -731,6 +732,21 @@ impl KeyManager {
         KeyManager {
             key: key,
         }
+    }
+
+    /// Requests the authorization key created by `request_key`.
+    ///
+    /// This key must be present in an available keyring before `Key::manage` may be called.
+    pub fn request_key_auth_key(create: bool) -> Result<Key> {
+        let res = unsafe { keyctl_get_keyring_ID(KEY_SPEC_REQKEY_AUTH_KEY, create as libc::c_int) };
+        check_call(i64::from(res), Key::new_impl(res))
+    }
+
+    /// Drop authority for the current thread.
+    ///
+    /// This invalidates
+    pub fn drop_authority() -> Result<()> {
+        check_call(unsafe { keyctl_assume_authority(0) }, ())
     }
 
     /// Instantiate the key with the given payload.
