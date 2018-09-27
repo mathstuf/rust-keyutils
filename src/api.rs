@@ -107,7 +107,8 @@ impl Keyring {
     /// Requests a keyring with the given description by searching the thread, process, and session
     /// keyrings.
     pub fn request<D>(description: D) -> Result<Self>
-        where D: AsRef<str>,
+    where
+        D: AsRef<str>,
     {
         Keyring::new_impl(0).request_keyring(description)
     }
@@ -118,8 +119,9 @@ impl Keyring {
     /// If it is not found, the `info` string will be handed off to `/sbin/request-key` to generate
     /// the key.
     pub fn request_with_fallback<D, I>(description: D, info: I) -> Result<Self>
-        where D: AsRef<str>,
-              I: AsRef<str>,
+    where
+        D: AsRef<str>,
+        I: AsRef<str>,
     {
         Keyring::new_impl(0).request_keyring_with_fallback(description, info)
     }
@@ -150,7 +152,8 @@ impl Keyring {
     /// If a keyring named `name` exists, attach it as the session keyring (requires the `search`
     /// permission). If a keyring does not exist, create it and attach it as the session keyring.
     pub fn join_session<N>(name: N) -> Result<Self>
-        where N: AsRef<str>,
+    where
+        N: AsRef<str>,
     {
         let name_cstr = CString::new(name.as_ref()).unwrap();
         let res = unsafe { keyctl_join_session_keyring(name_cstr.as_ptr()) };
@@ -208,7 +211,8 @@ impl Keyring {
     /// `link` permission on the key exist) and return it. Requires the `search` permission on the
     /// keyring. Any children keyrings without the `search` permission are ignored.
     pub fn search_for_key<D>(&self, description: D) -> Result<Key>
-        where D: AsRef<str>,
+    where
+        D: AsRef<str>,
     {
         let res = self.search_impl("user", description.as_ref())?;
         check_call(res, Key::new_impl(res as key_serial_t))
@@ -221,7 +225,8 @@ impl Keyring {
     /// permission on the keyring. Any children keyrings without the `search` permission are
     /// ignored.
     pub fn search_for_keyring<D>(&self, description: D) -> Result<Self>
-        where D: AsRef<str>,
+    where
+        D: AsRef<str>,
     {
         let res = self.search_impl("keyring", description.as_ref())?;
         check_call(res, Keyring::new_impl(res as key_serial_t))
@@ -294,7 +299,8 @@ impl Keyring {
     /// If a keyring with the same description already, the link to the old keyring will be
     /// removed. Requires `write` permission on the keyring.
     pub fn add_keyring<D>(&mut self, description: D) -> Result<Self>
-        where D: Borrow<<keytypes::Keyring as KeyType>::Description>,
+    where
+        D: Borrow<<keytypes::Keyring as KeyType>::Description>,
     {
         let key = self.add_key::<keytypes::Keyring, _, _>(description, ())?;
         Ok(Keyring::new_impl(key.id))
@@ -313,7 +319,8 @@ impl Keyring {
     ///
     /// If it is found, it is attached to the keyring.
     pub fn request_key<D>(&self, description: D) -> Result<Key>
-        where D: AsRef<str>,
+    where
+        D: AsRef<str>,
     {
         let res = self.request_impl("user", description.as_ref())?;
         check_call(i64::from(res), Key::new_impl(res))
@@ -324,7 +331,8 @@ impl Keyring {
     ///
     /// If it is found, it is attached to the keyring.
     pub fn request_keyring<D>(&self, description: D) -> Result<Self>
-        where D: AsRef<str>,
+    where
+        D: AsRef<str>,
     {
         let res = self.request_impl("keyring", description.as_ref())?;
         check_call(i64::from(res), Keyring::new_impl(res))
@@ -349,8 +357,9 @@ impl Keyring {
     /// the key. If found, it will be attached to the current keyring. Requires `write` permission
     /// to the keyring.
     pub fn request_key_with_fallback<D, I>(&self, description: D, info: I) -> Result<Key>
-        where D: AsRef<str>,
-              I: AsRef<str>,
+    where
+        D: AsRef<str>,
+        I: AsRef<str>,
     {
         let res = self.request_fallback_impl("user", description.as_ref(), info.as_ref())?;
         check_call(i64::from(res), Key::new_impl(res))
@@ -363,8 +372,9 @@ impl Keyring {
     /// the key. If found, it will be attached to the current keyring. Requires `write` permission
     /// to the keyring.
     pub fn request_keyring_with_fallback<D, I>(&self, description: D, info: I) -> Result<Self>
-        where D: AsRef<str>,
-              I: AsRef<str>,
+    where
+        D: AsRef<str>,
+        I: AsRef<str>,
     {
         let res = self.request_fallback_impl("keyring", description.as_ref(), info.as_ref())?;
         check_call(i64::from(res), Keyring::new_impl(res))
@@ -484,7 +494,8 @@ impl Key {
     /// Requests a key with the given description by searching the thread, process, and session
     /// keyrings.
     pub fn request<D>(description: D) -> Result<Self>
-        where D: AsRef<str>,
+    where
+        D: AsRef<str>,
     {
         Keyring::new_impl(0).request_key(description)
     }
@@ -495,15 +506,17 @@ impl Key {
     /// If it is not found, the `info` string will be handed off to `/sbin/request-key` to generate
     /// the key.
     pub fn request_with_fallback<D, I>(description: D, info: I) -> Result<Self>
-        where D: AsRef<str>,
-              I: AsRef<str>,
+    where
+        D: AsRef<str>,
+        I: AsRef<str>,
     {
         Keyring::new_impl(0).request_key_with_fallback(description, info)
     }
 
     /// Update the payload in the key.
     pub fn update<D>(&mut self, data: D) -> Result<()>
-        where D: AsRef<[u8]>,
+    where
+        D: AsRef<[u8]>,
     {
         let data = data.as_ref();
         check_call(unsafe {
@@ -664,7 +677,8 @@ impl KeyManager {
 
     /// Instantiate the key with the given payload.
     pub fn instantiate<P>(self, keyring: &Keyring, payload: P) -> Result<()>
-        where P: AsRef<[u8]>,
+    where
+        P: AsRef<[u8]>,
     {
         let payload = payload.as_ref();
         check_call(unsafe {
