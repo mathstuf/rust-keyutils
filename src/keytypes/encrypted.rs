@@ -143,7 +143,12 @@ pub enum Payload {
 impl KeyPayload for Payload {
     fn payload(&self) -> Cow<[u8]> {
         let payload = match *self {
-            Payload::New { ref format, ref keytype, ref description, ref keylen } => {
+            Payload::New {
+                ref format,
+                ref keytype,
+                ref description,
+                ref keylen,
+            } => {
                 format!(
                     "new {} {}:{} {}",
                     format.unwrap_or_default().name(),
@@ -152,12 +157,13 @@ impl KeyPayload for Payload {
                     keylen,
                 )
             },
-            Payload::Load { ref blob } => {
-                format!("load {}", AsciiHex::convert(&blob))
-            },
-            Payload::Update { ref keytype, ref description } => {
-                format!("update {}:{}", keytype.name(), description)
-            },
+            Payload::Load {
+                ref blob,
+            } => format!("load {}", AsciiHex::convert(&blob)),
+            Payload::Update {
+                ref keytype,
+                ref description,
+            } => format!("update {}:{}", keytype.name(), description),
         };
 
         payload.bytes().collect()
