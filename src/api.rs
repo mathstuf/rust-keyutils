@@ -247,15 +247,17 @@ impl Keyring {
             )
         })?;
         unsafe { buffer.set_len((actual_sz as usize) / mem::size_of::<KeyringSerial>()) };
-        let keys = buffer.iter()
+        let keys = buffer
+            .iter()
             .map(|&id| Key::new_impl(id))
             .partition(|key| key.description().unwrap().type_ == "keyring");
         Ok((
             keys.1,
             keys.0
-            .iter()
-            .map(|key| Keyring::new_impl(key.id))
-            .collect::<Vec<_>>()))
+                .iter()
+                .map(|key| Keyring::new_impl(key.id))
+                .collect::<Vec<_>>(),
+        ))
     }
 
     /// Attach the persistent keyring for the current user to the current keyring.
@@ -786,7 +788,9 @@ mod tests {
         // Create the key.
         let description = "test:rust-keyutils:add_key";
         let payload = "payload";
-        let key = keyring.add_key::<keytypes::User, _, _>(description, payload.as_bytes()).unwrap();
+        let key = keyring
+            .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
+            .unwrap();
         assert_eq!(
             key.read().unwrap(),
             payload.as_bytes().iter().cloned().collect::<Vec<_>>()
@@ -806,7 +810,12 @@ mod tests {
         assert_eq!(keyrings.len(), 0);
 
         // Create a key.
-        keyring.add_key::<keytypes::User, _, _>("test:rust-keyutils:clear_keyring", "payload".as_bytes()).unwrap();
+        keyring
+            .add_key::<keytypes::User, _, _>(
+                "test:rust-keyutils:clear_keyring",
+                "payload".as_bytes(),
+            )
+            .unwrap();
         keyring.add_keyring("description").unwrap();
 
         let (keys, keyrings) = keyring.read().unwrap();
@@ -831,7 +840,9 @@ mod tests {
         // Create the key.
         let desc = "test:rust-keyutils:describe_key";
         let payload = "payload";
-        let key = keyring.add_key::<keytypes::User, _, _>(desc, payload.as_bytes()).unwrap();
+        let key = keyring
+            .add_key::<keytypes::User, _, _>(desc, payload.as_bytes())
+            .unwrap();
 
         // Check its description.
         let description = key.description().unwrap();
@@ -850,7 +861,9 @@ mod tests {
         // Create the key.
         let description = "test:rust-keyutils:invalidate_key";
         let payload = "payload";
-        let key = keyring.add_key::<keytypes::User, _, _>(description, payload.as_bytes()).unwrap();
+        let key = keyring
+            .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
+            .unwrap();
         key.invalidate().unwrap();
 
         let (keys, keyrings) = keyring.read().unwrap();
@@ -888,7 +901,12 @@ mod tests {
         assert_eq!(keys.len(), 0);
         assert_eq!(keyrings.len(), 0);
 
-        let key = keyring.add_key::<keytypes::User, _, _>("test:rust-keyutils:read_keyring", "payload".as_bytes()).unwrap();
+        let key = keyring
+            .add_key::<keytypes::User, _, _>(
+                "test:rust-keyutils:read_keyring",
+                "payload".as_bytes(),
+            )
+            .unwrap();
 
         let (keys, keyrings) = keyring.read().unwrap();
         assert_eq!(keys.len(), 1);
@@ -907,7 +925,9 @@ mod tests {
         // Create the key.
         let description = "test:rust-keyutils:read_key";
         let payload = "payload";
-        let key = keyring.add_key::<keytypes::User, _, _>(description, payload.as_bytes()).unwrap();
+        let key = keyring
+            .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
+            .unwrap();
         assert_eq!(
             key.read().unwrap(),
             payload.as_bytes().iter().cloned().collect::<Vec<_>>()
@@ -963,7 +983,9 @@ mod tests {
         // Create the key.
         let description = "test:rust-keyutils:request_key";
         let payload = "payload";
-        let key = keyring.add_key::<keytypes::User, _, _>(description, payload.as_bytes()).unwrap();
+        let key = keyring
+            .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
+            .unwrap();
 
         let found_key = keyring.request_key(description).unwrap();
         assert_eq!(found_key, key);
@@ -980,7 +1002,9 @@ mod tests {
         // Create the key.
         let description = "test:rust-keyutils:revoke_key";
         let payload = "payload";
-        let key = keyring.add_key::<keytypes::User, _, _>(description, payload.as_bytes()).unwrap();
+        let key = keyring
+            .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
+            .unwrap();
         let key_copy = key.clone();
 
         key.revoke().unwrap();
@@ -1002,7 +1026,9 @@ mod tests {
         // Create the key.
         let description = "test:rust-keyutils:search_key";
         let payload = "payload";
-        let key = new_inner_keyring.add_key::<keytypes::User, _, _>(description, payload.as_bytes()).unwrap();
+        let key = new_inner_keyring
+            .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
+            .unwrap();
 
         let found_key = keyring.search_for_key(description).unwrap();
         assert_eq!(found_key, key);
@@ -1021,7 +1047,9 @@ mod tests {
         // Create the key.
         let description = "test:rust-keyutils:key_timeout";
         let payload = "payload";
-        let mut key = keyring.add_key::<keytypes::User, _, _>(description, payload.as_bytes()).unwrap();
+        let mut key = keyring
+            .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
+            .unwrap();
 
         // Set the timeout on the key.
         let duration = Duration::from_secs(1);
@@ -1074,7 +1102,9 @@ mod tests {
         // Create the key.
         let description = "test:rust-keyutils:unlink_key";
         let payload = "payload";
-        let key = keyring.add_key::<keytypes::User, _, _>(description, payload.as_bytes()).unwrap();
+        let key = keyring
+            .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
+            .unwrap();
 
         let (keys, keyrings) = keyring.read().unwrap();
         assert_eq!(keys.len(), 1);
@@ -1102,11 +1132,15 @@ mod tests {
         // Create the key.
         let description = "test:rust-keyutils:update_key";
         let payload = "payload";
-        let key = keyring.add_key::<keytypes::User, _, _>(description, payload.as_bytes()).unwrap();
+        let key = keyring
+            .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
+            .unwrap();
 
         // Update the key.
         let new_payload = "new_payload";
-        let updated_key = keyring.add_key::<keytypes::User, _, _>(description, new_payload.as_bytes()).unwrap();
+        let updated_key = keyring
+            .add_key::<keytypes::User, _, _>(description, new_payload.as_bytes())
+            .unwrap();
         assert_eq!(key, updated_key);
         assert_eq!(
             updated_key.read().unwrap(),
