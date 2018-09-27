@@ -90,7 +90,7 @@ impl Keyring {
     /// If the kernel returns a keyring value which the library does not understand, the conversion
     /// from the return value into a `DefaultKeyring` will panic.
     pub fn set_default(keyring: DefaultKeyring) -> Result<DefaultKeyring> {
-        let ret = try!(check_call_ret(unsafe { keyctl_set_reqkey_keyring(keyring.serial()) }));
+        let ret = check_call_ret(unsafe { keyctl_set_reqkey_keyring(keyring.serial()) })?;
         Ok(DefaultKeyring::from(ret as i32))
     }
 
@@ -200,7 +200,7 @@ impl Keyring {
     pub fn search_for_key<D>(&self, description: D) -> Result<Key>
         where D: AsRef<str>,
     {
-        let res = try!(self.search_impl("user", description.as_ref()));
+        let res = self.search_impl("user", description.as_ref())?;
         check_call(res, Key::new(res as key_serial_t))
     }
 
@@ -213,7 +213,7 @@ impl Keyring {
     pub fn search_for_keyring<D>(&self, description: D) -> Result<Self>
         where D: AsRef<str>,
     {
-        let res = try!(self.search_impl("keyring", description.as_ref()));
+        let res = self.search_impl("keyring", description.as_ref())?;
         check_call(res, Keyring::new(res as key_serial_t))
     }
 
@@ -221,14 +221,14 @@ impl Keyring {
     ///
     /// Requires `read` permission on the keyring.
     pub fn read(&self) -> Result<(Vec<Key>, Vec<Keyring>)> {
-        let sz = try!(check_call_ret(unsafe { keyctl_read(self.id, ptr::null_mut(), 0) }));
+        let sz = check_call_ret(unsafe { keyctl_read(self.id, ptr::null_mut(), 0) })?;
         let mut buffer = Vec::<key_serial_t>::with_capacity((sz as usize) /
                                                             mem::size_of::<KeyringSerial>());
-        let actual_sz = try!(check_call_ret(unsafe {
+        let actual_sz = check_call_ret(unsafe {
             keyctl_read(self.id,
                         buffer.as_mut_ptr() as *mut libc::c_char,
                         sz as usize)
-        }));
+        })?;
         unsafe { buffer.set_len((actual_sz as usize) / mem::size_of::<KeyringSerial>()) };
         let keys = buffer.iter()
             .map(|&id| Key::new(id))
@@ -305,7 +305,7 @@ impl Keyring {
     pub fn request_key<D>(&self, description: D) -> Result<Key>
         where D: AsRef<str>,
     {
-        let res = try!(self.request_impl("user", description.as_ref()));
+        let res = self.request_impl("user", description.as_ref())?;
         check_call(res as libc::c_long, Key::new(res))
     }
 
@@ -316,7 +316,7 @@ impl Keyring {
     pub fn request_keyring<D>(&self, description: D) -> Result<Self>
         where D: AsRef<str>,
     {
-        let res = try!(self.request_impl("keyring", description.as_ref()));
+        let res = self.request_impl("keyring", description.as_ref())?;
         check_call(res as libc::c_long, Keyring::new(res))
     }
 
@@ -342,7 +342,7 @@ impl Keyring {
         where D: AsRef<str>,
               I: AsRef<str>,
     {
-        let res = try!(self.request_fallback_impl("user", description.as_ref(), info.as_ref()));
+        let res = self.request_fallback_impl("user", description.as_ref(), info.as_ref())?;
         check_call(res as libc::c_long, Key::new(res))
     }
 
@@ -356,7 +356,7 @@ impl Keyring {
         where D: AsRef<str>,
               I: AsRef<str>,
     {
-        let res = try!(self.request_fallback_impl("keyring", description.as_ref(), info.as_ref()));
+        let res = self.request_fallback_impl("keyring", description.as_ref(), info.as_ref())?;
         check_call(res as libc::c_long, Keyring::new(res))
     }
 
@@ -392,13 +392,13 @@ impl Keyring {
     }
 
     fn description_raw(&self) -> Result<String> {
-        let sz = try!(check_call_ret(unsafe { keyctl_describe(self.id, ptr::null_mut(), 0) }));
+        let sz = check_call_ret(unsafe { keyctl_describe(self.id, ptr::null_mut(), 0) })?;
         let mut buffer = Vec::with_capacity(sz as usize);
-        let actual_sz = try!(check_call_ret(unsafe {
+        let actual_sz = check_call_ret(unsafe {
             keyctl_describe(self.id,
                             buffer.as_mut_ptr() as *mut libc::c_char,
                             sz as usize)
-        }));
+        })?;
         unsafe { buffer.set_len((actual_sz - 1) as usize) };
         let str_slice = str::from_utf8(&buffer[..]).unwrap();
         Ok(str_slice.to_owned())
@@ -423,13 +423,13 @@ impl Keyring {
     /// The security context of the keyring. Depends on the security manager loaded into the kernel
     /// (e.g., SELinux or AppArmor).
     pub fn security(&self) -> Result<String> {
-        let sz = try!(check_call_ret(unsafe { keyctl_get_security(self.id, ptr::null_mut(), 0) }));
+        let sz = check_call_ret(unsafe { keyctl_get_security(self.id, ptr::null_mut(), 0) })?;
         let mut buffer = Vec::with_capacity(sz as usize);
-        let actual_sz = try!(check_call_ret(unsafe {
+        let actual_sz = check_call_ret(unsafe {
             keyctl_get_security(self.id,
                                 buffer.as_mut_ptr() as *mut libc::c_char,
                                 sz as usize)
-        }));
+        })?;
         unsafe { buffer.set_len(actual_sz as usize) };
         let str_slice = str::from_utf8(&buffer[..]).unwrap();
         Ok(str_slice.to_owned())
@@ -533,13 +533,13 @@ impl Key {
 
     /// Read the payload of the key. Requires `read` permissions on the key.
     pub fn read(&self) -> Result<Vec<u8>> {
-        let sz = try!(check_call_ret(unsafe { keyctl_read(self.id, ptr::null_mut(), 0) }));
+        let sz = check_call_ret(unsafe { keyctl_read(self.id, ptr::null_mut(), 0) })?;
         let mut buffer = Vec::with_capacity(sz as usize);
-        let actual_sz = try!(check_call_ret(unsafe {
+        let actual_sz = check_call_ret(unsafe {
             keyctl_read(self.id,
                         buffer.as_mut_ptr() as *mut libc::c_char,
                         sz as usize)
-        }));
+        })?;
         unsafe { buffer.set_len(actual_sz as usize) };
         Ok(buffer)
     }
@@ -573,9 +573,9 @@ impl Key {
 
     /// Compute a Diffie-Hellman prime for use as a shared secret or public key.
     pub fn compute_dh(private: &Key, prime: &Key, base: &Key) -> Result<Vec<u8>> {
-        let sz = try!(check_call_ret(unsafe { keyctl_dh_compute(private.id, prime.id, base.id, ptr::null_mut() as *mut libc::c_char, 0) }));
+        let sz = check_call_ret(unsafe { keyctl_dh_compute(private.id, prime.id, base.id, ptr::null_mut() as *mut libc::c_char, 0) })?;
         let mut buffer = Vec::with_capacity(sz as usize);
-        let actual_sz = try!(check_call_ret(unsafe { keyctl_dh_compute(private.id, prime.id, base.id, buffer.as_mut_ptr() as *mut libc::c_char, sz as usize) }));
+        let actual_sz = check_call_ret(unsafe { keyctl_dh_compute(private.id, prime.id, base.id, buffer.as_mut_ptr() as *mut libc::c_char, sz as usize) })?;
         unsafe { buffer.set_len(actual_sz as usize) };
         Ok(buffer)
     }
