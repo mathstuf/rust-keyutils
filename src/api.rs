@@ -682,9 +682,6 @@ impl KeyManager {
     /// seconds are ignored). This is to prevent a denial-of-service by
     /// requesting a non-existant key repeatedly. The requester must have
     /// `write` permission on the keyring.
-    ///
-    /// TODO: Accept `SpecialKeyring` values here. They are special in that they refer to the
-    /// *requester's* special keyring and not this one.
     pub fn reject(self, keyring: &Keyring, timeout: Duration, error: errno::Errno) -> Result<()> {
         let errno::Errno(errval) = error;
         check_call(unsafe { keyctl_reject(self.key.id, timeout.as_secs() as u32, errval as u32, keyring.id) },
