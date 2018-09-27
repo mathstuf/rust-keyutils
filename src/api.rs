@@ -965,7 +965,10 @@ mod tests {
         let perms = description.perms;
         let new_perms = {
             let mut tmp_perms = perms.clone();
-            let write_bits = constants::POSSESSOR_WRITE | constants::USER_WRITE | constants::GROUP_WRITE | constants::OTHER_WRITE;
+            let write_bits = constants::POSSESSOR_WRITE
+                | constants::USER_WRITE
+                | constants::GROUP_WRITE
+                | constants::OTHER_WRITE;
             tmp_perms.remove(write_bits);
             tmp_perms
         };
