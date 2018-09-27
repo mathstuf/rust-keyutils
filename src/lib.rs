@@ -24,6 +24,10 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+//! Linux keyring bindings for Rust
+//!
+//! This crate provides a high-level API for interacting with the Linux keys subsystem.
+
 #![warn(missing_docs)]
 
 #[macro_use] extern crate bitflags;
