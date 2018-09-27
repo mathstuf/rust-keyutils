@@ -30,8 +30,11 @@
 
 #![warn(missing_docs)]
 
-#[macro_use] extern crate bitflags;
-#[macro_use] extern crate log;
+#[macro_use]
+extern crate bitflags;
+
+#[macro_use]
+extern crate log;
 
 mod crates {
     // public
@@ -44,6 +47,7 @@ mod crates {
 
 mod constants;
 mod keytype;
+
 mod api;
 
 pub mod keytypes;
