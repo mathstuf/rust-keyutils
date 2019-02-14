@@ -47,6 +47,7 @@ impl KeyType for Trusted {
     }
 }
 
+/// Hashes supported by TPM devices.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TpmHash {
     /// SHA-1
@@ -81,6 +82,7 @@ impl TpmHash {
     }
 }
 
+/// Options for trusted keys.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct TrustedOptions {
     /// The ID of the sealing key to use.
@@ -177,6 +179,7 @@ impl TrustedOptions {
     }
 }
 
+/// The payload for trusted keys.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Payload {
     /// Create a new key.
@@ -200,7 +203,10 @@ pub enum Payload {
     /// Update a key.
     ///
     /// Use this with `update`.
-    Update { options: TrustedOptions },
+    Update {
+        /// Options to apply to the key.
+        options: TrustedOptions,
+    },
 }
 
 impl KeyPayload for Payload {
