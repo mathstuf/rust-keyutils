@@ -30,3 +30,32 @@ use crates::libc;
 
 pub type key_serial_t = libc::int32_t;
 pub type key_perm_t = libc::uint32_t;
+
+// No actual type in the API, but create one for simplicity.
+pub type _keyctl_support_t = libc::uint32_t;
+
+#[rustfmt::skip]
+#[repr(C)]
+pub struct keyctl_pkey_query {
+    pub supported_ops:  libc::uint32_t,
+    pub key_size:       libc::uint32_t,
+    pub max_data_size:  libc::uint16_t,
+    pub max_sig_size:   libc::uint16_t,
+    pub max_enc_size:   libc::uint16_t,
+    pub max_dec_size:   libc::uint16_t,
+    __spare:            [libc::uint32_t; 10],
+}
+
+impl keyctl_pkey_query {
+    pub fn new() -> Self {
+        keyctl_pkey_query {
+            supported_ops: 0,
+            key_size: 0,
+            max_data_size: 0,
+            max_sig_size: 0,
+            max_enc_size: 0,
+            max_dec_size: 0,
+            __spare: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        }
+    }
+}

@@ -27,7 +27,7 @@
 // Ignore rustfmt changes in here. The horizontal alignment is too useful to give up.
 #![cfg_attr(rustfmt, rustfmt_skip)]
 
-use types::{key_perm_t, key_serial_t};
+use types::{key_perm_t, key_serial_t, _keyctl_support_t};
 
 pub const KEY_TYPE_USER:                    &str = "user";
 pub const KEY_TYPE_LOGON:                   &str = "logon";
@@ -80,3 +80,8 @@ pub const KEY_OTH_SEARCH:  key_perm_t = 0x0000_0008;
 pub const KEY_OTH_LINK:    key_perm_t = 0x0000_0010;
 pub const KEY_OTH_SETATTR: key_perm_t = 0x0000_0020;
 pub const KEY_OTH_ALL:     key_perm_t = 0x0000_003f;
+
+pub const KEYCTL_SUPPORTS_ENCRYPT: _keyctl_support_t = 0x01;
+pub const KEYCTL_SUPPORTS_DECRYPT: _keyctl_support_t = 0x02;
+pub const KEYCTL_SUPPORTS_SIGN:    _keyctl_support_t = 0x04;
+pub const KEYCTL_SUPPORTS_VERIFY:  _keyctl_support_t = 0x08;

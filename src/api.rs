@@ -36,7 +36,9 @@ use crates::errno;
 use crates::libc;
 use crates::libkeyutils_sys::*;
 
-use constants::{DefaultKeyring, KeyPermissions, KeyringSerial, Permission, SpecialKeyring};
+use constants::{
+    DefaultKeyring, KeyPermissions, KeyctlSupportFlags, KeyringSerial, Permission, SpecialKeyring,
+};
 use keytype::*;
 use keytypes;
 
@@ -502,6 +504,64 @@ pub struct Key {
     id: KeyringSerial,
 }
 
+/// Structure to store results from a query on optional feature support for a key.
+#[derive(Debug, Clone, Copy)]
+pub struct KeySupportInfo {
+    /// Features supported by the key.
+    pub supported_ops: KeyctlSupportFlags,
+    /// The size of the key (in bits).
+    pub key_size: u32,
+    /// The maximum size of a data blob which may be signed.
+    pub max_data_size: u16,
+    /// The maximum size of a signature blob.
+    pub max_sig_size: u16,
+    /// The maximum size of a blob to be encrypted.
+    pub max_enc_size: u16,
+    /// The maximum size of a blob to be decrypted.
+    pub max_dec_size: u16,
+}
+
+impl KeySupportInfo {
+    fn from_c(c_info: keyctl_pkey_query) -> Self {
+        KeySupportInfo {
+            supported_ops: c_info.supported_ops,
+            key_size: c_info.key_size,
+            max_data_size: c_info.max_data_size,
+            max_sig_size: c_info.max_sig_size,
+            max_enc_size: c_info.max_enc_size,
+            max_dec_size: c_info.max_dec_size,
+        }
+    }
+}
+
+/// Encodings supported by the kernel.
+#[derive(Debug, Clone)]
+// #[non_exhaustive]
+pub enum KeyctlEncoding {
+    /// The RSASSA-PKCS1-v1.5 encoding.
+    RsassaPkcs1V15,
+    /// The RSAES-PKCS1-v1.5 encoding.
+    RsaesPkcs1V15,
+    /// The RSASSA-PSS encoding.
+    RsassaPss,
+    /// The RSAES-OAEP encoding.
+    RsaesOaep,
+    /// For extensibility.
+    OtherEncoding(Cow<'static, str>),
+}
+
+impl KeyctlEncoding {
+    fn encoding(&self) -> &str {
+        match *self {
+            KeyctlEncoding::RsassaPkcs1V15 => "pkcs1",
+            KeyctlEncoding::RsaesPkcs1V15 => "pkcs1",
+            KeyctlEncoding::RsassaPss => "pss",
+            KeyctlEncoding::RsaesOaep => "oaep",
+            KeyctlEncoding::OtherEncoding(ref s) => &s,
+        }
+    }
+}
+
 /// Hashes supported by the kernel.
 #[derive(Debug, Clone)]
 // #[non_exhaustive]
@@ -569,6 +629,27 @@ impl KeyctlHash {
             KeyctlHash::Sm3_256 => "sm3-256",
             KeyctlHash::OtherEncoding(ref s) => &s,
         }
+    }
+}
+
+/// Options for output from public key functions (encryption, decryption, signing, and verifying).
+pub struct PublicKeyOptions {
+    /// The encoding of the encrypted blob or the signature.
+    pub encoding: Option<KeyctlEncoding>,
+    /// Hash algorithm to use (if the encoding uses it).
+    pub hash: Option<KeyctlHash>,
+}
+
+impl PublicKeyOptions {
+    fn info(&self) -> String {
+        let options = [
+            ("enc", self.encoding.as_ref().map(KeyctlEncoding::encoding)),
+            ("hash", self.hash.as_ref().map(KeyctlHash::hash)),
+        ]
+        .iter()
+        .map(|&(key, value)| value.map_or_else(String::new, |v| format!("{}={}", key, v)))
+        .collect::<Vec<_>>();
+        options.join(" ").trim().to_owned()
     }
 }
 
@@ -790,6 +871,118 @@ impl Key {
         })?;
         unsafe { buffer.set_len(actual_sz as usize) };
         Ok(buffer)
+    }
+
+    /// Query which optionally supported features may be used by the key.
+    pub fn query_support(&self, password: &Option<Key>) -> Result<KeySupportInfo> {
+        let mut info = keyctl_pkey_query::new();
+        let password_id = password.as_ref().map_or(0, |pass| pass.id);
+        try!(check_call_ret(unsafe {
+            keyctl_pkey_query(self.id, password_id, &mut info)
+        }));
+        Ok(KeySupportInfo::from_c(info))
+    }
+
+    /// Encrypt data using the key.
+    pub fn encrypt(
+        &self,
+        password: &Option<Key>,
+        options: &PublicKeyOptions,
+        data: &[u8],
+    ) -> Result<Vec<u8>> {
+        let password_id = password.as_ref().map_or(0, |pass| pass.id);
+        let info_cstr = CString::new(options.info()).unwrap();
+        let sz = try!(self.query_support(password)).max_enc_size;
+        let mut buffer = Vec::with_capacity(sz as usize);
+        let actual_sz = try!(check_call_ret(unsafe {
+            keyctl_pkey_encrypt(
+                self.id,
+                password_id,
+                info_cstr.as_ptr(),
+                data.as_ptr() as *const libc::c_void,
+                data.len(),
+                buffer.as_mut_ptr() as *mut libc::c_void,
+                buffer.len(),
+            )
+        }));
+        unsafe { buffer.set_len(actual_sz as usize) };
+        Ok(buffer)
+    }
+
+    /// Decrypt data using the key.
+    pub fn decrypt(
+        &self,
+        password: &Option<Key>,
+        options: &PublicKeyOptions,
+        data: &[u8],
+    ) -> Result<Vec<u8>> {
+        let password_id = password.as_ref().map_or(0, |pass| pass.id);
+        let info_cstr = CString::new(options.info()).unwrap();
+        let sz = try!(self.query_support(password)).max_dec_size;
+        let mut buffer = Vec::with_capacity(sz as usize);
+        let actual_sz = try!(check_call_ret(unsafe {
+            keyctl_pkey_decrypt(
+                self.id,
+                password_id,
+                info_cstr.as_ptr(),
+                data.as_ptr() as *const libc::c_void,
+                data.len(),
+                buffer.as_mut_ptr() as *mut libc::c_void,
+                buffer.len(),
+            )
+        }));
+        unsafe { buffer.set_len(actual_sz as usize) };
+        Ok(buffer)
+    }
+
+    /// Sign data using the key.
+    pub fn sign(
+        &self,
+        password: &Option<Key>,
+        options: &PublicKeyOptions,
+        data: &[u8],
+    ) -> Result<Vec<u8>> {
+        let password_id = password.as_ref().map_or(0, |pass| pass.id);
+        let info_cstr = CString::new(options.info()).unwrap();
+        let sz = try!(self.query_support(password)).max_sig_size;
+        let mut buffer = Vec::with_capacity(sz as usize);
+        let actual_sz = try!(check_call_ret(unsafe {
+            keyctl_pkey_sign(
+                self.id,
+                password_id,
+                info_cstr.as_ptr(),
+                data.as_ptr() as *const libc::c_void,
+                data.len(),
+                buffer.as_mut_ptr() as *mut libc::c_void,
+                buffer.len(),
+            )
+        }));
+        unsafe { buffer.set_len(actual_sz as usize) };
+        Ok(buffer)
+    }
+
+    /// Verify a signature of the data using the key.
+    pub fn verify(
+        &self,
+        password: &Option<Key>,
+        options: &PublicKeyOptions,
+        data: &[u8],
+        signature: &[u8],
+    ) -> Result<bool> {
+        let password_id = password.as_ref().map_or(0, |pass| pass.id);
+        let info_cstr = CString::new(options.info()).unwrap();
+        let res = try!(check_call_ret(unsafe {
+            keyctl_pkey_sign(
+                self.id,
+                password_id,
+                info_cstr.as_ptr(),
+                data.as_ptr() as *const libc::c_void,
+                data.len(),
+                signature.as_ptr() as *mut libc::c_void,
+                signature.len(),
+            )
+        }));
+        Ok(res == 0)
     }
 }
 

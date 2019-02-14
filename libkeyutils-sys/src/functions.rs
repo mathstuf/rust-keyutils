@@ -26,7 +26,7 @@
 
 use crates::libc;
 
-use types::{key_perm_t, key_serial_t};
+use types::{key_perm_t, key_serial_t, keyctl_pkey_query};
 
 #[rustfmt::skip]
 extern "C" {
@@ -155,5 +155,46 @@ extern "C" {
         otherinfolen:   libc::size_t,
         buffer:         *mut libc::c_char,
         buflen:         libc::size_t)
+        -> libc::c_long;
+    pub fn keyctl_pkey_query(
+        key:        key_serial_t,
+        password:   key_serial_t,
+        info:       *mut keyctl_pkey_query)
+        -> libc::c_long;
+    pub fn keyctl_pkey_encrypt(
+        key:        key_serial_t,
+        password:   key_serial_t,
+        info:       *const libc::c_char,
+        data:       *const libc::c_void,
+        data_len:   libc::size_t,
+        enc:        *mut libc::c_void,
+        enc_len:    libc::size_t)
+        -> libc::c_long;
+    pub fn keyctl_pkey_decrypt(
+        key:        key_serial_t,
+        password:   key_serial_t,
+        info:       *const libc::c_char,
+        enc:        *const libc::c_void,
+        enc_len:    libc::size_t,
+        data:       *mut libc::c_void,
+        data_len:   libc::size_t)
+        -> libc::c_long;
+    pub fn keyctl_pkey_sign(
+        key:        key_serial_t,
+        password:   key_serial_t,
+        info:       *const libc::c_char,
+        data:       *const libc::c_void,
+        data_len:   libc::size_t,
+        sig:        *mut libc::c_void,
+        sig_len:    libc::size_t)
+        -> libc::c_long;
+    pub fn keyctl_pkey_verify(
+        key:        key_serial_t,
+        password:   key_serial_t,
+        info:       *const libc::c_char,
+        data:       *const libc::c_void,
+        data_len:   libc::size_t,
+        sig:        *const libc::c_void,
+        sig_len:    libc::size_t)
         -> libc::c_long;
 }
