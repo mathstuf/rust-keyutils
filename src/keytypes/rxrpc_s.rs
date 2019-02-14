@@ -26,9 +26,9 @@
 
 //! RxRPC server keys
 
-use keytype::*;
-
 use std::borrow::Cow;
+
+use keytype::*;
 
 /// An RxRPC server key.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]

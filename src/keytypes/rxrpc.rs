@@ -24,9 +24,11 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use keytype::*;
+//! Keys for RxRPC clients.
 
 use std::borrow::Cow;
+
+use keytype::*;
 
 /// An RxRPC client key.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
@@ -42,6 +44,7 @@ impl KeyType for RxRPC {
     }
 }
 
+/// The payload for RxRPC client keys.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Payload {
     expiry: u32,

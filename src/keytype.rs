@@ -1,4 +1,4 @@
-// Copyright (c) 2018, Ben Boeckel
+// Copyright (c) 2015, Ben Boeckel
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without modification,
@@ -24,67 +24,69 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-//! Certificate blacklist keys
-
 use std::borrow::Cow;
 
-use keytype::*;
-use keytypes::AsciiHex;
+/// A trait for representing a type of key in the Linux keyring subsystem.
+pub trait KeyType {
+    /// The type for describing the key.
+    type Description: KeyDescription + ?Sized;
+    /// The type for representing a payload for the key.
+    type Payload: KeyPayload + ?Sized;
 
-/// Blacklist hashes.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
-pub struct Blacklist;
-
-impl KeyType for Blacklist {
-    /// Login key descriptions are free-form.
-    type Description = Description;
-    /// Login payloads are free-form.
-    type Payload = ();
-
-    fn name() -> &'static str {
-        "keyring"
-    }
+    /// The name of the keytype.
+    fn name() -> &'static str;
 }
 
-/// The hash type to blacklist.
-#[derive(Debug, Clone, Eq)]
-pub enum HashType {
-    /// x509 data
-    Tbs,
-    /// Custom hash type
-    Other(String),
+/// A description for a key.
+pub trait KeyDescription {
+    /// The description of the key.
+    fn description(&self) -> Cow<str>;
 }
 
-impl HashType {
-    /// The name of the hash type.
-    fn name(&self) -> &str {
-        match *self {
-            HashType::Tbs => "tbs",
-            HashType::Other(ref s) => s,
-        }
-    }
-}
-
-impl PartialEq for HashType {
-    fn eq(&self, rhs: &Self) -> bool {
-        self.name() == rhs.name()
-    }
-}
-
-/// The description of a blacklist key.
-pub struct Description {
-    /// The hash type to blacklist.
-    pub hash_type: HashType,
-    /// The hash to blacklist.
-    pub hash: Vec<u8>,
-}
-
-impl KeyDescription for Description {
+impl KeyDescription for str {
     fn description(&self) -> Cow<str> {
-        Cow::Owned(format!(
-            "{}:{}",
-            self.hash_type.name(),
-            AsciiHex::convert(&self.hash),
-        ))
+        Cow::Borrowed(&self)
+    }
+}
+
+impl KeyDescription for String {
+    fn description(&self) -> Cow<str> {
+        Cow::Borrowed(&self)
+    }
+}
+
+/// A payload for a key.
+pub trait KeyPayload {
+    /// The payload for the key.
+    fn payload(&self) -> Cow<[u8]>;
+}
+
+impl KeyPayload for () {
+    fn payload(&self) -> Cow<[u8]> {
+        Cow::Borrowed(&[])
+    }
+}
+
+impl KeyPayload for str {
+    fn payload(&self) -> Cow<[u8]> {
+        Cow::Borrowed(self.as_bytes())
+    }
+}
+
+impl KeyPayload for String {
+    fn payload(&self) -> Cow<[u8]> {
+        Cow::Borrowed(self.as_bytes())
+    }
+}
+
+impl KeyPayload for [u8] {
+    fn payload(&self) -> Cow<[u8]> {
+        Cow::Borrowed(self)
+    }
+}
+
+impl KeyPayload for Vec<u8> {
+    fn payload(&self) -> Cow<[u8]> {
+        Cow::Borrowed(&self)
     }
 }

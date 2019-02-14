@@ -26,12 +26,12 @@
 
 //! Trusted keys
 
+use std::borrow::Cow;
+
 use crates::itertools::Itertools;
 
 use keytype::*;
 use keytypes::AsciiHex;
-
-use std::borrow::Cow;
 
 /// Trusted keys are rooted in the TPM.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
@@ -47,6 +47,7 @@ impl KeyType for Trusted {
     }
 }
 
+/// Hashes supported by TPM devices.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TpmHash {
     /// SHA-1
@@ -81,6 +82,7 @@ impl TpmHash {
     }
 }
 
+/// Options for trusted keys.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct TrustedOptions {
     /// The ID of the sealing key to use.
@@ -89,9 +91,9 @@ pub struct TrustedOptions {
     pub keyauth: Option<[u8; 20]>,
     /// The authorization for sealing data.
     pub blobauth: Option<[u8; 20]>,
-    // TODO: What is this?
+    /// Platform Configuration Register (PCR) data.
     pub pcrinfo: Option<Vec<u8>>,
-    /// The PCR in the TPM to extend and lock the key.
+    /// The PCR number in the TPM to extend and lock the key.
     ///
     /// Only makes sense during a `Load` operation.
     pub pcrlock: Option<u32>,
@@ -169,7 +171,7 @@ impl TrustedOptions {
         ];
 
         let options = parts
-            .into_iter()
+            .iter()
             .filter_map(|(key, value)| value.as_ref().map(|value| format!("{}={}", key, value)))
             .format(" ");
 
@@ -177,6 +179,7 @@ impl TrustedOptions {
     }
 }
 
+/// The payload for trusted keys.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Payload {
     /// Create a new key.
@@ -200,7 +203,10 @@ pub enum Payload {
     /// Update a key.
     ///
     /// Use this with `update`.
-    Update { options: TrustedOptions },
+    Update {
+        /// Options to apply to the key.
+        options: TrustedOptions,
+    },
 }
 
 impl KeyPayload for Payload {
