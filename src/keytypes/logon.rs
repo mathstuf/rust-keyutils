@@ -53,9 +53,9 @@ impl KeyType for Logon {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Description {
     /// They subtype of the key.
-    pub subtype: String,
+    pub subtype: Cow<'static, str>,
     /// The description of the key.
-    pub description: String,
+    pub description: Cow<'static, str>,
 }
 
 impl KeyDescription for Description {
