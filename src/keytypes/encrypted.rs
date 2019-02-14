@@ -115,7 +115,7 @@ pub enum Payload {
         /// The type of key to use for encrypting the new key.
         keytype: MasterKeyType,
         /// The description of the key to use for encrypting the new key.
-        description: String,
+        description: Cow<'static, str>,
         /// The size of the key to generate.
         keylen: usize,
     },
@@ -136,7 +136,7 @@ pub enum Payload {
         /// Must be the same type as when the key was created.
         keytype: MasterKeyType,
         /// The description of the key to use for encrypting the new key.
-        description: String,
+        description: Cow<'static, str>,
     },
 }
 

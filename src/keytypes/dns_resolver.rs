@@ -53,7 +53,7 @@ pub enum QueryType {
     /// An AFS database address.
     AFSDB,
     /// A custom DNS record.
-    Other(String),
+    Other(Cow<'static, str>),
 }
 
 impl QueryType {
@@ -82,15 +82,15 @@ pub struct Description {
     /// If not specified, `A` and `AAAA` entries will be found.
     pub query_type: Option<QueryType>,
     /// The name to resolve.
-    pub name: String,
+    pub name: Cow<'static, str>,
 }
 
 impl KeyDescription for Description {
     fn description(&self) -> Cow<str> {
-        Cow::Owned(if let Some(ref query_type) = self.query_type {
-            format!("{}:{}", query_type.name(), self.name)
+        if let Some(ref query_type) = self.query_type {
+            Cow::Owned(format!("{}:{}", query_type.name(), self.name))
         } else {
             self.name.clone()
-        })
+        }
     }
 }

@@ -52,7 +52,7 @@ pub enum HashType {
     /// x509 data
     Tbs,
     /// Custom hash type
-    Other(String),
+    Other(Cow<'static, str>),
 }
 
 impl HashType {
