@@ -29,8 +29,8 @@
 
 use types::{key_perm_t, key_serial_t};
 
-pub const KEY_TYPE_USER:                    &'static str = "user";
-pub const KEY_TYPE_LOGON:                   &'static str = "logon";
+pub const KEY_TYPE_USER:                    &str = "user";
+pub const KEY_TYPE_LOGON:                   &str = "logon";
 
 pub const KEY_SPEC_THREAD_KEYRING:          key_serial_t = -1;
 pub const KEY_SPEC_PROCESS_KEYRING:         key_serial_t = -2;
@@ -49,34 +49,34 @@ pub const KEY_REQKEY_DEFL_USER_KEYRING:         key_serial_t = 4;
 pub const KEY_REQKEY_DEFL_USER_SESSION_KEYRING: key_serial_t = 5;
 pub const KEY_REQKEY_DEFL_GROUP_KEYRING:        key_serial_t = 6;
 
-pub const KEY_POS_VIEW:    key_perm_t = 0x01000000;     /* possessor can view a key's attributes */
-pub const KEY_POS_READ:    key_perm_t = 0x02000000;     /* possessor can read key payload / view keyring */
-pub const KEY_POS_WRITE:   key_perm_t = 0x04000000;     /* possessor can update key payload / add link to keyring */
-pub const KEY_POS_SEARCH:  key_perm_t = 0x08000000;     /* possessor can find a key in search / search a keyring */
-pub const KEY_POS_LINK:    key_perm_t = 0x10000000;     /* possessor can create a link to a key/keyring */
-pub const KEY_POS_SETATTR: key_perm_t = 0x20000000;     /* possessor can set key attributes */
-pub const KEY_POS_ALL:     key_perm_t = 0x3f000000;
+pub const KEY_POS_VIEW:    key_perm_t = 0x0100_0000;     /* possessor can view a key's attributes */
+pub const KEY_POS_READ:    key_perm_t = 0x0200_0000;     /* possessor can read key payload / view keyring */
+pub const KEY_POS_WRITE:   key_perm_t = 0x0400_0000;     /* possessor can update key payload / add link to keyring */
+pub const KEY_POS_SEARCH:  key_perm_t = 0x0800_0000;     /* possessor can find a key in search / search a keyring */
+pub const KEY_POS_LINK:    key_perm_t = 0x1000_0000;     /* possessor can create a link to a key/keyring */
+pub const KEY_POS_SETATTR: key_perm_t = 0x2000_0000;     /* possessor can set key attributes */
+pub const KEY_POS_ALL:     key_perm_t = 0x3f00_0000;
 
-pub const KEY_USR_VIEW:    key_perm_t = 0x00010000;     /* user permissions... */
-pub const KEY_USR_READ:    key_perm_t = 0x00020000;
-pub const KEY_USR_WRITE:   key_perm_t = 0x00040000;
-pub const KEY_USR_SEARCH:  key_perm_t = 0x00080000;
-pub const KEY_USR_LINK:    key_perm_t = 0x00100000;
-pub const KEY_USR_SETATTR: key_perm_t = 0x00200000;
-pub const KEY_USR_ALL:     key_perm_t = 0x003f0000;
+pub const KEY_USR_VIEW:    key_perm_t = 0x0001_0000;     /* user permissions... */
+pub const KEY_USR_READ:    key_perm_t = 0x0002_0000;
+pub const KEY_USR_WRITE:   key_perm_t = 0x0004_0000;
+pub const KEY_USR_SEARCH:  key_perm_t = 0x0008_0000;
+pub const KEY_USR_LINK:    key_perm_t = 0x0010_0000;
+pub const KEY_USR_SETATTR: key_perm_t = 0x0020_0000;
+pub const KEY_USR_ALL:     key_perm_t = 0x003f_0000;
 
-pub const KEY_GRP_VIEW:    key_perm_t = 0x00000100;     /* group permissions... */
-pub const KEY_GRP_READ:    key_perm_t = 0x00000200;
-pub const KEY_GRP_WRITE:   key_perm_t = 0x00000400;
-pub const KEY_GRP_SEARCH:  key_perm_t = 0x00000800;
-pub const KEY_GRP_LINK:    key_perm_t = 0x00001000;
-pub const KEY_GRP_SETATTR: key_perm_t = 0x00002000;
-pub const KEY_GRP_ALL:     key_perm_t = 0x00003f00;
+pub const KEY_GRP_VIEW:    key_perm_t = 0x0000_0100;     /* group permissions... */
+pub const KEY_GRP_READ:    key_perm_t = 0x0000_0200;
+pub const KEY_GRP_WRITE:   key_perm_t = 0x0000_0400;
+pub const KEY_GRP_SEARCH:  key_perm_t = 0x0000_0800;
+pub const KEY_GRP_LINK:    key_perm_t = 0x0000_1000;
+pub const KEY_GRP_SETATTR: key_perm_t = 0x0000_2000;
+pub const KEY_GRP_ALL:     key_perm_t = 0x0000_3f00;
 
-pub const KEY_OTH_VIEW:    key_perm_t = 0x00000001;     /* third party permissions... */
-pub const KEY_OTH_READ:    key_perm_t = 0x00000002;
-pub const KEY_OTH_WRITE:   key_perm_t = 0x00000004;
-pub const KEY_OTH_SEARCH:  key_perm_t = 0x00000008;
-pub const KEY_OTH_LINK:    key_perm_t = 0x00000010;
-pub const KEY_OTH_SETATTR: key_perm_t = 0x00000020;
-pub const KEY_OTH_ALL:     key_perm_t = 0x0000003f;
+pub const KEY_OTH_VIEW:    key_perm_t = 0x0000_0001;     /* third party permissions... */
+pub const KEY_OTH_READ:    key_perm_t = 0x0000_0002;
+pub const KEY_OTH_WRITE:   key_perm_t = 0x0000_0004;
+pub const KEY_OTH_SEARCH:  key_perm_t = 0x0000_0008;
+pub const KEY_OTH_LINK:    key_perm_t = 0x0000_0010;
+pub const KEY_OTH_SETATTR: key_perm_t = 0x0000_0020;
+pub const KEY_OTH_ALL:     key_perm_t = 0x0000_003f;

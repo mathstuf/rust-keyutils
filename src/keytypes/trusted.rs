@@ -169,7 +169,7 @@ impl TrustedOptions {
         ];
 
         let options = parts
-            .into_iter()
+            .iter()
             .filter_map(|(key, value)| value.as_ref().map(|value| format!("{}={}", key, value)))
             .format(" ");
 

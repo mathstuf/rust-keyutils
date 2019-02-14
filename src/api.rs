@@ -81,13 +81,13 @@ impl Keyring {
     /// This is unsafe because no keyring is known to exist with the given ID.
     pub unsafe fn new(id: KeyringSerial) -> Self {
         Keyring {
-            id: id,
+            id,
         }
     }
 
     fn new_impl(id: KeyringSerial) -> Self {
         Keyring {
-            id: id,
+            id,
         }
     }
 
@@ -512,7 +512,7 @@ impl Key {
 
     fn new_impl(id: KeyringSerial) -> Self {
         Key {
-            id: id,
+            id,
         }
     }
 
@@ -730,7 +730,7 @@ pub struct KeyManager {
 impl KeyManager {
     fn new(key: Key) -> Self {
         KeyManager {
-            key: key,
+            key,
         }
     }
 
