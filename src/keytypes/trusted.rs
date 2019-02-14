@@ -89,9 +89,9 @@ pub struct TrustedOptions {
     pub keyauth: Option<[u8; 20]>,
     /// The authorization for sealing data.
     pub blobauth: Option<[u8; 20]>,
-    // TODO: What is this?
+    /// Platform Configuration Register (PCR) data.
     pub pcrinfo: Option<Vec<u8>>,
-    /// The PCR in the TPM to extend and lock the key.
+    /// The PCR number in the TPM to extend and lock the key.
     ///
     /// Only makes sense during a `Load` operation.
     pub pcrlock: Option<u32>,
