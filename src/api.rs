@@ -28,7 +28,7 @@ use crates::errno;
 use crates::libc;
 use crates::libkeyutils_sys::*;
 
-use constants::{DefaultKeyring, KeyringSerial, KeyPermissions, Permission, SpecialKeyring};
+use constants::{DefaultKeyring, KeyPermissions, KeyringSerial, Permission, SpecialKeyring};
 use keytype::*;
 use keytypes;
 
