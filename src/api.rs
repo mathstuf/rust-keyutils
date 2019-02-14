@@ -24,7 +24,7 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use std::borrow::Borrow;
+use std::borrow::{Borrow, Cow};
 use std::ffi::CString;
 use std::mem;
 use std::ptr;
@@ -502,6 +502,76 @@ pub struct Key {
     id: KeyringSerial,
 }
 
+/// Hashes supported by the kernel.
+#[derive(Debug, Clone)]
+// #[non_exhaustive]
+pub enum KeyctlHash {
+    /// The MD4 hash.
+    Md4,
+    /// The MD5 hash.
+    Md5,
+    /// The SHA1 hash.
+    Sha1,
+    /// The sha224 hash.
+    Sha224,
+    /// The sha256 hash.
+    Sha256,
+    /// The sha384 hash.
+    Sha384,
+    /// The sha512 hash.
+    Sha512,
+    /// The rmd128 hash.
+    RipeMd128,
+    /// The rmd160 hash.
+    RipeMd160,
+    /// The rmd256 hash.
+    RipeMd256,
+    /// The rmd320 hash.
+    RipeMd320,
+    /// The wp256 hash.
+    Wp256,
+    /// The wp384 hash.
+    Wp384,
+    /// The wp512 hash.
+    Wp512,
+    /// The tgr128 hash.
+    Tgr128,
+    /// The tgr160 hash.
+    Tgr160,
+    /// The tgr192 hash.
+    Tgr192,
+    /// The sm3-256 hash.
+    Sm3_256,
+    /// For extensibility.
+    OtherEncoding(Cow<'static, str>),
+}
+
+impl KeyctlHash {
+    fn hash(&self) -> &str {
+        match *self {
+            KeyctlHash::Md4 => "md4",
+            KeyctlHash::Md5 => "md5",
+            KeyctlHash::Sha1 => "sha1",
+            KeyctlHash::Sha224 => "sha224",
+            KeyctlHash::Sha256 => "sha256",
+            KeyctlHash::Sha384 => "sha384",
+            KeyctlHash::Sha512 => "sha512",
+            KeyctlHash::RipeMd128 => "rmd128",
+            KeyctlHash::RipeMd160 => "rmd160",
+            KeyctlHash::RipeMd256 => "rmd256",
+            KeyctlHash::RipeMd320 => "rmd320",
+            KeyctlHash::Wp256 => "wp256",
+            KeyctlHash::Wp384 => "wp384",
+            KeyctlHash::Wp512 => "wp512",
+            KeyctlHash::Tgr128 => "tgr128",
+            KeyctlHash::Tgr160 => "tgr160",
+            KeyctlHash::Tgr192 => "tgr192",
+            KeyctlHash::Sm3_256 => "sm3-256",
+            KeyctlHash::OtherEncoding(ref s) => &s,
+        }
+    }
+}
+
 impl Key {
     /// Instantiate a key from an ID.
     ///
@@ -660,6 +730,60 @@ impl Key {
                 private.id,
                 prime.id,
                 base.id,
+                buffer.as_mut_ptr() as *mut libc::c_char,
+                sz as usize,
+            )
+        })?;
+        unsafe { buffer.set_len(actual_sz as usize) };
+        Ok(buffer)
+    }
+
+    /// Compute a key from a Diffie-Hellman shared secret.
+    ///
+    /// The `base` key contains the remote public key to create a share secret which is then
+    /// processed using `hash`.
+    ///
+    /// See [SP800-56A][] for details.
+    ///
+    /// [SP800-56A]: https://csrc.nist.gov/publications/detail/sp/800-56a/revised/archive/2007-03-14
+    pub fn compute_dh_kdf<O>(
+        private: &Key,
+        prime: &Key,
+        base: &Key,
+        hash: KeyctlHash,
+        other: Option<O>,
+    ) -> Result<Vec<u8>>
+    where
+        O: AsRef<[u8]>,
+    {
+        let hash_cstr = CString::new(hash.hash()).unwrap();
+        let (other_ptr, other_sz) = if let Some(other) = other {
+            let other = other.as_ref();
+            (other.as_ptr() as *const libc::c_void, other.len())
+        } else {
+            (ptr::null_mut() as *const libc::c_void, 0)
+        };
+        let sz = check_call_ret(unsafe {
+            keyctl_dh_compute_kdf(
+                private.id,
+                prime.id,
+                base.id,
+                hash_cstr.as_ptr(),
+                other_ptr,
+                other_sz,
+                ptr::null_mut() as *mut libc::c_char,
+                0,
+            )
+        })?;
+        let mut buffer = Vec::with_capacity(sz as usize);
+        let actual_sz = check_call_ret(unsafe {
+            keyctl_dh_compute_kdf(
+                private.id,
+                prime.id,
+                base.id,
+                hash_cstr.as_ptr(),
+                other_ptr,
+                other_sz,
                 buffer.as_mut_ptr() as *mut libc::c_char,
                 sz as usize,
             )

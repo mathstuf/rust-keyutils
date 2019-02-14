@@ -143,4 +143,17 @@ extern "C" {
         buffer:     *mut libc::c_char,
         buflen:     libc::size_t)
         -> libc::c_long;
+    pub fn keyctl_dh_compute_kdf(
+        private:        key_serial_t,
+        prime:          key_serial_t,
+        base:           key_serial_t,
+        // These are typos in the original API that can't be fixed.
+        // hashname:   *mut libc::c_char,
+        // otherinfo:  *mut libc::c_char,
+        hashname:       *const libc::c_char,
+        otherinfo:      *const libc::c_void,
+        otherinfolen:   libc::size_t,
+        buffer:         *mut libc::c_char,
+        buflen:         libc::size_t)
+        -> libc::c_long;
 }
