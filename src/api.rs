@@ -28,7 +28,7 @@ use crates::errno;
 use crates::libc;
 use crates::libkeyutils_sys::*;
 
-use constants::*;
+use constants::{DefaultKeyring, KeyringSerial, KeyPermissions, Permission, SpecialKeyring};
 use keytype::*;
 use keytypes;
 
@@ -811,7 +811,7 @@ mod tests {
     use std::time::Duration;
 
     use api::Keyring;
-    use constants::{self, SpecialKeyring};
+    use constants::{Permission, SpecialKeyring};
     use keytype::KeyType;
     use keytypes;
 
@@ -1019,10 +1019,10 @@ mod tests {
         let perms = description.perms;
         let new_perms = {
             let mut tmp_perms = perms.clone();
-            let write_bits = constants::POSSESSOR_WRITE
-                | constants::USER_WRITE
-                | constants::GROUP_WRITE
-                | constants::OTHER_WRITE;
+            let write_bits = Permission::POSSESSOR_WRITE
+                | Permission::USER_WRITE
+                | Permission::GROUP_WRITE
+                | Permission::OTHER_WRITE;
             tmp_perms.remove(write_bits);
             tmp_perms
         };
