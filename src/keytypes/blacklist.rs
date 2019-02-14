@@ -26,10 +26,10 @@
 
 //! Certificate blacklist keys
 
+use std::borrow::Cow;
+
 use keytype::*;
 use keytypes::AsciiHex;
-
-use std::borrow::Cow;
 
 /// Blacklist hashes.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]

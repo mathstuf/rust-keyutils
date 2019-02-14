@@ -26,10 +26,10 @@
 
 //! Encrypted keys
 
+use std::borrow::Cow;
+
 use keytype::*;
 use keytypes::AsciiHex;
-
-use std::borrow::Cow;
 
 /// Encrypted keys.
 ///

@@ -28,11 +28,11 @@
 //!
 //! Logon keys are arbitrary keys that userspace cannot read once set.
 
+use std::borrow::Cow;
+
 use crates::libkeyutils_sys::KEY_TYPE_LOGON;
 
 use keytype::*;
-
-use std::borrow::Cow;
 
 /// Keys which can only be created and updated from userspace but not read back.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]

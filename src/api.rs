@@ -24,14 +24,6 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crates::errno;
-use crates::libc;
-use crates::libkeyutils_sys::*;
-
-use constants::{DefaultKeyring, KeyPermissions, KeyringSerial, Permission, SpecialKeyring};
-use keytype::*;
-use keytypes;
-
 use std::borrow::Borrow;
 use std::ffi::CString;
 use std::mem;
@@ -39,6 +31,14 @@ use std::ptr;
 use std::result;
 use std::str;
 use std::time::Duration;
+
+use crates::errno;
+use crates::libc;
+use crates::libkeyutils_sys::*;
+
+use constants::{DefaultKeyring, KeyPermissions, KeyringSerial, Permission, SpecialKeyring};
+use keytype::*;
+use keytypes;
 
 /// Reexport of `Errno` as `Error`.
 pub type Error = errno::Errno;
@@ -805,10 +805,10 @@ impl KeyManager {
 
 #[cfg(test)]
 mod tests {
-    use crates::libc;
-
     use std::thread;
     use std::time::Duration;
+
+    use crates::libc;
 
     use api::Keyring;
     use constants::{Permission, SpecialKeyring};

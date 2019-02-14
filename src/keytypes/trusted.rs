@@ -26,12 +26,12 @@
 
 //! Trusted keys
 
+use std::borrow::Cow;
+
 use crates::itertools::Itertools;
 
 use keytype::*;
 use keytypes::AsciiHex;
-
-use std::borrow::Cow;
 
 /// Trusted keys are rooted in the TPM.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
