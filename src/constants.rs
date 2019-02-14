@@ -27,6 +27,7 @@
 use crates::libkeyutils_sys::*;
 
 /// Special keyrings predefined for a process.
+// #[non_exhaustive]
 pub enum SpecialKeyring {
     /// A thread-specific keyring.
     Thread,
@@ -63,6 +64,7 @@ impl SpecialKeyring {
 ///
 /// Keys which are implicitly required via syscalls and other operations are placed in the
 /// default keyring.
+// #[non_exhaustive]
 pub enum DefaultKeyring {
     /// Do not change the default keyring.
     ///
