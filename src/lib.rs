@@ -42,6 +42,7 @@ mod crates {
 
     // private
     pub extern crate errno;
+    pub extern crate itertools;
     pub extern crate libkeyutils_sys;
 }
 

@@ -52,6 +52,9 @@ pub use self::keyring::Keyring;
 pub mod logon;
 pub use self::logon::Logon;
 
+pub mod trusted;
+pub use self::trusted::Trusted;
+
 pub mod user;
 pub use self::user::User;
 
