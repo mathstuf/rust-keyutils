@@ -52,6 +52,12 @@ pub use self::keyring::Keyring;
 pub mod logon;
 pub use self::logon::Logon;
 
+pub mod rxrpc;
+pub use self::rxrpc::RxRPC;
+
+pub mod rxrpc_s;
+pub use self::rxrpc_s::RxRPCServer;
+
 pub mod trusted;
 pub use self::trusted::Trusted;
 
