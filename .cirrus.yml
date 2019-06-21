@@ -1,16 +1,15 @@
 clippy_task:
     container:
-        image: rustlang/rust:nightly
+        image: rust:latest
     keyutils_script: apt-get update && apt-get install libkeyutils-dev
     component_script: rustup component add clippy
-    update_script: cargo +nightly update
+    fmt_script: cargo clippy
     toolchain_cache:
         folder: $RUSTUP_HOME
-        fingerprint_script: rustc +nightly --version
+        fingerprint_script: rustc --version
     cargo_cache:
         folder: $CARGO_HOME/registry
         fingerprint_script: cat Cargo.lock
-    fmt_script: cargo +nightly clippy
 
 rustfmt_task:
     container:
