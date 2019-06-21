@@ -30,9 +30,9 @@
 
 use std::borrow::Cow;
 
-use crates::libkeyutils_sys::KEY_TYPE_LOGON;
+use libkeyutils_sys::KEY_TYPE_LOGON;
 
-use keytype::*;
+use crate::keytype::*;
 
 /// Keys which can only be created and updated from userspace but not read back.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]

@@ -90,7 +90,7 @@ impl AsciiHex {
 
 #[cfg(test)]
 mod tests {
-    use keytypes::AsciiHex;
+    use super::*;
 
     fn check(input: &[u8], expected: &str) {
         assert_eq!(AsciiHex::convert(input), expected);

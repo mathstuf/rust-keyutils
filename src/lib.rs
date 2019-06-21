@@ -30,26 +30,9 @@
 
 #![warn(missing_docs)]
 
-#[macro_use]
-extern crate bitflags;
-
-#[macro_use]
-extern crate log;
-
-mod crates {
-    // public
-    pub extern crate libc;
-
-    // private
-    pub extern crate errno;
-    pub extern crate itertools;
-    pub extern crate libkeyutils_sys;
-}
-
+mod api;
 mod constants;
 mod keytype;
-
-mod api;
 
 pub mod keytypes;
 

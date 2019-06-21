@@ -26,7 +26,7 @@
 
 //! Big keys
 
-use keytype::*;
+use crate::keytype::*;
 
 /// Big keys.
 ///

@@ -24,9 +24,7 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crates::libc;
-
-use types::{key_perm_t, key_serial_t};
+use crate::types::{key_perm_t, key_serial_t};
 
 #[rustfmt::skip]
 extern "C" {

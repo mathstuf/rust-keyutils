@@ -28,7 +28,7 @@
 
 use std::borrow::Cow;
 
-use keytype::*;
+use crate::keytype::*;
 
 /// An RxRPC client key.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]

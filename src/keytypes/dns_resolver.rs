@@ -28,7 +28,7 @@
 
 use std::borrow::Cow;
 
-use keytype::*;
+use crate::keytype::*;
 
 /// A DNS resolver key.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
