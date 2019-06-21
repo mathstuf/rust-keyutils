@@ -26,7 +26,7 @@
 
 //! Asymmetric keys
 
-use keytype::*;
+use crate::keytype::*;
 
 /// Asymmetric keys support encrypting, decrypting, signing, and verifying data.
 ///

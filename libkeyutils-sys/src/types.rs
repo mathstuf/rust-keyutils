@@ -26,7 +26,5 @@
 
 #![allow(non_camel_case_types)]
 
-use crates::libc;
-
-pub type key_serial_t = libc::int32_t;
-pub type key_perm_t = libc::uint32_t;
+pub type key_serial_t = i32;
+pub type key_perm_t = u32;

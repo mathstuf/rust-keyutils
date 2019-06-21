@@ -28,10 +28,10 @@
 
 use std::borrow::Cow;
 
-use crates::itertools::Itertools;
+use itertools::Itertools;
 
-use keytype::*;
-use keytypes::AsciiHex;
+use super::AsciiHex;
+use crate::keytype::*;
 
 /// Trusted keys are rooted in the TPM.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]

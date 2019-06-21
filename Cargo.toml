@@ -3,22 +3,21 @@ name = "keyutils"
 version = "0.4.0"
 authors = ["Ben Boeckel <mathstuf@gmail.com>"]
 license = "BSD-3-Clause"
-description = """
-Rust interface to the Linux keyring.
-"""
+description = "Rust interface to the Linux keyring."
 repository = "https://github.com/mathstuf/rust-keyutils.git"
-homepage = "https://github.com/mathstuf/rust-keyutils.git"
-documentation = "https://docs.rs/keyutils/~0.4"
+homepage = "https://github.com/mathstuf/rust-keyutils"
+documentation = "https://docs.rs/keyutils"
 readme = "README.md"
+edition = "2018"
 
 [workspace]
 members = ["libkeyutils-sys"]
 
 [dependencies]
-bitflags = "^1.0"
-errno = "~0.2"
-itertools = "~0.8"
-libkeyutils-sys = { path = "libkeyutils-sys", version = "~0.3.1" }
-log = "~0.4"
+bitflags = "1.0"
+errno = "0.2"
+itertools = "0.8"
+libkeyutils-sys = { path = "libkeyutils-sys" }
+log = "0.4"
 
-libc = "~0.2"
+libc = "0.2"

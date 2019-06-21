@@ -26,9 +26,9 @@
 
 //! User keys
 
-use crates::libkeyutils_sys::KEY_TYPE_USER;
+use libkeyutils_sys::KEY_TYPE_USER;
 
-use keytype::*;
+use crate::keytype::*;
 
 /// Keys which can be created, updated, and read from userspace but are not intended for use by the
 /// kernel.

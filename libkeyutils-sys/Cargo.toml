@@ -3,14 +3,12 @@ name = "libkeyutils-sys"
 version = "0.3.1"
 authors = ["Ben Boeckel <mathstuf@gmail.com>"]
 license = "BSD-3-Clause"
-description = """
-FFI bindings to libkeyutils.
-"""
+description = "FFI bindings to libkeyutils."
 repository = "https://github.com/mathstuf/rust-keyutils.git"
-homepage = "https://github.com/mathstuf/rust-keyutils.git"
-documentation = "https://docs.rs/libkeyutils-sys/~0.3"
+homepage = "https://github.com/mathstuf/rust-keyutils"
 keywords = ["keyutils"]
 links = "keyutils"
+edition = "2018"
 
 [dependencies]
-libc = "~0.2"
+libc = "0.2"

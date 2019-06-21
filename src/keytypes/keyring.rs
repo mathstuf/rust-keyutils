@@ -26,7 +26,7 @@
 
 //! Keyrings
 
-use keytype::*;
+use crate::keytype::*;
 
 /// Keyrings contain other keys.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]

@@ -27,7 +27,7 @@
 // Ignore rustfmt changes in here. The horizontal alignment is too useful to give up.
 #![cfg_attr(rustfmt, rustfmt_skip)]
 
-use types::{key_perm_t, key_serial_t};
+use crate::types::{key_perm_t, key_serial_t};
 
 pub const KEY_TYPE_USER:                    &str = "user";
 pub const KEY_TYPE_LOGON:                   &str = "logon";

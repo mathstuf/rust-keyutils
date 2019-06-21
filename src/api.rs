@@ -32,13 +32,12 @@ use std::result;
 use std::str;
 use std::time::Duration;
 
-use crates::errno;
-use crates::libc;
-use crates::libkeyutils_sys::*;
+use libkeyutils_sys::*;
+use log::error;
 
-use constants::{DefaultKeyring, KeyPermissions, KeyringSerial, Permission, SpecialKeyring};
-use keytype::*;
-use keytypes;
+use crate::constants::{DefaultKeyring, KeyPermissions, KeyringSerial, Permission, SpecialKeyring};
+use crate::keytype::*;
+use crate::keytypes;
 
 /// Reexport of `Errno` as `Error`.
 pub type Error = errno::Errno;
@@ -806,14 +805,8 @@ impl KeyManager {
 #[cfg(test)]
 mod tests {
     use std::thread;
-    use std::time::Duration;
 
-    use crates::libc;
-
-    use api::Keyring;
-    use constants::{Permission, SpecialKeyring};
-    use keytype::KeyType;
-    use keytypes;
+    use super::*;
 
     #[test]
     fn test_add_key() {

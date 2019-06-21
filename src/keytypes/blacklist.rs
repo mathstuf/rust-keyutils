@@ -28,8 +28,8 @@
 
 use std::borrow::Cow;
 
-use keytype::*;
-use keytypes::AsciiHex;
+use super::AsciiHex;
+use crate::keytype::*;
 
 /// Blacklist hashes.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]

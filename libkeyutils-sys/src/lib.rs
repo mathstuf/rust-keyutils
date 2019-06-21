@@ -37,10 +37,6 @@
 //!   - `keyctl(3)`
 //!   - `keyctl(7)`
 
-mod crates {
-    pub extern crate libc;
-}
-
 mod constants;
 mod functions;
 mod types;
