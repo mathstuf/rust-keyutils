@@ -75,6 +75,6 @@ impl KeyPayload for Payload {
         payload.extend(self.session_key.iter());
         payload.extend(self.ticket.iter());
 
-        Cow::Owned(payload)
+        payload.into()
     }
 }

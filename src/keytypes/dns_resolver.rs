@@ -59,11 +59,11 @@ pub enum QueryType {
 impl QueryType {
     /// The name of the DNS record.
     fn name(&self) -> &str {
-        match *self {
+        match self {
             QueryType::A => "a",
             QueryType::AAAA => "aaaa",
             QueryType::AFSDB => "afsdb",
-            QueryType::Other(ref s) => s,
+            QueryType::Other(s) => s,
         }
     }
 }
@@ -87,10 +87,9 @@ pub struct Description {
 
 impl KeyDescription for Description {
     fn description(&self) -> Cow<str> {
-        if let Some(ref query_type) = self.query_type {
-            Cow::Owned(format!("{}:{}", query_type.name(), self.name))
-        } else {
-            self.name.clone()
+        match &self.query_type {
+            Some(ref query_type) => format!("{}:{}", query_type.name(), self.name).into(),
+            _ => self.name.clone(),
         }
     }
 }
