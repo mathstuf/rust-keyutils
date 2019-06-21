@@ -205,7 +205,7 @@ impl KeyPayload for Payload {
             } => format!("load {:x}{}", ByteBuf(blob), options),
             Payload::Update {
                 options,
-            } => format!("update {}", options),
+            } => format!("update{}", options),
         }
         .into_bytes()
         .into()
