@@ -29,8 +29,11 @@
 
 use crate::types::{key_perm_t, key_serial_t};
 
+// TODO: change these to &CStr when const fns get unblocked.
+pub const KEY_TYPE_KEYRING:                 &str = "keyring";
 pub const KEY_TYPE_USER:                    &str = "user";
 pub const KEY_TYPE_LOGON:                   &str = "logon";
+pub const KEY_TYPE_BIG_KEY:                 &str = "big_key";
 
 pub const KEY_SPEC_THREAD_KEYRING:          key_serial_t = -1;
 pub const KEY_SPEC_PROCESS_KEYRING:         key_serial_t = -2;

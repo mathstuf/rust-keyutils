@@ -27,6 +27,7 @@
 //! Keyrings
 
 use crate::keytype::*;
+use keyutils_raw::KEY_TYPE_KEYRING;
 
 /// Keyrings contain other keys.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
@@ -39,6 +40,6 @@ impl KeyType for Keyring {
     type Payload = ();
 
     fn name() -> &'static str {
-        "keyring"
+        KEY_TYPE_KEYRING
     }
 }
