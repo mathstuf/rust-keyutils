@@ -1,43 +1,29 @@
 clippy_task:
     container:
         image: rust:latest
-    keyutils_script: apt-get update && apt-get install libkeyutils-dev
     component_script: rustup component add clippy
-    fmt_script: cargo clippy
-    toolchain_cache:
-        folder: $RUSTUP_HOME
-        fingerprint_script: rustc --version
-    cargo_cache:
-        folder: $CARGO_HOME/registry
-        fingerprint_script: cat Cargo.lock
+    clippy_script: cargo clippy
 
 rustfmt_task:
     container:
+        # Our .rustfmt.toml uses currently unstable features
         image: rustlang/rust:nightly
-    keyutils_script: apt-get update && apt-get install libkeyutils-dev
     component_script: rustup component add rustfmt
     fmt_script: cargo fmt --all -- --check
 
 linux_task:
-    container:
-      image: rust:latest
     matrix:
-        - env:
-              RUSTVER: 1.32.0
-        - env:
-              RUSTVER: stable
-        - allow_failures: true
-          env:
-              RUSTVER: nightly
+    - container:
+        image: rust:1.32.0
+    - container:
+        image: rust:latest
+    - allow_failures: true
+      container:
+        image: rustlang/rust:nightly
     keyutils_script: apt-get update && apt-get install libkeyutils-dev
-    rustup_script: rustup toolchain install $RUSTVER
-    toolchain_cache:
-        folder: $RUSTUP_HOME
-        fingerprint_script: rustc +$RUSTVER --version
-    update_script: cargo +$RUSTVER update
     cargo_cache:
         folder: $CARGO_HOME/registry
         fingerprint_script: cat Cargo.lock
-    build_script: cargo +$RUSTVER build
-    test_script: cargo +$RUSTVER test
+    build_script: cargo build
+    test_script: cargo test
     before_cache_script: rm -rf $CARGO_HOME/registry/index
