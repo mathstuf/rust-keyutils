@@ -25,7 +25,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use bitflags::bitflags;
-use libkeyutils_sys::*;
+use keyutils_raw::*;
 
 /// Special keyrings predefined for a process.
 pub enum SpecialKeyring {

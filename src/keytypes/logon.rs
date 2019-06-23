@@ -30,7 +30,7 @@
 
 use std::borrow::Cow;
 
-use libkeyutils_sys::KEY_TYPE_LOGON;
+use keyutils_raw::KEY_TYPE_LOGON;
 
 use crate::keytype::*;
 

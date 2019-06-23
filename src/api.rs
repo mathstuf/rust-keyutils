@@ -32,7 +32,7 @@ use std::result;
 use std::str;
 use std::time::Duration;
 
-use libkeyutils_sys::*;
+use keyutils_raw::*;
 use log::error;
 
 use crate::constants::{DefaultKeyring, KeyPermissions, KeyringSerial, Permission, SpecialKeyring};
