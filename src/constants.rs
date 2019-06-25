@@ -43,9 +43,6 @@ pub enum SpecialKeyring {
     Group,
 }
 
-/// The kernel type for representing a keyring (or key).
-pub type KeyringSerial = i32;
-
 impl SpecialKeyring {
     /// Retrieve the serial number for the special keyring.
     pub fn serial(self) -> KeyringSerial {
@@ -59,78 +56,6 @@ impl SpecialKeyring {
         }
     }
 }
-
-/// An enumeration for the keyrings which may be set as the default.
-///
-/// Keys which are implicitly required via syscalls and other operations are placed in the
-/// default keyring.
-pub enum DefaultKeyring {
-    /// Do not change the default keyring.
-    ///
-    /// This may be used to get the current default keyring.
-    NoChange,
-    /// Set the thread-specific keyring as the default.
-    ThreadKeyring,
-    /// Set the process-specific keyring as the default.
-    ProcessKeyring,
-    /// Set the session-specific keyring as the default.
-    SessionKeyring,
-    /// Set the user-specific keyring as the default.
-    UserKeyring,
-    /// Set the user session-specific keyring as the default.
-    UserSessionKeyring,
-    /// Set the user session-specific keyring as the default.
-    GroupKeyring,
-    /// Set the default keyring to the default logic.
-    ///
-    /// Keys will be placed in the first available keyring of:
-    ///
-    ///   - thread-specific
-    ///   - process-specific
-    ///   - session-specific
-    ///   - user-specific
-    DefaultKeyring,
-}
-
-/// The kernel type for representing a default keyring.
-pub type KeyringDefaultSerial = i32;
-
-impl DefaultKeyring {
-    /// Retrieve the serial number for the default keyring.
-    pub fn serial(self) -> KeyringDefaultSerial {
-        match self {
-            DefaultKeyring::NoChange => KEY_REQKEY_DEFL_NO_CHANGE,
-            DefaultKeyring::ThreadKeyring => KEY_REQKEY_DEFL_THREAD_KEYRING,
-            DefaultKeyring::ProcessKeyring => KEY_REQKEY_DEFL_PROCESS_KEYRING,
-            DefaultKeyring::SessionKeyring => KEY_REQKEY_DEFL_SESSION_KEYRING,
-            DefaultKeyring::UserKeyring => KEY_REQKEY_DEFL_USER_KEYRING,
-            DefaultKeyring::UserSessionKeyring => KEY_REQKEY_DEFL_USER_SESSION_KEYRING,
-            DefaultKeyring::GroupKeyring => KEY_REQKEY_DEFL_GROUP_KEYRING,
-            DefaultKeyring::DefaultKeyring => KEY_REQKEY_DEFL_DEFAULT,
-        }
-    }
-}
-
-impl From<i32> for DefaultKeyring {
-    fn from(id: i32) -> DefaultKeyring {
-        match id {
-            KEY_REQKEY_DEFL_NO_CHANGE => DefaultKeyring::NoChange,
-            KEY_REQKEY_DEFL_THREAD_KEYRING => DefaultKeyring::ThreadKeyring,
-            KEY_REQKEY_DEFL_PROCESS_KEYRING => DefaultKeyring::ProcessKeyring,
-            KEY_REQKEY_DEFL_SESSION_KEYRING => DefaultKeyring::SessionKeyring,
-            KEY_REQKEY_DEFL_USER_KEYRING => DefaultKeyring::UserKeyring,
-            KEY_REQKEY_DEFL_USER_SESSION_KEYRING => DefaultKeyring::UserSessionKeyring,
-            KEY_REQKEY_DEFL_GROUP_KEYRING => DefaultKeyring::GroupKeyring,
-            KEY_REQKEY_DEFL_DEFAULT => DefaultKeyring::DefaultKeyring,
-            _ => panic!("Invalid value for a default keyring: {}", id),
-        }
-    }
-}
-
-/// The kernel type for representing a keyring's or key's permission.
-///
-/// See `Permission`.
-pub type KeyPermissions = u32;
 
 bitflags! {
     /// Permission bits for keyring objects.
@@ -230,39 +155,6 @@ fn test_keyring_ids() {
         KEY_SPEC_USER_SESSION_KEYRING
     );
     assert_eq!(SpecialKeyring::Group.serial(), KEY_SPEC_GROUP_KEYRING);
-}
-
-#[test]
-fn test_default_keyring_ids() {
-    assert_eq!(DefaultKeyring::NoChange.serial(), KEY_REQKEY_DEFL_NO_CHANGE);
-    assert_eq!(
-        DefaultKeyring::ThreadKeyring.serial(),
-        KEY_REQKEY_DEFL_THREAD_KEYRING
-    );
-    assert_eq!(
-        DefaultKeyring::ProcessKeyring.serial(),
-        KEY_REQKEY_DEFL_PROCESS_KEYRING
-    );
-    assert_eq!(
-        DefaultKeyring::SessionKeyring.serial(),
-        KEY_REQKEY_DEFL_SESSION_KEYRING
-    );
-    assert_eq!(
-        DefaultKeyring::UserKeyring.serial(),
-        KEY_REQKEY_DEFL_USER_KEYRING
-    );
-    assert_eq!(
-        DefaultKeyring::UserSessionKeyring.serial(),
-        KEY_REQKEY_DEFL_USER_SESSION_KEYRING
-    );
-    assert_eq!(
-        DefaultKeyring::GroupKeyring.serial(),
-        KEY_REQKEY_DEFL_GROUP_KEYRING
-    );
-    assert_eq!(
-        DefaultKeyring::DefaultKeyring.serial(),
-        KEY_REQKEY_DEFL_DEFAULT
-    );
 }
 
 #[test]

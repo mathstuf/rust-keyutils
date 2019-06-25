@@ -24,7 +24,7 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::types::{key_perm_t, key_serial_t};
+use crate::{KeyPermissions, KeyringSerial, TimeoutSeconds};
 
 #[rustfmt::skip]
 extern "C" {
@@ -33,111 +33,111 @@ extern "C" {
         description:    *const libc::c_char,
         payload:        *const libc::c_void,
         plen:           libc::size_t,
-        keyring:        key_serial_t)
-        -> key_serial_t;
+        keyring:        KeyringSerial)
+        -> KeyringSerial;
     pub fn request_key(
         type_:          *const libc::c_char,
         description:    *const libc::c_char,
         callout_info:   *const libc::c_char,
-        keyring:        key_serial_t)
-        -> key_serial_t;
+        keyring:        Option<KeyringSerial>)
+        -> KeyringSerial;
 
     pub fn keyctl_get_keyring_ID(
-        id:     key_serial_t,
+        id:     KeyringSerial,
         create: libc::c_int)
-        -> key_serial_t;
+        -> KeyringSerial;
     pub fn keyctl_join_session_keyring(
         name:   *const libc::c_char)
-        -> key_serial_t;
+        -> KeyringSerial;
     pub fn keyctl_update(
-        id:         key_serial_t,
+        id:         KeyringSerial,
         payload:    *const libc::c_void,
         plen:       libc::size_t)
         -> libc::c_long;
     pub fn keyctl_revoke(
-        id: key_serial_t)
+        id: KeyringSerial)
         -> libc::c_long;
     pub fn keyctl_chown(
-        id:     key_serial_t,
+        id:     KeyringSerial,
         uid:    libc::uid_t,
         gid:    libc::gid_t)
         -> libc::c_long;
     pub fn keyctl_setperm(
-        id:     key_serial_t,
-        perm:   key_perm_t)
+        id:     KeyringSerial,
+        perm:   KeyPermissions)
         -> libc::c_long;
     pub fn keyctl_describe(
-        id:     key_serial_t,
+        id:     KeyringSerial,
         buffer: *mut libc::c_char,
         buflen: libc::size_t)
         -> libc::c_long;
     pub fn keyctl_clear(
-        ringid: key_serial_t)
+        ringid: KeyringSerial)
         -> libc::c_long;
     pub fn keyctl_link(
-        id:     key_serial_t,
-        ringid: key_serial_t)
+        id:     KeyringSerial,
+        ringid: KeyringSerial)
         -> libc::c_long;
     pub fn keyctl_unlink(
-        id:     key_serial_t,
-        ringid: key_serial_t)
+        id:     KeyringSerial,
+        ringid: KeyringSerial)
         -> libc::c_long;
     pub fn keyctl_search(
-        ringid:         key_serial_t,
+        ringid:         KeyringSerial,
         type_:          *const libc::c_char,
         description:    *const libc::c_char,
-        destringid:     key_serial_t)
+        destringid:     KeyringSerial)
         -> libc::c_long;
     pub fn keyctl_read(
-        id:     key_serial_t,
+        id:     KeyringSerial,
         buffer: *mut libc::c_char,
         buflen: libc::size_t)
         -> libc::c_long;
     pub fn keyctl_instantiate(
-        id:         key_serial_t,
+        id:         KeyringSerial,
         payload:    *const libc::c_void,
         plen:       libc::size_t,
-        ringid:     key_serial_t)
+        ringid:     KeyringSerial)
         -> libc::c_long;
     pub fn keyctl_negate(
-        id:         key_serial_t,
-        timeout:    libc::c_uint,
-        ringid:     key_serial_t)
+        id:         KeyringSerial,
+        timeout:    TimeoutSeconds,
+        ringid:     KeyringSerial)
         -> libc::c_long;
     pub fn keyctl_set_reqkey_keyring(
         reqkey_defl:    libc::c_int)
         -> libc::c_long;
     pub fn keyctl_set_timeout(
-        key:        key_serial_t,
-        timeout:    libc::c_uint)
+        key:        KeyringSerial,
+        timeout:    TimeoutSeconds)
         -> libc::c_long;
     pub fn keyctl_assume_authority(
-        key:    key_serial_t)
+        key:    Option<KeyringSerial>)
         -> libc::c_long;
     pub fn keyctl_get_security(
-        key:    key_serial_t,
+        key:    KeyringSerial,
         buffer: *mut libc::c_char,
         buflen: libc::size_t)
         -> libc::c_long;
     //pub fn keyctl_session_to_parent()
     //    -> libc::c_long;
     pub fn keyctl_reject(
-        id:         key_serial_t,
-        timeout:    libc::c_uint,
+        id:         KeyringSerial,
+        timeout:    TimeoutSeconds,
         error:      libc::c_uint,
-        ringid:     key_serial_t)
+        ringid:     KeyringSerial)
         -> libc::c_long;
     pub fn keyctl_invalidate(
-        id: key_serial_t)
+        id: KeyringSerial)
         -> libc::c_long;
     pub fn keyctl_get_persistent(
         uid:    libc::uid_t,
-        id:     key_serial_t)
+        id:     KeyringSerial)
         -> libc::c_long;
     pub fn keyctl_dh_compute(
-        private:    key_serial_t,
-        prime:      key_serial_t,
-        base:       key_serial_t,
+        private:    KeyringSerial,
+        prime:      KeyringSerial,
+        base:       KeyringSerial,
         buffer:     *mut libc::c_char,
         buflen:     libc::size_t)
         -> libc::c_long;

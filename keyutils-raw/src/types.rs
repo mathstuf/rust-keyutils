@@ -24,7 +24,63 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#![allow(non_camel_case_types)]
+/// Alias for the key_serial_t kernel type, representing a keyring (or key).
+pub type KeyringSerial = std::num::NonZeroI32;
 
-pub type key_serial_t = i32;
-pub type key_perm_t = u32;
+/// Alias for the key_perm_t kernel type, representing a keyring's (or key's)
+/// permission bits.
+///
+/// See `Permission`.
+pub type KeyPermissions = u32;
+
+pub type TimeoutSeconds = libc::c_uint;
+
+/// An enumeration for the keyrings which may be set as the default.
+///
+/// Keys which are implicitly required via syscalls and other operations are
+/// placed in the default keyring.
+#[derive(Debug, PartialEq, Eq)]
+pub enum DefaultKeyring {
+    /// Do not change the default keyring.
+    ///
+    /// This may be used to get the current default keyring.
+    NoChange = -1,
+    /// Set the thread-specific keyring as the default.
+    ThreadKeyring = 1,
+    /// Set the process-specific keyring as the default.
+    ProcessKeyring = 2,
+    /// Set the session-specific keyring as the default.
+    SessionKeyring = 3,
+    /// Set the user-specific keyring as the default.
+    UserKeyring = 4,
+    /// Set the user session-specific keyring as the default.
+    UserSessionKeyring = 5,
+    /// Set the user session-specific keyring as the default.
+    GroupKeyring = 6,
+    /// Set the default keyring to the default logic.
+    ///
+    /// Keys will be placed in the first available keyring of:
+    ///
+    ///   - thread-specific
+    ///   - process-specific
+    ///   - session-specific
+    ///   - user-specific
+    DefaultKeyring = 0,
+}
+
+impl From<libc::c_long> for DefaultKeyring {
+    fn from(id: libc::c_long) -> DefaultKeyring {
+        use self::DefaultKeyring::*;
+        match id {
+            x if x == NoChange as libc::c_long => NoChange,
+            x if x == ThreadKeyring as libc::c_long => ThreadKeyring,
+            x if x == ProcessKeyring as libc::c_long => ProcessKeyring,
+            x if x == SessionKeyring as libc::c_long => SessionKeyring,
+            x if x == UserKeyring as libc::c_long => UserKeyring,
+            x if x == UserSessionKeyring as libc::c_long => UserSessionKeyring,
+            x if x == GroupKeyring as libc::c_long => GroupKeyring,
+            x if x == DefaultKeyring as libc::c_long => DefaultKeyring,
+            _ => panic!("Invalid value for a default keyring: {}", id),
+        }
+    }
+}
