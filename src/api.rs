@@ -250,17 +250,26 @@ impl Keyring {
             )
         })?;
         unsafe { buffer.set_len((actual_sz as usize) / mem::size_of::<KeyringSerial>()) };
-        let keys = buffer
-            .iter()
-            .map(|&id| Key::new_impl(id))
-            .partition(|key| key.description().unwrap().type_ == keytypes::Keyring::name());
-        Ok((
-            keys.1,
-            keys.0
-                .iter()
-                .map(|key| Keyring::new_impl(key.id))
-                .collect::<Vec<_>>(),
-        ))
+
+        let mut keys = Vec::new();
+        let mut keyrings = Vec::new();
+        for key in buffer.into_iter().map(|id| Key::new_impl(id)) {
+            match key.description() {
+                Ok(description) => {
+                    if description.type_ == keytypes::Keyring::name() {
+                        keyrings.push(Keyring::new_impl(key.id))
+                    } else {
+                        keys.push(key)
+                    }
+                },
+                // Keys can be invalidated between reading the keyring and
+                // reading the child key's description. If this happens, we get
+                // ENOKEY and just skip that key.
+                Err(errno::Errno(libc::ENOKEY)) => {},
+                Err(e) => return Err(e),
+            }
+        }
+        Ok((keys, keyrings))
     }
 
     /// Attach the persistent keyring for the current user to the current keyring.
