@@ -29,7 +29,7 @@
 //! The Linux kernel supports many types of keys. They may be compiled out or available as
 //! modules. The types provided here try to make it easier to use these keys.
 
-use std::char;
+use std::fmt;
 
 pub mod asymmetric;
 pub use self::asymmetric::Asymmetric;
@@ -64,36 +64,24 @@ pub use self::trusted::Trusted;
 pub mod user;
 pub use self::user::User;
 
-/// A structure for assisting in coverting binary data into hexadecimal.
-///
-/// Many key types take in ASCII hexadecimal input instead of raw binary.
-pub struct AsciiHex;
+/// A structure for assisting in display binary data.
+struct ByteBuf<'a>(&'a [u8]);
 
-/// The mask for a nibble.
-const NIBBLE_MASK: u8 = 0x0f;
-
-impl AsciiHex {
-    /// Convert binary data into an ASCII hexadecimal string.
-    pub fn convert(data: &[u8]) -> String {
-        data.iter()
-            .fold(String::with_capacity(data.len() * 2), |mut string, byte| {
-                let hi = (byte >> 4) & NIBBLE_MASK;
-                let lo = byte & NIBBLE_MASK;
-
-                string.push(char::from_digit(u32::from(hi), 16).unwrap());
-                string.push(char::from_digit(u32::from(lo), 16).unwrap());
-
-                string
-            })
+impl fmt::LowerHex for ByteBuf<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        for byte in self.0 {
+            write!(f, "{:02x}", byte)?;
+        }
+        Ok(())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::ByteBuf;
 
     fn check(input: &[u8], expected: &str) {
-        assert_eq!(AsciiHex::convert(input), expected);
+        assert_eq!(format!("{:x}", ByteBuf(input)), expected);
     }
 
     #[test]

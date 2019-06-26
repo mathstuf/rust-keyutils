@@ -27,10 +27,9 @@
 //! Trusted keys
 
 use std::borrow::Cow;
+use std::fmt;
 
-use itertools::Itertools;
-
-use super::AsciiHex;
+use super::ByteBuf;
 use crate::keytype::*;
 
 /// Trusted keys are rooted in the TPM.
@@ -111,71 +110,55 @@ pub struct TrustedOptions {
     pub policyhandle: Option<u32>,
 }
 
-impl TrustedOptions {
-    fn payload_string(&self) -> String {
-        let parts = [
+impl fmt::Display for TrustedOptions {
+    /// Formats the options that are present. Starts with a leading space.
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if let Some(keyhandle) = self.keyhandle {
             // keyhandle=    ascii hex value of sealing key; default 40000000 (SRK)
-            (
-                "keyhandle",
-                self.keyhandle
-                    .as_ref()
-                    .map(|v| AsciiHex::convert(&v.to_be().to_be_bytes())),
-            ),
+            write!(f, " keyhandle={:x}", keyhandle)?;
+        }
+        if let Some(keyauth) = self.keyauth.as_ref() {
             // keyauth=      ascii hex auth for sealing key; default 00...
             //               (40 ascii zeros)
-            (
-                "keyauth",
-                self.keyauth.as_ref().map(|v| AsciiHex::convert(v)),
-            ),
+            write!(f, " keyauth={:x}", ByteBuf(keyauth))?;
+        }
+        if let Some(blobauth) = self.blobauth.as_ref() {
             // blobauth=     ascii hex auth for sealed data; default 00...
             //               (40 ascii zeros)
-            (
-                "blobauth",
-                self.blobauth.as_ref().map(|v| AsciiHex::convert(v)),
-            ),
+            write!(f, " blobauth={:x}", ByteBuf(blobauth))?;
+        }
+        if let Some(pcrinfo) = self.pcrinfo.as_ref() {
             // pcrinfo=      ascii hex of PCR_INFO or PCR_INFO_LONG (no default)
-            (
-                "pcrinfo",
-                self.pcrinfo.as_ref().map(|v| AsciiHex::convert(&v)),
-            ),
+            write!(f, " pcrinfo={:x}", ByteBuf(pcrinfo))?;
+        }
+        if let Some(pcrlock) = self.pcrlock {
             // pcrlock=      pcr number to be extended to "lock" blob
-            ("pcrlock", self.pcrlock.as_ref().map(|v| format!("{}", v))),
+            write!(f, " pcrlock={}", pcrlock)?;
+        }
+        if let Some(migratable) = self.migratable {
             // migratable=   0|1 indicating permission to reseal to new PCR values,
             //               default 1 (resealing allowed)
-            (
-                "migratable",
-                self.migratable
-                    .as_ref()
-                    .map(|&v| if v { "1" } else { "0" }.to_string()),
-            ),
+            write!(f, " migratable={}", migratable as u8)?;
+        }
+        if let Some(hash) = self.hash {
             // hash=         hash algorithm name as a string. For TPM 1.x the only
             //               allowed value is sha1. For TPM 2.x the allowed values
             //               are sha1, sha256, sha384, sha512 and sm3-256.
-            ("hash", self.hash.as_ref().map(|v| v.name().to_string())),
+            write!(f, " hash={}", hash.name())?;
+        }
+        if let Some(policydigest) = self.policydigest.as_ref() {
             // policydigest= digest for the authorization policy. must be calculated
             //               with the same hash algorithm as specified by the 'hash='
             //               option.
-            (
-                "policydigest",
-                self.policydigest.as_ref().map(|v| AsciiHex::convert(&v)),
-            ),
+            write!(f, " policydigest={:x}", ByteBuf(policydigest))?;
+        }
+        if let Some(policyhandle) = self.policyhandle {
             // policyhandle= handle to an authorization policy session that defines the
             //               same policy and with the same hash algorithm as was used to
             //               seal the key.
-            (
-                "policyhandle",
-                self.policyhandle
-                    .as_ref()
-                    .map(|v| AsciiHex::convert(&v.to_be().to_be_bytes())),
-            ),
-        ];
-
-        let options = parts
-            .iter()
-            .filter_map(|(key, value)| value.as_ref().map(|value| format!("{}={}", key, value)))
-            .format(" ");
-
-        format!("{}", options)
+            write!(f, " policyhandle={:x}", policyhandle)?;
+        }
+        Ok(())
     }
 }
 
@@ -211,22 +194,20 @@ pub enum Payload {
 
 impl KeyPayload for Payload {
     fn payload(&self) -> Cow<[u8]> {
-        let (command, blob, options) = match *self {
+        match self {
             Payload::New {
-                ref keylen,
-                ref options,
-            } => ("new", format!("{}", keylen), options),
+                keylen,
+                options,
+            } => format!("new {}{}", keylen, options),
             Payload::Load {
-                ref blob,
-                ref options,
-            } => ("load", AsciiHex::convert(&blob), options),
+                blob,
+                options,
+            } => format!("load {:x}{}", ByteBuf(blob), options),
             Payload::Update {
-                ref options,
-            } => ("update", String::new(), options),
-        };
-
-        format!("{} {} {}", command, blob, options.payload_string())
-            .bytes()
-            .collect()
+                options,
+            } => format!("update{}", options),
+        }
+        .into_bytes()
+        .into()
     }
 }

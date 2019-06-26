@@ -54,7 +54,7 @@ pub struct Description {
 
 impl KeyDescription for Description {
     fn description(&self) -> Cow<str> {
-        Cow::Owned(format!("{}:{}", self.service_id, self.security_index))
+        format!("{}:{}", self.service_id, self.security_index).into()
     }
 }
 

@@ -28,7 +28,7 @@
 
 use std::borrow::Cow;
 
-use super::AsciiHex;
+use super::ByteBuf;
 use crate::keytype::*;
 
 /// Blacklist hashes.
@@ -81,10 +81,6 @@ pub struct Description {
 
 impl KeyDescription for Description {
     fn description(&self) -> Cow<str> {
-        Cow::Owned(format!(
-            "{}:{}",
-            self.hash_type.name(),
-            AsciiHex::convert(&self.hash),
-        ))
+        format!("{}:{:x}", self.hash_type.name(), ByteBuf(&self.hash)).into()
     }
 }

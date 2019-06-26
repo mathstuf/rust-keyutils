@@ -28,7 +28,7 @@
 
 use std::borrow::Cow;
 
-use super::AsciiHex;
+use super::ByteBuf;
 use crate::keytype::*;
 
 /// Encrypted keys.
@@ -96,7 +96,7 @@ pub enum MasterKeyType {
 impl MasterKeyType {
     /// The name of the master key type.
     fn name(&self) -> &str {
-        match *self {
+        match self {
             MasterKeyType::Trusted => "trusted",
             MasterKeyType::User => "user",
         }
@@ -142,12 +142,12 @@ pub enum Payload {
 
 impl KeyPayload for Payload {
     fn payload(&self) -> Cow<[u8]> {
-        let payload = match *self {
+        match self {
             Payload::New {
-                ref format,
-                ref keytype,
-                ref description,
-                ref keylen,
+                format,
+                keytype,
+                description,
+                keylen,
             } => {
                 format!(
                     "new {} {}:{} {}",
@@ -158,14 +158,14 @@ impl KeyPayload for Payload {
                 )
             },
             Payload::Load {
-                ref blob,
-            } => format!("load {}", AsciiHex::convert(&blob)),
+                blob,
+            } => format!("load {:x}", ByteBuf(&blob)),
             Payload::Update {
-                ref keytype,
-                ref description,
+                keytype,
+                description,
             } => format!("update {}:{}", keytype.name(), description),
-        };
-
-        payload.bytes().collect()
+        }
+        .into_bytes()
+        .into()
     }
 }
