@@ -1,44 +1,46 @@
 clippy_task:
     container:
-        image: rustlang/rust:nightly
-    keyutils_script: apt-get update && apt-get install libkeyutils-dev
+        image: rust:latest
     component_script: rustup component add clippy
-    update_script: cargo +nightly update
-    toolchain_cache:
-        folder: $RUSTUP_HOME
-        fingerprint_script: rustc +nightly --version
+    lockfile_script: cargo generate-lockfile
     cargo_cache:
         folder: $CARGO_HOME/registry
         fingerprint_script: cat Cargo.lock
-    fmt_script: cargo +nightly clippy
+    clippy_script: cargo clippy
+    before_cache_script: rm -rf $CARGO_HOME/registry/index
 
 rustfmt_task:
     container:
+        # Our .rustfmt.toml uses currently unstable features
         image: rustlang/rust:nightly
-    keyutils_script: apt-get update && apt-get install libkeyutils-dev
     component_script: rustup component add rustfmt
     fmt_script: cargo fmt --all -- --check
 
 linux_task:
-    container:
-      image: rust:latest
     matrix:
-        - env:
-              RUSTVER: 1.32.0
-        - env:
-              RUSTVER: stable
-        - allow_failures: true
-          env:
-              RUSTVER: nightly
+    - container:
+        image: rust:1.32.0
+    - container:
+        image: rust:latest
+    - allow_failures: true
+      container:
+        image: rustlang/rust:nightly
     keyutils_script: apt-get update && apt-get install libkeyutils-dev
-    rustup_script: rustup toolchain install $RUSTVER
-    toolchain_cache:
-        folder: $RUSTUP_HOME
-        fingerprint_script: rustc +$RUSTVER --version
-    update_script: cargo +$RUSTVER update
+    lockfile_script: cargo generate-lockfile
     cargo_cache:
         folder: $CARGO_HOME/registry
         fingerprint_script: cat Cargo.lock
-    build_script: cargo +$RUSTVER build
-    test_script: cargo +$RUSTVER test
+    build_script: cargo build
+    test_script: cargo test
+    before_cache_script: rm -rf $CARGO_HOME/registry/index
+
+minimal_version_task:
+    # We make sure we can build with the minimum specificed versions
+    container:
+        image: rustlang/rust:nightly
+    lockfile_script: cargo generate-lockfile -Z minimal-versions
+    cargo_cache:
+        folder: $CARGO_HOME/registry
+        fingerprint_script: cat Cargo.lock
+    build_script: cargo build
     before_cache_script: rm -rf $CARGO_HOME/registry/index

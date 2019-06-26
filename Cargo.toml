@@ -14,10 +14,10 @@ edition = "2018"
 members = ["libkeyutils-sys"]
 
 [dependencies]
-bitflags = "1.0"
+bitflags = "1.0.4"
 errno = "0.2"
 itertools = "0.8"
 libkeyutils-sys = { path = "libkeyutils-sys" }
-log = "0.4"
+log = "0.4.4"
 
 libc = "0.2"
