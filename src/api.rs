@@ -25,6 +25,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use std::borrow::Borrow;
+use std::convert::TryInto;
 use std::ffi::CString;
 use std::mem;
 use std::ptr;
@@ -111,7 +112,7 @@ impl Keyring {
     pub fn set_default(keyring: DefaultKeyring) -> Result<DefaultKeyring> {
         let ret = unsafe { keyctl_set_reqkey_keyring(keyring as libc::c_int) };
         check_call(ret)?;
-        Ok(ret.into())
+        Ok(ret.try_into().unwrap())
     }
 
     /// Requests a keyring with the given description by searching the thread, process, and session

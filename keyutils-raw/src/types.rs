@@ -24,8 +24,11 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use std::convert::TryFrom;
+use std::num::NonZeroI32;
+
 /// Alias for the key_serial_t kernel type, representing a keyring (or key).
-pub type KeyringSerial = std::num::NonZeroI32;
+pub type KeyringSerial = NonZeroI32;
 
 /// Alias for the key_perm_t kernel type, representing a keyring's (or key's)
 /// permission bits.
@@ -68,19 +71,23 @@ pub enum DefaultKeyring {
     DefaultKeyring = 0,
 }
 
-impl From<libc::c_long> for DefaultKeyring {
-    fn from(id: libc::c_long) -> DefaultKeyring {
+#[derive(Debug, PartialEq, Eq)]
+pub struct UnknownDefault(libc::c_long);
+
+impl TryFrom<libc::c_long> for DefaultKeyring {
+    type Error = UnknownDefault;
+    fn try_from(id: libc::c_long) -> Result<DefaultKeyring, UnknownDefault> {
         use self::DefaultKeyring::*;
         match id {
-            x if x == NoChange as libc::c_long => NoChange,
-            x if x == ThreadKeyring as libc::c_long => ThreadKeyring,
-            x if x == ProcessKeyring as libc::c_long => ProcessKeyring,
-            x if x == SessionKeyring as libc::c_long => SessionKeyring,
-            x if x == UserKeyring as libc::c_long => UserKeyring,
-            x if x == UserSessionKeyring as libc::c_long => UserSessionKeyring,
-            x if x == GroupKeyring as libc::c_long => GroupKeyring,
-            x if x == DefaultKeyring as libc::c_long => DefaultKeyring,
-            _ => panic!("Invalid value for a default keyring: {}", id),
+            x if x == NoChange as libc::c_long => Ok(NoChange),
+            x if x == ThreadKeyring as libc::c_long => Ok(ThreadKeyring),
+            x if x == ProcessKeyring as libc::c_long => Ok(ProcessKeyring),
+            x if x == SessionKeyring as libc::c_long => Ok(SessionKeyring),
+            x if x == UserKeyring as libc::c_long => Ok(UserKeyring),
+            x if x == UserSessionKeyring as libc::c_long => Ok(UserSessionKeyring),
+            x if x == GroupKeyring as libc::c_long => Ok(GroupKeyring),
+            x if x == DefaultKeyring as libc::c_long => Ok(DefaultKeyring),
+            x => Err(UnknownDefault(x)),
         }
     }
 }
