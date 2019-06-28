@@ -27,6 +27,7 @@
 //! Big keys
 
 use crate::keytype::*;
+use keyutils_raw::KEY_TYPE_BIG_KEY;
 
 /// Big keys.
 ///
@@ -42,6 +43,6 @@ impl KeyType for BigKey {
     type Payload = [u8];
 
     fn name() -> &'static str {
-        "big_key"
+        KEY_TYPE_BIG_KEY
     }
 }

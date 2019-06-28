@@ -11,12 +11,12 @@ readme = "README.md"
 edition = "2018"
 
 [workspace]
-members = ["libkeyutils-sys"]
+members = ["keyutils-raw"]
 
 [dependencies]
 bitflags = "1.0.4"
 errno = "0.2"
-libkeyutils-sys = { path = "libkeyutils-sys" }
+keyutils-raw = { path = "keyutils-raw" }
 log = "0.4.4"
 
 libc = "0.2"

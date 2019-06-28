@@ -26,7 +26,7 @@
 
 //! User keys
 
-use libkeyutils_sys::KEY_TYPE_USER;
+use keyutils_raw::KEY_TYPE_USER;
 
 use crate::keytype::*;
 

@@ -39,3 +39,5 @@ pub mod keytypes;
 pub use self::api::*;
 pub use self::constants::*;
 pub use self::keytype::*;
+
+pub use keyutils_raw::{DefaultKeyring, KeyPermissions, KeyringSerial, TimeoutSeconds};

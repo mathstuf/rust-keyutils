@@ -1,9 +1,9 @@
 [package]
-name = "libkeyutils-sys"
-version = "0.3.1"
+name = "keyutils-raw"
+version = "0.4.0"
 authors = ["Ben Boeckel <mathstuf@gmail.com>"]
 license = "BSD-3-Clause"
-description = "FFI bindings to libkeyutils."
+description = "Raw bindings to Linux keyring syscalls"
 repository = "https://github.com/mathstuf/rust-keyutils.git"
 homepage = "https://github.com/mathstuf/rust-keyutils"
 keywords = ["keyutils"]
