@@ -26,6 +26,9 @@
 
 use crate::{KeyPermissions, KeyringSerial, TimeoutSeconds};
 
+// Remove when rust-lang/rust#60300 is in stable
+#[allow(improper_ctypes)]
+
 #[rustfmt::skip]
 extern "C" {
     pub fn add_key(
