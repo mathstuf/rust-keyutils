@@ -24,5 +24,70 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-pub mod kernel;
-pub mod keys;
+use crate::KeyType;
+
+pub struct EmptyKey;
+
+impl KeyType for EmptyKey {
+    type Description = str;
+    type Payload = ();
+
+    fn name() -> &'static str {
+        ""
+    }
+}
+
+pub struct UnsupportedKey;
+
+impl KeyType for UnsupportedKey {
+    type Description = str;
+    type Payload = ();
+
+    fn name() -> &'static str {
+        "unsupported_key_type"
+    }
+}
+
+pub struct InvalidKey;
+
+impl KeyType for InvalidKey {
+    type Description = str;
+    type Payload = ();
+
+    fn name() -> &'static str {
+        ".invalid_key_type"
+    }
+}
+
+pub struct MaxLenKey;
+
+impl KeyType for MaxLenKey {
+    type Description = str;
+    type Payload = ();
+
+    fn name() -> &'static str {
+        "1234567890123456789012345678901"
+    }
+}
+
+pub struct OverlongKey;
+
+impl KeyType for OverlongKey {
+    type Description = str;
+    type Payload = ();
+
+    fn name() -> &'static str {
+        "12345678901234567890123456789012"
+    }
+}
+
+pub struct KeyringShadow;
+
+impl KeyType for KeyringShadow {
+    type Description = str;
+    type Payload = str;
+
+    fn name() -> &'static str {
+        "keyring"
+    }
+}

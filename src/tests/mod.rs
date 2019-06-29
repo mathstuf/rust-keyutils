@@ -27,3 +27,5 @@
 //! The test structure here comes from the structure in libkeyutils.
 
 mod utils;
+
+mod add;
