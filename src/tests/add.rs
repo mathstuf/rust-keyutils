@@ -140,6 +140,7 @@ fn add_key_to_session() {
         .unwrap();
     let payload = key.read().unwrap();
     assert_eq!(payload, expected);
+
     let new_expected = "lizard".as_bytes();
     key.update(new_expected).unwrap();
     let new_payload = key.read().unwrap();
