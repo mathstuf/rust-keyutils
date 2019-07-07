@@ -109,7 +109,7 @@ fn overlong_user_description() {
 fn invalid_keyring() {
     let mut keyring = utils::invalid_keyring();
     let err = keyring
-        .add_key::<User, _, _>("desc", "payload".as_bytes())
+        .add_key::<User, _, _>("invalid_keyring", "payload".as_bytes())
         .unwrap_err();
     assert_eq!(err, errno::Errno(libc::EINVAL));
 }
@@ -118,7 +118,9 @@ fn invalid_keyring() {
 fn add_key_to_session() {
     let mut keyring = Keyring::attach_or_create(SpecialKeyring::Session).unwrap();
     let expected = "stuff".as_bytes();
-    let mut key = keyring.add_key::<User, _, _>("wibble", expected).unwrap();
+    let mut key = keyring
+        .add_key::<User, _, _>("add_key_to_session", expected)
+        .unwrap();
     let payload = key.read().unwrap();
     assert_eq!(payload, expected);
     let new_expected = "lizard".as_bytes();
