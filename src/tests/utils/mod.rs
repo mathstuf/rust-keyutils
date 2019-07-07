@@ -24,5 +24,14 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use crate::{Keyring, KeyringSerial};
+
 pub mod kernel;
 pub mod keys;
+
+pub fn invalid_keyring() -> Keyring {
+    // Yes, we're explicitly breaking the NonZeroI32 rules here. However, it is not passing through
+    // any bits which care (e.g., `Option`), so this is purely to test that using an invalid
+    // keyring ID gives back `EINVAL` as expected.
+    unsafe { Keyring::new(KeyringSerial::new_unchecked(0)) }
+}

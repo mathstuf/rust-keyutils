@@ -27,8 +27,9 @@
 use std::iter;
 
 use crate::keytypes::User;
-use crate::{Keyring, KeyringSerial, SpecialKeyring};
+use crate::{Keyring, SpecialKeyring};
 
+use super::utils;
 use super::utils::kernel::*;
 use super::utils::keys::*;
 
@@ -106,10 +107,7 @@ fn overlong_user_description() {
 
 #[test]
 fn invalid_keyring() {
-    // Yes, we're explicitly breaking the NonZeroI32 rules here. However, it is not passing
-    // through any bits which care (e.g., `Option`), so this is purely to test that using an
-    // invalid keyring ID gives back `EINVAL` as expected.
-    let mut keyring = unsafe { Keyring::new(KeyringSerial::new_unchecked(0)) };
+    let mut keyring = utils::invalid_keyring();
     let err = keyring
         .add_key::<User, _, _>("desc", "payload".as_bytes())
         .unwrap_err();
