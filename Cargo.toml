@@ -13,6 +13,10 @@ edition = "2018"
 [workspace]
 members = ["keyutils-raw"]
 
+[dev-dependencies]
+lazy_static = "1"
+regex = "1"
+
 [dependencies]
 bitflags = "1.0.4"
 errno = "0.2"

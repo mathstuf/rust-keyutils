@@ -1,4 +1,4 @@
-// Copyright (c) 2018, Ben Boeckel
+// Copyright (c) 2019, Ben Boeckel
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without modification,
@@ -24,27 +24,5 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-//! Linux keyring bindings for Rust
-//!
-//! This crate provides a high-level API for interacting with the Linux keys subsystem.
-
-#![warn(missing_docs)]
-
-#[cfg(test)]
-#[macro_use]
-extern crate lazy_static;
-
-mod api;
-mod constants;
-mod keytype;
-
-pub mod keytypes;
-
-pub use self::api::*;
-pub use self::constants::*;
-pub use self::keytype::*;
-
-pub use keyutils_raw::{DefaultKeyring, KeyPermissions, KeyringSerial, TimeoutSeconds};
-
-#[cfg(test)]
-mod tests;
+pub mod kernel;
+pub mod keys;

@@ -1,4 +1,4 @@
-// Copyright (c) 2018, Ben Boeckel
+// Copyright (c) 2019, Ben Boeckel
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without modification,
@@ -24,27 +24,70 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-//! Linux keyring bindings for Rust
-//!
-//! This crate provides a high-level API for interacting with the Linux keys subsystem.
+use crate::KeyType;
 
-#![warn(missing_docs)]
+pub struct EmptyKey;
 
-#[cfg(test)]
-#[macro_use]
-extern crate lazy_static;
+impl KeyType for EmptyKey {
+    type Description = str;
+    type Payload = ();
 
-mod api;
-mod constants;
-mod keytype;
+    fn name() -> &'static str {
+        ""
+    }
+}
 
-pub mod keytypes;
+pub struct UnsupportedKey;
 
-pub use self::api::*;
-pub use self::constants::*;
-pub use self::keytype::*;
+impl KeyType for UnsupportedKey {
+    type Description = str;
+    type Payload = ();
 
-pub use keyutils_raw::{DefaultKeyring, KeyPermissions, KeyringSerial, TimeoutSeconds};
+    fn name() -> &'static str {
+        "unsupported_key_type"
+    }
+}
 
-#[cfg(test)]
-mod tests;
+pub struct InvalidKey;
+
+impl KeyType for InvalidKey {
+    type Description = str;
+    type Payload = ();
+
+    fn name() -> &'static str {
+        ".invalid_key_type"
+    }
+}
+
+pub struct MaxLenKey;
+
+impl KeyType for MaxLenKey {
+    type Description = str;
+    type Payload = ();
+
+    fn name() -> &'static str {
+        "1234567890123456789012345678901"
+    }
+}
+
+pub struct OverlongKey;
+
+impl KeyType for OverlongKey {
+    type Description = str;
+    type Payload = ();
+
+    fn name() -> &'static str {
+        "12345678901234567890123456789012"
+    }
+}
+
+pub struct KeyringShadow;
+
+impl KeyType for KeyringShadow {
+    type Description = str;
+    type Payload = str;
+
+    fn name() -> &'static str {
+        "keyring"
+    }
+}
