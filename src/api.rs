@@ -524,6 +524,11 @@ impl Key {
         }
     }
 
+    #[cfg(test)]
+    pub(crate) fn serial(&self) -> KeyringSerial {
+        self.id
+    }
+
     /// Requests a key with the given description by searching the thread, process, and session
     /// keyrings.
     pub fn request<K, D>(description: D) -> Result<Self>

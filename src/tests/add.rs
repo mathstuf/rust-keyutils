@@ -115,6 +115,23 @@ fn invalid_keyring() {
 }
 
 #[test]
+fn add_key_to_non_keyring() {
+    let mut keyring = Keyring::attach_or_create(SpecialKeyring::Session).unwrap();
+    let expected = "stuff".as_bytes();
+    let key = keyring
+        .add_key::<User, _, _>("add_key_to_non_keyring", expected)
+        .unwrap();
+
+    let mut not_a_keyring = unsafe { Keyring::new(key.serial()) };
+    let err = not_a_keyring
+        .add_key::<User, _, _>("add_key_to_non_keyring", expected)
+        .unwrap_err();
+    assert_eq!(err, errno::Errno(libc::ENOTDIR));
+
+    keyring.unlink_key(&key).unwrap();
+}
+
+#[test]
 fn add_key_to_session() {
     let mut keyring = Keyring::attach_or_create(SpecialKeyring::Session).unwrap();
     let expected = "stuff".as_bytes();
