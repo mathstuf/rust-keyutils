@@ -825,38 +825,6 @@ mod tests {
     use crate::tests::utils;
 
     #[test]
-    fn test_clear_keyring() {
-        let mut keyring = utils::new_test_keyring();
-
-        let (keys, keyrings) = keyring.read().unwrap();
-        assert_eq!(keys.len(), 0);
-        assert_eq!(keyrings.len(), 0);
-
-        // Create a key.
-        keyring
-            .add_key::<keytypes::User, _, _>(
-                "test:rust-keyutils:clear_keyring",
-                "payload".as_bytes(),
-            )
-            .unwrap();
-        keyring.add_keyring("description").unwrap();
-
-        let (keys, keyrings) = keyring.read().unwrap();
-        assert_eq!(keys.len(), 1);
-        assert_eq!(keyrings.len(), 1);
-
-        // Clear the keyring.
-        keyring.clear().unwrap();
-
-        let (keys, keyrings) = keyring.read().unwrap();
-        assert_eq!(keys.len(), 0);
-        assert_eq!(keyrings.len(), 0);
-
-        // Clean up.
-        keyring.invalidate().unwrap();
-    }
-
-    #[test]
     fn test_describe_key() {
         let mut keyring = utils::new_test_keyring();
 

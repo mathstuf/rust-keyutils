@@ -29,3 +29,4 @@
 pub(crate) mod utils;
 
 mod add;
+mod clear;
