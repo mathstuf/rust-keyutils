@@ -27,7 +27,7 @@
 use std::iter;
 
 use crate::keytypes::User;
-use crate::{Keyring, SpecialKeyring};
+use crate::Keyring;
 
 use super::utils;
 use super::utils::kernel::*;
@@ -35,42 +35,42 @@ use super::utils::keys::*;
 
 #[test]
 fn empty_key_type() {
-    let mut keyring = Keyring::attach_or_create(SpecialKeyring::Process).unwrap();
+    let mut keyring = utils::new_test_keyring();
     let err = keyring.add_key::<EmptyKey, _, _>("", ()).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EINVAL));
 }
 
 #[test]
 fn unsupported_key_type() {
-    let mut keyring = Keyring::attach_or_create(SpecialKeyring::Process).unwrap();
+    let mut keyring = utils::new_test_keyring();
     let err = keyring.add_key::<UnsupportedKey, _, _>("", ()).unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENODEV));
 }
 
 #[test]
 fn invalid_key_type() {
-    let mut keyring = Keyring::attach_or_create(SpecialKeyring::Process).unwrap();
+    let mut keyring = utils::new_test_keyring();
     let err = keyring.add_key::<InvalidKey, _, _>("", ()).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EPERM));
 }
 
 #[test]
 fn maxlen_key_type() {
-    let mut keyring = Keyring::attach_or_create(SpecialKeyring::Process).unwrap();
+    let mut keyring = utils::new_test_keyring();
     let err = keyring.add_key::<MaxLenKey, _, _>("", ()).unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENODEV));
 }
 
 #[test]
 fn overlong_key_type() {
-    let mut keyring = Keyring::attach_or_create(SpecialKeyring::Process).unwrap();
+    let mut keyring = utils::new_test_keyring();
     let err = keyring.add_key::<OverlongKey, _, _>("", ()).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EINVAL));
 }
 
 #[test]
 fn keyring_with_payload() {
-    let mut keyring = Keyring::attach_or_create(SpecialKeyring::Process).unwrap();
+    let mut keyring = utils::new_test_keyring();
     let err = keyring
         .add_key::<KeyringShadow, _, _>("", "payload")
         .unwrap_err();
@@ -79,7 +79,7 @@ fn keyring_with_payload() {
 
 #[test]
 fn max_user_description() {
-    let mut keyring = Keyring::attach_or_create(SpecialKeyring::Process).unwrap();
+    let mut keyring = utils::new_test_keyring();
     // Subtract one because the NUL is added in the kernel API.
     let maxdesc: String = iter::repeat('a').take(*PAGE_SIZE - 1).collect();
     let res = keyring.add_key::<User, _, _>(maxdesc.as_ref(), "payload".as_bytes());
@@ -95,7 +95,7 @@ fn max_user_description() {
 
 #[test]
 fn overlong_user_description() {
-    let mut keyring = Keyring::attach_or_create(SpecialKeyring::Process).unwrap();
+    let mut keyring = utils::new_test_keyring();
     // On MIPS with < 3.19, there is a bug where this is allowed. 3.19 was released in Feb 2015,
     // so this is being ignored here.
     let toolarge: String = iter::repeat('a').take(*PAGE_SIZE).collect();
@@ -116,7 +116,7 @@ fn invalid_keyring() {
 
 #[test]
 fn add_key_to_non_keyring() {
-    let mut keyring = Keyring::attach_or_create(SpecialKeyring::Session).unwrap();
+    let mut keyring = utils::new_test_keyring();
     let expected = "stuff".as_bytes();
     let key = keyring
         .add_key::<User, _, _>("add_key_to_non_keyring", expected)
@@ -133,7 +133,7 @@ fn add_key_to_non_keyring() {
 
 #[test]
 fn add_key_to_session() {
-    let mut keyring = Keyring::attach_or_create(SpecialKeyring::Session).unwrap();
+    let mut keyring = utils::new_test_keyring();
     let expected = "stuff".as_bytes();
     let mut key = keyring
         .add_key::<User, _, _>("add_key_to_session", expected)

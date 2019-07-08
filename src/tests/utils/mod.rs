@@ -24,10 +24,24 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::{Keyring, KeyringSerial};
+use std::sync::atomic;
+
+use crate::{Keyring, KeyringSerial, SpecialKeyring};
 
 pub mod kernel;
 pub mod keys;
+
+// For testing, each test gets a new keyring attached to the Thread keyring. This makes sure tests
+// don't interfere with each other, and keys are not prematurely garbage collected.
+pub fn new_test_keyring() -> Keyring {
+    let mut thread_keyring = Keyring::attach_or_create(SpecialKeyring::Thread).unwrap();
+
+    static KEYRING_COUNT: atomic::AtomicUsize = atomic::AtomicUsize::new(0);
+    let num = KEYRING_COUNT.fetch_add(1, atomic::Ordering::SeqCst);
+    thread_keyring
+        .add_keyring(format!("test:rust-keyutils{}", num))
+        .unwrap()
+}
 
 pub fn invalid_keyring() -> Keyring {
     // Yes, we're explicitly breaking the NonZeroI32 rules here. However, it is not passing through

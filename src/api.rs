@@ -819,25 +819,14 @@ impl KeyManager {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::atomic;
     use std::thread;
 
     use super::*;
-
-    // For testing, each test gets a new keyring attached to the Thread keyring.
-    // This makes sure tests don't interfere with eachother, and keys are not
-    // prematurely garbage collected.
-    fn new_test_keyring() -> Result<Keyring> {
-        let mut thread_keyring = Keyring::attach_or_create(SpecialKeyring::Thread)?;
-
-        static KEYRING_COUNT: atomic::AtomicUsize = atomic::AtomicUsize::new(0);
-        let num = KEYRING_COUNT.fetch_add(1, atomic::Ordering::SeqCst);
-        thread_keyring.add_keyring(format!("test:rust-keyutils{}", num))
-    }
+    use crate::tests::utils;
 
     #[test]
     fn test_add_key() {
-        let mut keyring = new_test_keyring().unwrap();
+        let mut keyring = utils::new_test_keyring();
 
         // Create the key.
         let description = "test:rust-keyutils:add_key";
@@ -857,7 +846,7 @@ mod tests {
 
     #[test]
     fn test_clear_keyring() {
-        let mut keyring = new_test_keyring().unwrap();
+        let mut keyring = utils::new_test_keyring();
 
         let (keys, keyrings) = keyring.read().unwrap();
         assert_eq!(keys.len(), 0);
@@ -889,7 +878,7 @@ mod tests {
 
     #[test]
     fn test_describe_key() {
-        let mut keyring = new_test_keyring().unwrap();
+        let mut keyring = utils::new_test_keyring();
 
         // Create the key.
         let desc = "test:rust-keyutils:describe_key";
@@ -910,7 +899,7 @@ mod tests {
 
     #[test]
     fn test_invalidate_key() {
-        let mut keyring = new_test_keyring().unwrap();
+        let mut keyring = utils::new_test_keyring();
 
         // Create the key.
         let description = "test:rust-keyutils:invalidate_key";
@@ -930,7 +919,7 @@ mod tests {
 
     #[test]
     fn test_link_key() {
-        let mut keyring = new_test_keyring().unwrap();
+        let mut keyring = utils::new_test_keyring();
         let mut new_keyring = keyring.add_keyring("new_keyring").unwrap();
 
         // Create the key.
@@ -955,7 +944,7 @@ mod tests {
 
     #[test]
     fn test_link_keyring() {
-        let mut keyring = new_test_keyring().unwrap();
+        let mut keyring = utils::new_test_keyring();
         let mut new_keyring = keyring.add_keyring("new_keyring").unwrap();
         let new_inner_keyring = keyring.add_keyring("new_inner_keyring").unwrap();
 
@@ -974,7 +963,7 @@ mod tests {
 
     #[test]
     fn test_read_keyring() {
-        let mut keyring = new_test_keyring().unwrap();
+        let mut keyring = utils::new_test_keyring();
 
         let (keys, keyrings) = keyring.read().unwrap();
         assert_eq!(keys.len(), 0);
@@ -999,7 +988,7 @@ mod tests {
 
     #[test]
     fn test_read_key() {
-        let mut keyring = new_test_keyring().unwrap();
+        let mut keyring = utils::new_test_keyring();
 
         // Create the key.
         let description = "test:rust-keyutils:read_key";
@@ -1019,7 +1008,7 @@ mod tests {
 
     #[test]
     fn test_create_keyring() {
-        let mut keyring = new_test_keyring().unwrap();
+        let mut keyring = utils::new_test_keyring();
         let new_keyring = keyring.add_keyring("new_keyring").unwrap();
 
         let (keys, keyrings) = keyring.read().unwrap();
@@ -1034,7 +1023,7 @@ mod tests {
 
     #[test]
     fn test_chmod_keyring() {
-        let mut keyring = new_test_keyring().unwrap();
+        let mut keyring = utils::new_test_keyring();
         let description = keyring.description().unwrap();
         let perms = description.perms;
         let new_perms = {
@@ -1060,7 +1049,7 @@ mod tests {
 
     #[test]
     fn test_request_key() {
-        let mut keyring = new_test_keyring().unwrap();
+        let mut keyring = utils::new_test_keyring();
 
         // Create the key.
         let description = "test:rust-keyutils:request_key";
@@ -1081,7 +1070,7 @@ mod tests {
 
     #[test]
     fn test_revoke_key() {
-        let mut keyring = new_test_keyring().unwrap();
+        let mut keyring = utils::new_test_keyring();
 
         // Create the key.
         let description = "test:rust-keyutils:revoke_key";
@@ -1103,7 +1092,7 @@ mod tests {
 
     #[test]
     fn test_search_key() {
-        let mut keyring = new_test_keyring().unwrap();
+        let mut keyring = utils::new_test_keyring();
         let mut new_keyring = keyring.add_keyring("new_keyring").unwrap();
         let mut new_inner_keyring = new_keyring.add_keyring("new_inner_keyring").unwrap();
 
@@ -1128,7 +1117,7 @@ mod tests {
 
     #[test]
     fn test_search_keyring() {
-        let mut keyring = new_test_keyring().unwrap();
+        let mut keyring = utils::new_test_keyring();
         let mut new_keyring = keyring.add_keyring("new_keyring").unwrap();
         let new_inner_keyring = new_keyring.add_keyring("new_inner_keyring").unwrap();
 
@@ -1143,7 +1132,7 @@ mod tests {
 
     #[test]
     fn test_key_timeout() {
-        let mut keyring = new_test_keyring().unwrap();
+        let mut keyring = utils::new_test_keyring();
 
         // Create the key.
         let description = "test:rust-keyutils:key_timeout";
@@ -1171,7 +1160,7 @@ mod tests {
 
     #[test]
     fn test_unlink_keyring() {
-        let mut keyring = new_test_keyring().unwrap();
+        let mut keyring = utils::new_test_keyring();
 
         // Create the keyring.
         let description = "test:rust-keyutils:unlink_keyring";
@@ -1198,7 +1187,7 @@ mod tests {
 
     #[test]
     fn test_unlink_key() {
-        let mut keyring = new_test_keyring().unwrap();
+        let mut keyring = utils::new_test_keyring();
 
         // Create the key.
         let description = "test:rust-keyutils:unlink_key";
@@ -1228,7 +1217,7 @@ mod tests {
 
     #[test]
     fn test_update_key() {
-        let mut keyring = new_test_keyring().unwrap();
+        let mut keyring = utils::new_test_keyring();
 
         // Create the key.
         let description = "test:rust-keyutils:update_key";
