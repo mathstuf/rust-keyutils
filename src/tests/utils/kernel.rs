@@ -32,6 +32,8 @@ use regex::{Captures, Regex};
 
 lazy_static! {
     pub static ref PAGE_SIZE: usize = page_size();
+    pub static ref UID: libc::uid_t = getuid();
+    pub static ref GID: libc::gid_t = getgid();
     pub static ref KEY_INFO: KeyQuota = key_user_info();
 }
 
@@ -119,4 +121,12 @@ fn key_user_info() -> KeyQuota {
     *all_key_user_info()
         .get(&uid)
         .expect("the current user has no keys?")
+}
+
+fn getuid() -> libc::uid_t {
+    unsafe { libc::getuid() }
+}
+
+fn getgid() -> libc::gid_t {
+    unsafe { libc::getgid() }
 }
