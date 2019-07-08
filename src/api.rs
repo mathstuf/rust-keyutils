@@ -834,10 +834,7 @@ mod tests {
         let key = keyring
             .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
             .unwrap();
-        assert_eq!(
-            key.read().unwrap(),
-            payload.as_bytes().iter().cloned().collect::<Vec<_>>()
-        );
+        assert_eq!(key.read().unwrap(), payload.as_bytes());
 
         // Clean up.
         keyring.unlink_key(&key).unwrap();
@@ -996,10 +993,7 @@ mod tests {
         let key = keyring
             .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
             .unwrap();
-        assert_eq!(
-            key.read().unwrap(),
-            payload.as_bytes().iter().cloned().collect::<Vec<_>>()
-        );
+        assert_eq!(key.read().unwrap(), payload.as_bytes());
 
         // Clean up.
         keyring.unlink_key(&key).unwrap();
@@ -1232,10 +1226,7 @@ mod tests {
             .add_key::<keytypes::User, _, _>(description, new_payload.as_bytes())
             .unwrap();
         assert_eq!(key, updated_key);
-        assert_eq!(
-            updated_key.read().unwrap(),
-            new_payload.as_bytes().iter().cloned().collect::<Vec<_>>()
-        );
+        assert_eq!(updated_key.read().unwrap(), new_payload.as_bytes());
 
         // Clean up.
         keyring.unlink_key(&key).unwrap();
