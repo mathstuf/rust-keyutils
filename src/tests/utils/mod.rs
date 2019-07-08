@@ -26,7 +26,7 @@
 
 use std::sync::atomic;
 
-use crate::{Keyring, KeyringSerial, SpecialKeyring};
+use crate::{Key, Keyring, KeyringSerial, SpecialKeyring};
 
 pub mod kernel;
 pub mod keys;
@@ -43,9 +43,17 @@ pub fn new_test_keyring() -> Keyring {
         .unwrap()
 }
 
-pub fn invalid_keyring() -> Keyring {
+unsafe fn invalid_serial() -> KeyringSerial {
     // Yes, we're explicitly breaking the NonZeroI32 rules here. However, it is not passing through
     // any bits which care (e.g., `Option`), so this is purely to test that using an invalid
     // keyring ID gives back `EINVAL` as expected.
-    unsafe { Keyring::new(KeyringSerial::new_unchecked(0)) }
+    KeyringSerial::new_unchecked(0)
+}
+
+pub fn invalid_keyring() -> Keyring {
+    unsafe { Keyring::new(invalid_serial()) }
+}
+
+pub fn invalid_key() -> Key {
+    unsafe { Key::new(invalid_serial()) }
 }
