@@ -825,23 +825,6 @@ mod tests {
     use crate::tests::utils;
 
     #[test]
-    fn test_add_key() {
-        let mut keyring = utils::new_test_keyring();
-
-        // Create the key.
-        let description = "test:rust-keyutils:add_key";
-        let payload = "payload";
-        let key = keyring
-            .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
-            .unwrap();
-        assert_eq!(key.read().unwrap(), payload.as_bytes());
-
-        // Clean up.
-        keyring.unlink_key(&key).unwrap();
-        keyring.invalidate().unwrap();
-    }
-
-    #[test]
     fn test_clear_keyring() {
         let mut keyring = utils::new_test_keyring();
 
@@ -1206,30 +1189,6 @@ mod tests {
         assert_eq!(keyrings.len(), 0);
 
         // Clean up.
-        keyring.invalidate().unwrap();
-    }
-
-    #[test]
-    fn test_update_key() {
-        let mut keyring = utils::new_test_keyring();
-
-        // Create the key.
-        let description = "test:rust-keyutils:update_key";
-        let payload = "payload";
-        let key = keyring
-            .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
-            .unwrap();
-
-        // Update the key.
-        let new_payload = "new_payload";
-        let updated_key = keyring
-            .add_key::<keytypes::User, _, _>(description, new_payload.as_bytes())
-            .unwrap();
-        assert_eq!(key, updated_key);
-        assert_eq!(updated_key.read().unwrap(), new_payload.as_bytes());
-
-        // Clean up.
-        keyring.unlink_key(&key).unwrap();
         keyring.invalidate().unwrap();
     }
 }

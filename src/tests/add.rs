@@ -150,19 +150,51 @@ fn add_key_to_non_keyring() {
 }
 
 #[test]
-fn add_key_to_session() {
+fn add_key() {
     let mut keyring = utils::new_test_keyring();
-    let expected = "stuff".as_bytes();
-    let mut key = keyring
-        .add_key::<User, _, _>("add_key_to_session", expected)
-        .unwrap();
-    let payload = key.read().unwrap();
-    assert_eq!(payload, expected);
 
-    let new_expected = "lizard".as_bytes();
-    key.update(new_expected).unwrap();
-    let new_payload = key.read().unwrap();
-    assert_eq!(new_payload, new_expected);
+    let payload = "stuff".as_bytes();
+    let key = keyring.add_key::<User, _, _>("add_key", payload).unwrap();
+    assert_eq!(key.read().unwrap(), payload);
+
+    keyring.unlink_key(&key).unwrap();
+    keyring.invalidate().unwrap()
+}
+
+#[test]
+fn update_key() {
+    let mut keyring = utils::new_test_keyring();
+
+    let payload = "stuff".as_bytes();
+    let mut key = keyring
+        .add_key::<User, _, _>("update_key", payload)
+        .unwrap();
+    assert_eq!(key.read().unwrap(), payload);
+
+    let payload = "lizard".as_bytes();
+    key.update(payload).unwrap();
+    assert_eq!(key.read().unwrap(), payload);
+
+    keyring.unlink_key(&key).unwrap();
+    keyring.invalidate().unwrap()
+}
+
+#[test]
+fn update_key_via_add() {
+    let mut keyring = utils::new_test_keyring();
+
+    let description = "update_key_via_add";
+
+    let payload = "stuff".as_bytes();
+    let key = keyring.add_key::<User, _, _>(description, payload).unwrap();
+    assert_eq!(key.read().unwrap(), payload);
+
+    let payload = "lizard".as_bytes();
+    let key_updated = keyring.add_key::<User, _, _>(description, payload).unwrap();
+    assert_eq!(key, key_updated);
+    assert_eq!(key.read().unwrap(), payload);
+    assert_eq!(key_updated.read().unwrap(), payload);
+
     keyring.unlink_key(&key).unwrap();
     keyring.invalidate().unwrap()
 }
