@@ -825,27 +825,6 @@ mod tests {
     use crate::tests::utils;
 
     #[test]
-    fn test_describe_key() {
-        let mut keyring = utils::new_test_keyring();
-
-        // Create the key.
-        let desc = "test:rust-keyutils:describe_key";
-        let payload = "payload";
-        let key = keyring
-            .add_key::<keytypes::User, _, _>(desc, payload.as_bytes())
-            .unwrap();
-
-        // Check its description.
-        let description = key.description().unwrap();
-        assert_eq!(&description.type_, keytypes::User::name());
-        assert_eq!(&description.description, desc);
-
-        // Clean up.
-        keyring.unlink_key(&key).unwrap();
-        keyring.invalidate().unwrap();
-    }
-
-    #[test]
     fn test_invalidate_key() {
         let mut keyring = utils::new_test_keyring();
 
