@@ -28,6 +28,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::str::FromStr;
 
+use lazy_static::lazy_static;
 use regex::{Captures, Regex};
 
 lazy_static! {
