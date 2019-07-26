@@ -25,17 +25,42 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use std::collections::HashMap;
+use std::ffi::CStr;
 use std::fs;
+use std::mem;
 use std::str::FromStr;
 
 use lazy_static::lazy_static;
 use regex::{Captures, Regex};
 
 lazy_static! {
+    pub static ref KERNEL_VERSION: String = kernel_version();
+    pub static ref SEMVER_KERNEL_VERSION: &'static str = semver_kernel_version();
     pub static ref PAGE_SIZE: usize = page_size();
     pub static ref UID: libc::uid_t = getuid();
     pub static ref GID: libc::gid_t = getgid();
     pub static ref KEY_INFO: KeyQuota = key_user_info();
+}
+
+// The full version of the running kernel.
+fn kernel_version() -> String {
+    let mut utsname = unsafe { mem::zeroed() };
+    let ret = unsafe { libc::uname(&mut utsname) };
+    if ret < 0 {
+        panic!("failed to query the kernel version: {}", errno::errno());
+    }
+    let cstr = unsafe { CStr::from_ptr(utsname.release.as_ptr()) };
+    cstr.to_str()
+        .expect("kernel version should be ASCII")
+        .into()
+}
+
+// A semver-compatible string for the kernel version.
+fn semver_kernel_version() -> &'static str {
+    match (*KERNEL_VERSION).find('-') {
+        Some(pos) => &(*KERNEL_VERSION)[..pos],
+        None => &*KERNEL_VERSION,
+    }
 }
 
 fn page_size() -> usize {
