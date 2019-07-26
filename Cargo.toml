@@ -18,6 +18,7 @@ lazy_static = "1"
 regex = "1"
 serial_test = "*"
 serial_test_derive = "*"
+semver = "*"
 
 [dependencies]
 bitflags = "1.0.4"
