@@ -101,6 +101,11 @@ impl Keyring {
         }
     }
 
+    #[cfg(test)]
+    pub(crate) fn serial(&self) -> KeyringSerial {
+        self.id
+    }
+
     /// Set the default keyring to use when implicit requests on the current thread.
     ///
     /// Returns the old default keyring.

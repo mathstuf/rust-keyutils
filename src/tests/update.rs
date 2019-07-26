@@ -24,13 +24,63 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-//! The test structure here comes from the structure in libkeyutils.
+use crate::keytypes::User;
 
-pub(crate) mod utils;
+use super::utils;
 
-mod add;
-mod clear;
-mod describe;
-mod invalidate;
-mod session;
-mod update;
+#[test]
+fn keyring() {
+    let keyring = utils::new_test_keyring();
+    let mut key = utils::keyring_as_key(&keyring);
+
+    let payload = "payload".as_bytes();
+    let err = key.update(payload).unwrap_err();
+    assert_eq!(err, errno::Errno(libc::EOPNOTSUPP));
+
+    keyring.invalidate().unwrap()
+}
+
+#[test]
+fn invalid_key() {
+    let mut key = utils::invalid_key();
+
+    let payload = "payload".as_bytes();
+    let err = key.update(payload).unwrap_err();
+    assert_eq!(err, errno::Errno(libc::EINVAL));
+}
+
+#[test]
+fn unlinked_key() {
+    let mut keyring = utils::new_test_keyring();
+    let payload = "payload".as_bytes();
+    let mut key = keyring
+        .add_key::<User, _, _>("unlinked_key", payload)
+        .unwrap();
+
+    keyring.unlink_key(&key).unwrap();
+    utils::wait_for_key_gc(&key);
+
+    let payload = "payload".as_bytes();
+    let err = key.update(payload).unwrap_err();
+    assert_eq!(err, errno::Errno(libc::ENOKEY));
+
+    keyring.invalidate().unwrap()
+}
+
+#[test]
+fn user_key() {
+    let mut keyring = utils::new_test_keyring();
+    let payload = "payload".as_bytes();
+    let mut key = keyring.add_key::<User, _, _>("user_key", payload).unwrap();
+
+    let actual_payload = key.read().unwrap();
+    assert_eq!(payload, actual_payload.as_slice());
+
+    let payload = "updated_payload".as_bytes();
+    key.update(payload).unwrap();
+
+    let actual_payload = key.read().unwrap();
+    assert_eq!(payload, actual_payload.as_slice());
+
+    keyring.invalidate().unwrap()
+}

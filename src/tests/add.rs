@@ -162,24 +162,6 @@ fn add_key() {
 }
 
 #[test]
-fn update_key() {
-    let mut keyring = utils::new_test_keyring();
-
-    let payload = "stuff".as_bytes();
-    let mut key = keyring
-        .add_key::<User, _, _>("update_key", payload)
-        .unwrap();
-    assert_eq!(key.read().unwrap(), payload);
-
-    let payload = "lizard".as_bytes();
-    key.update(payload).unwrap();
-    assert_eq!(key.read().unwrap(), payload);
-
-    keyring.unlink_key(&key).unwrap();
-    keyring.invalidate().unwrap()
-}
-
-#[test]
 fn update_key_via_add() {
     let mut keyring = utils::new_test_keyring();
 
