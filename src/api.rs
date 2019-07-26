@@ -978,28 +978,6 @@ mod tests {
     }
 
     #[test]
-    fn test_revoke_key() {
-        let mut keyring = utils::new_test_keyring();
-
-        // Create the key.
-        let description = "test:rust-keyutils:revoke_key";
-        let payload = "payload";
-        let key = keyring
-            .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
-            .unwrap();
-        let key_copy = key.clone();
-
-        key.revoke().unwrap();
-
-        let err = key_copy.read().unwrap_err();
-        assert_eq!(err.0, libc::EKEYREVOKED);
-
-        // Clean up.
-        keyring.unlink_key(&key_copy).unwrap();
-        keyring.invalidate().unwrap();
-    }
-
-    #[test]
     fn test_search_key() {
         let mut keyring = utils::new_test_keyring();
         let mut new_keyring = keyring.add_keyring("new_keyring").unwrap();
