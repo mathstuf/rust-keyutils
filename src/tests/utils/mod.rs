@@ -57,3 +57,18 @@ pub fn invalid_keyring() -> Keyring {
 pub fn invalid_key() -> Key {
     unsafe { Key::new(invalid_serial()) }
 }
+
+/// Keys are deleted asynchronously; describing the key succeeds until it has been garbage
+/// collected.
+pub fn wait_for_key_gc(key: &Key) {
+    loop {
+        match key.description() {
+            Ok(_) => (),
+            Err(errno::Errno(libc::ENOKEY)) => break,
+            e @ Err(_) => {
+                e.unwrap();
+                unreachable!()
+            },
+        }
+    }
+}

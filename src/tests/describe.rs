@@ -52,19 +52,7 @@ fn non_existent_key() {
         .unwrap();
 
     keyring.unlink_key(&key).unwrap();
-
-    // Keys are deleted asynchronously; describing the key succeeds until it has been garbage
-    // collected.
-    loop {
-        match key.description() {
-            Ok(_) => (),
-            Err(errno::Errno(libc::ENOKEY)) => break,
-            e @ Err(_) => {
-                e.unwrap();
-                unreachable!()
-            },
-        }
-    }
+    utils::wait_for_key_gc(&key);
 
     keyring.invalidate().unwrap()
 }
