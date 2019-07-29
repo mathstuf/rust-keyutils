@@ -34,4 +34,5 @@ mod describe;
 mod invalidate;
 mod revoke;
 mod session;
+mod timeout;
 mod update;

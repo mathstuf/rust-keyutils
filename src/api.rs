@@ -824,8 +824,6 @@ impl KeyManager {
 
 #[cfg(test)]
 mod tests {
-    use std::thread;
-
     use super::*;
     use crate::tests::utils;
 
@@ -1014,34 +1012,6 @@ mod tests {
         // Clean up.
         new_inner_keyring.invalidate().unwrap();
         new_keyring.invalidate().unwrap();
-        keyring.invalidate().unwrap();
-    }
-
-    #[test]
-    fn test_key_timeout() {
-        let mut keyring = utils::new_test_keyring();
-
-        // Create the key.
-        let description = "test:rust-keyutils:key_timeout";
-        let payload = "payload";
-        let mut key = keyring
-            .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
-            .unwrap();
-
-        // Set the timeout on the key.
-        let duration = Duration::from_secs(1);
-        let timeout_duration = duration + duration;
-        key.set_timeout(duration).unwrap();
-
-        // Sleep the timeout away.
-        thread::sleep(timeout_duration);
-
-        // Try to read the key.
-        let err = key.read().unwrap_err();
-        assert_eq!(err.0, libc::EKEYEXPIRED);
-
-        // Clean up.
-        keyring.unlink_key(&key).unwrap();
         keyring.invalidate().unwrap();
     }
 
