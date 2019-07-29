@@ -62,6 +62,10 @@ pub fn keyring_as_key(keyring: &Keyring) -> Key {
     unsafe { Key::new(keyring.serial()) }
 }
 
+pub fn key_as_keyring(key: &Key) -> Keyring {
+    unsafe { Keyring::new(key.serial()) }
+}
+
 /// Keys are deleted asynchronously; describing the key succeeds until it has been garbage
 /// collected.
 pub fn wait_for_key_gc(key: &Key) {

@@ -914,21 +914,6 @@ mod tests {
     }
 
     #[test]
-    fn test_create_keyring() {
-        let mut keyring = utils::new_test_keyring();
-        let new_keyring = keyring.add_keyring("new_keyring").unwrap();
-
-        let (keys, keyrings) = keyring.read().unwrap();
-        assert_eq!(keys.len(), 0);
-        assert_eq!(keyrings.len(), 1);
-        assert_eq!(keyrings[0], new_keyring);
-
-        // Clean up.
-        new_keyring.invalidate().unwrap();
-        keyring.invalidate().unwrap();
-    }
-
-    #[test]
     fn test_chmod_keyring() {
         let mut keyring = utils::new_test_keyring();
         let description = keyring.description().unwrap();
