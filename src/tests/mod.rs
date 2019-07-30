@@ -33,6 +33,7 @@ mod clear;
 mod describe;
 mod invalidate;
 mod newring;
+mod reading;
 mod revoke;
 mod session;
 mod timeout;

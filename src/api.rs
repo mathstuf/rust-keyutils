@@ -872,48 +872,6 @@ mod tests {
     }
 
     #[test]
-    fn test_read_keyring() {
-        let mut keyring = utils::new_test_keyring();
-
-        let (keys, keyrings) = keyring.read().unwrap();
-        assert_eq!(keys.len(), 0);
-        assert_eq!(keyrings.len(), 0);
-
-        let key = keyring
-            .add_key::<keytypes::User, _, _>(
-                "test:rust-keyutils:read_keyring",
-                "payload".as_bytes(),
-            )
-            .unwrap();
-
-        let (keys, keyrings) = keyring.read().unwrap();
-        assert_eq!(keys.len(), 1);
-        assert_eq!(keys[0], key);
-        assert_eq!(keyrings.len(), 0);
-
-        // Clean up.
-        keyring.unlink_key(&key).unwrap();
-        keyring.invalidate().unwrap();
-    }
-
-    #[test]
-    fn test_read_key() {
-        let mut keyring = utils::new_test_keyring();
-
-        // Create the key.
-        let description = "test:rust-keyutils:read_key";
-        let payload = "payload";
-        let key = keyring
-            .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
-            .unwrap();
-        assert_eq!(key.read().unwrap(), payload.as_bytes());
-
-        // Clean up.
-        keyring.unlink_key(&key).unwrap();
-        keyring.invalidate().unwrap();
-    }
-
-    #[test]
     fn test_chmod_keyring() {
         let mut keyring = utils::new_test_keyring();
         let description = keyring.description().unwrap();
