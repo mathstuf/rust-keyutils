@@ -803,6 +803,11 @@ impl KeyManager {
         }
     }
 
+    #[cfg(test)]
+    pub(crate) fn test_new(key: Key) -> Self {
+        Self::new(key)
+    }
+
     /// Requests the authorization key created by `request_key`.
     ///
     /// This key must be present in an available keyring before `Key::manage` may be called.

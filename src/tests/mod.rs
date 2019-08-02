@@ -31,6 +31,7 @@ pub(crate) mod utils;
 mod add;
 mod clear;
 mod describe;
+mod instantiate;
 mod invalidate;
 mod newring;
 mod reading;
