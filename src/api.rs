@@ -748,6 +748,48 @@ impl Description {
     }
 }
 
+/// The destination keyring of an instantiation request.
+#[derive(Debug)]
+pub enum TargetKeyring<'a> {
+    /// A special keyring.
+    Special(SpecialKeyring),
+    /// A specific keyring.
+    Keyring(&'a mut Keyring),
+}
+
+impl<'a> TargetKeyring<'a> {
+    fn serial(self) -> KeyringSerial {
+        match self {
+            TargetKeyring::Special(special) => special.serial(),
+            TargetKeyring::Keyring(keyring) => keyring.id,
+        }
+    }
+}
+
+impl<'a> From<SpecialKeyring> for TargetKeyring<'a> {
+    fn from(special: SpecialKeyring) -> Self {
+        TargetKeyring::Special(special)
+    }
+}
+
+impl<'a> From<&'a mut Keyring> for TargetKeyring<'a> {
+    fn from(keyring: &'a mut Keyring) -> Self {
+        TargetKeyring::Keyring(keyring)
+    }
+}
+
+impl<'a> From<SpecialKeyring> for Option<TargetKeyring<'a>> {
+    fn from(special: SpecialKeyring) -> Self {
+        Some(special.into())
+    }
+}
+
+impl<'a> From<&'a mut Keyring> for Option<TargetKeyring<'a>> {
+    fn from(keyring: &'a mut Keyring) -> Self {
+        Some(keyring.into())
+    }
+}
+
 /// A manager for a key to respond to instantiate a key request by the kernel.
 #[derive(Debug, PartialEq, Eq)]
 pub struct KeyManager {
@@ -776,8 +818,9 @@ impl KeyManager {
     }
 
     /// Instantiate the key with the given payload.
-    pub fn instantiate<P>(self, keyring: &Keyring, payload: P) -> Result<()>
+    pub fn instantiate<'a, T, P>(self, keyring: T, payload: P) -> Result<()>
     where
+        T: Into<Option<TargetKeyring<'a>>>,
         P: AsRef<[u8]>,
     {
         let payload = payload.as_ref();
@@ -786,7 +829,7 @@ impl KeyManager {
                 self.key.id,
                 payload.as_ptr() as *const libc::c_void,
                 payload.len(),
-                keyring.id,
+                keyring.into().map(TargetKeyring::serial),
             )
         })
     }
@@ -797,14 +840,17 @@ impl KeyManager {
     /// seconds are ignored). This is to prevent a denial-of-service by
     /// requesting a non-existant key repeatedly. The requester must have
     /// `write` permission on the keyring.
-    pub fn reject(self, keyring: &Keyring, timeout: Duration, error: errno::Errno) -> Result<()> {
+    pub fn reject<'a, T>(self, keyring: T, timeout: Duration, error: errno::Errno) -> Result<()>
+    where
+        T: Into<Option<TargetKeyring<'a>>>,
+    {
         let errno::Errno(errval) = error;
         check_call(unsafe {
             keyctl_reject(
                 self.key.id,
                 timeout.as_secs() as TimeoutSeconds,
                 errval as u32,
-                keyring.id,
+                keyring.into().map(TargetKeyring::serial),
             )
         })
     }
@@ -815,9 +861,16 @@ impl KeyManager {
     /// seconds are ignored). This is to prevent a denial-of-service by
     /// requesting a non-existant key repeatedly. The requester must have
     /// `write` permission on the keyring.
-    pub fn negate(self, keyring: &Keyring, timeout: Duration) -> Result<()> {
+    pub fn negate<'a, T>(self, keyring: T, timeout: Duration) -> Result<()>
+    where
+        T: Into<Option<TargetKeyring<'a>>>,
+    {
         check_call(unsafe {
-            keyctl_negate(self.key.id, timeout.as_secs() as TimeoutSeconds, keyring.id)
+            keyctl_negate(
+                self.key.id,
+                timeout.as_secs() as TimeoutSeconds,
+                keyring.into().map(TargetKeyring::serial),
+            )
         })
     }
 }

@@ -28,6 +28,7 @@ use bitflags::bitflags;
 use keyutils_raw::*;
 
 /// Special keyrings predefined for a process.
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum SpecialKeyring {
     /// A thread-specific keyring.
     Thread,

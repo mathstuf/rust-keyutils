@@ -100,12 +100,12 @@ extern "C" {
         id:         KeyringSerial,
         payload:    *const libc::c_void,
         plen:       libc::size_t,
-        ringid:     KeyringSerial)
+        ringid:     Option<KeyringSerial>)
         -> libc::c_long;
     pub fn keyctl_negate(
         id:         KeyringSerial,
         timeout:    TimeoutSeconds,
-        ringid:     KeyringSerial)
+        ringid:     Option<KeyringSerial>)
         -> libc::c_long;
     pub fn keyctl_set_reqkey_keyring(
         reqkey_defl:    libc::c_int)
@@ -128,7 +128,7 @@ extern "C" {
         id:         KeyringSerial,
         timeout:    TimeoutSeconds,
         error:      libc::c_uint,
-        ringid:     KeyringSerial)
+        ringid:     Option<KeyringSerial>)
         -> libc::c_long;
     pub fn keyctl_invalidate(
         id: KeyringSerial)
