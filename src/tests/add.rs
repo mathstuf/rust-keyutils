@@ -151,7 +151,7 @@ fn add_key_to_non_keyring() {
 fn add_key() {
     let mut keyring = utils::new_test_keyring();
 
-    let payload = "stuff".as_bytes();
+    let payload = "payload".as_bytes();
     let key = keyring.add_key::<User, _, _>("add_key", payload).unwrap();
     assert_eq!(key.read().unwrap(), payload);
 
@@ -164,11 +164,11 @@ fn update_key_via_add() {
 
     let description = "update_key_via_add";
 
-    let payload = "stuff".as_bytes();
+    let payload = "payload".as_bytes();
     let key = keyring.add_key::<User, _, _>(description, payload).unwrap();
     assert_eq!(key.read().unwrap(), payload);
 
-    let payload = "lizard".as_bytes();
+    let payload = "updated_payload".as_bytes();
     let key_updated = keyring.add_key::<User, _, _>(description, payload).unwrap();
     assert_eq!(key, key_updated);
     assert_eq!(key.read().unwrap(), payload);
