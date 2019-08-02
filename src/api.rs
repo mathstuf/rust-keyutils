@@ -261,6 +261,18 @@ impl Keyring {
     ///
     /// Requires `read` permission on the keyring.
     pub fn read(&self) -> Result<(Vec<Key>, Vec<Keyring>)> {
+        // The `description` check below hides this error code from the kernel.
+        if self.id.get() == 0 {
+            return Err(errno::Errno(libc::ENOKEY));
+        }
+
+        // Avoid a panic in the code below be ensuring that we actually have a keyring. Parsing
+        // a key's payload as a keyring payload.
+        let desc = self.description()?;
+        if desc.type_ != keytypes::Keyring::name() {
+            return Err(errno::Errno(libc::ENOTDIR));
+        }
+
         let sz = unsafe { keyctl_read(self.id, ptr::null_mut(), 0) };
         check_call(sz)?;
         let mut buffer = Vec::with_capacity((sz as usize) / mem::size_of::<KeyringSerial>());
