@@ -27,7 +27,6 @@
 use std::iter;
 
 use crate::keytypes::User;
-use crate::Keyring;
 
 use super::utils;
 use super::utils::kernel::*;
@@ -138,7 +137,7 @@ fn add_key_to_non_keyring() {
         .add_key::<User, _, _>("add_key_to_non_keyring", expected)
         .unwrap();
 
-    let mut not_a_keyring = unsafe { Keyring::new(key.serial()) };
+    let mut not_a_keyring = utils::key_as_keyring(&key);
     let err = not_a_keyring
         .add_key::<User, _, _>("add_key_to_non_keyring", expected)
         .unwrap_err();
