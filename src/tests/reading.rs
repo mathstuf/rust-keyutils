@@ -103,6 +103,32 @@ fn read_keyring() {
 }
 
 #[test]
+fn read_key_as_keyring() {
+    let mut keyring = utils::new_test_keyring();
+    let payload = "payload".as_bytes();
+    let key = keyring
+        .add_key::<User, _, _>("read_key_as_keyring", payload)
+        .unwrap();
+    let not_a_keyring = utils::key_as_keyring(&key);
+
+    let err = not_a_keyring.read().unwrap_err();
+    assert_eq!(err, errno::Errno(libc::ENOTDIR));
+
+    keyring.invalidate().unwrap()
+}
+
+#[test]
+fn read_keyring_as_key() {
+    let keyring = utils::new_test_keyring();
+    let not_a_key = utils::keyring_as_key(&keyring);
+
+    let payload = not_a_key.read().unwrap();
+    assert_eq!(b"", payload.as_slice());
+
+    keyring.invalidate().unwrap()
+}
+
+#[test]
 fn read_no_read_perm_with_search() {
     let mut keyring = utils::new_test_keyring();
     let payload = "payload".as_bytes();
