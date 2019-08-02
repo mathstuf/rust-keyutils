@@ -144,8 +144,6 @@ fn add_key_to_non_keyring() {
         .unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOTDIR));
 
-    keyring.unlink_key(&key).unwrap();
-
     keyring.invalidate().unwrap()
 }
 
@@ -157,7 +155,6 @@ fn add_key() {
     let key = keyring.add_key::<User, _, _>("add_key", payload).unwrap();
     assert_eq!(key.read().unwrap(), payload);
 
-    keyring.unlink_key(&key).unwrap();
     keyring.invalidate().unwrap()
 }
 
@@ -177,6 +174,5 @@ fn update_key_via_add() {
     assert_eq!(key.read().unwrap(), payload);
     assert_eq!(key_updated.read().unwrap(), payload);
 
-    keyring.unlink_key(&key).unwrap();
     keyring.invalidate().unwrap()
 }
