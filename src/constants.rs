@@ -66,7 +66,7 @@ bitflags! {
     /// keyring, and a third set which is used when neither of the other two match.
     ///
     /// The fourth set is combined with the permission set used above (priority to user, then
-    /// group, finaly other) where either set granting a permission allows it. This set is,
+    /// group, finally other) where either set granting a permission allows it. This set is,
     /// however, only used if the caller is a "possessor" of they key or keyring. Generally,
     /// "possession" requires the `search` permission, association from the calling thread
     /// (the session, process, and thread keyrings), or is linked to from a possessed keyring. See
