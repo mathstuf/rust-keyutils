@@ -66,6 +66,7 @@ fn into_serial(res: libc::c_long) -> KeyringSerial {
     KeyringSerial::new(res as i32).unwrap()
 }
 
+/// Request a key from the kernel.
 fn request_impl<K: KeyType>(
     description: &str,
     info: Option<&str>,
@@ -122,31 +123,24 @@ impl Keyring {
 
     /// Requests a keyring with the given description by searching the thread, process, and session
     /// keyrings.
-    pub fn request<D>(description: D) -> Result<Self>
+    ///
+    /// If it is not found, the `info` string (if provided) will be handed off to
+    /// `/sbin/request-key` to generate the key.
+    ///
+    /// If `target` is given, the found keyring will be linked into it. If `target` is not given
+    /// and a new key is constructed due to the request, it will be linked into the default
+    /// keyring (see `Keyring::set_default`).
+    pub fn request<'a, D, I, IS, T>(description: D, info: I, target: T) -> Result<Self>
     where
         D: AsRef<str>,
+        I: Into<Option<IS>>,
+        IS: AsRef<str>,
+        T: Into<Option<TargetKeyring<'a>>>,
     {
         check_call_keyring(request_impl::<keytypes::Keyring>(
             description.as_ref(),
-            None,
-            None,
-        ))
-    }
-
-    /// Requests a keyring with the given description by searching the thread, process, and session
-    /// keyrings.
-    ///
-    /// If it is not found, the `info` string will be handed off to `/sbin/request-key` to generate
-    /// the key.
-    pub fn request_with_fallback<D, I>(description: D, info: I) -> Result<Self>
-    where
-        D: Borrow<<keytypes::Keyring as KeyType>::Description>,
-        I: AsRef<str>,
-    {
-        check_call_keyring(request_impl::<keytypes::Keyring>(
-            &description.borrow().description(),
-            Some(info.as_ref()),
-            None,
+            info.into().as_ref().copied(),
+            target.into().map(TargetKeyring::serial),
         ))
     }
 
@@ -371,74 +365,6 @@ impl Keyring {
         check_call_keyring(self.add_key_impl::<keytypes::Keyring>(description.borrow(), &()))
     }
 
-    /// Requests a key with the given description by searching the thread, process, and session
-    /// keyrings.
-    ///
-    /// If it is found, it is attached to the keyring.
-    pub fn request_key<K, D>(&self, description: D) -> Result<Key>
-    where
-        K: KeyType,
-        D: Borrow<K::Description>,
-    {
-        check_call_key(request_impl::<K>(
-            &description.borrow().description(),
-            None,
-            Some(self.id),
-        ))
-    }
-
-    /// Requests a keyring with the given description by searching the thread, process, and session
-    /// keyrings.
-    ///
-    /// If it is found, it is attached to the keyring.
-    pub fn request_keyring<D>(&self, description: D) -> Result<Self>
-    where
-        D: Borrow<<keytypes::Keyring as KeyType>::Description>,
-    {
-        check_call_keyring(request_impl::<keytypes::Keyring>(
-            &description.borrow().description(),
-            None,
-            Some(self.id),
-        ))
-    }
-
-    /// Requests a key with the given description by searching the thread, process, and session
-    /// keyrings.
-    ///
-    /// If it is not found, the `info` string will be handed off to `/sbin/request-key` to generate
-    /// the key. If found, it will be attached to the current keyring. Requires `write` permission
-    /// to the keyring.
-    pub fn request_key_with_fallback<K, D, I>(&self, description: D, info: I) -> Result<Key>
-    where
-        K: KeyType,
-        D: Borrow<K::Description>,
-        I: AsRef<str>,
-    {
-        check_call_key(request_impl::<K>(
-            &description.borrow().description(),
-            Some(info.as_ref()),
-            Some(self.id),
-        ))
-    }
-
-    /// Requests a keyring with the given description by searching the thread, process, and session
-    /// keyrings.
-    ///
-    /// If it is not found, the `info` string will be handed off to `/sbin/request-key` to generate
-    /// the key. If found, it will be attached to the current keyring. Requires `write` permission
-    /// to the keyring.
-    pub fn request_keyring_with_fallback<D, I>(&self, description: D, info: I) -> Result<Self>
-    where
-        D: Borrow<<keytypes::Keyring as KeyType>::Description>,
-        I: AsRef<str>,
-    {
-        check_call_keyring(request_impl::<keytypes::Keyring>(
-            &description.borrow().description(),
-            Some(info.as_ref()),
-            Some(self.id),
-        ))
-    }
-
     /// Revokes the keyring.
     ///
     /// Requires `write` permission on the keyring.
@@ -561,35 +487,27 @@ impl Key {
         self.id
     }
 
-    /// Requests a key with the given description by searching the thread, process, and session
-    /// keyrings.
-    pub fn request<K, D>(description: D) -> Result<Self>
+    /// Requests a key with the given type and description by searching the thread, process, and
+    /// session keyrings.
+    ///
+    /// If it is not found, the `info` string (if provided) will be handed off to
+    /// `/sbin/request-key` to generate the key.
+    ///
+    /// If `target` is given, the found keyring will be linked into it. If `target` is not given
+    /// and a new key is constructed due to the request, it will be linked into the default
+    /// keyring (see `Keyring::set_default`).
+    pub fn request<'a, K, D, I, IS, T>(description: D, info: I, target: T) -> Result<Self>
     where
         K: KeyType,
         D: Borrow<K::Description>,
+        I: Into<Option<IS>>,
+        IS: AsRef<str>,
+        T: Into<Option<TargetKeyring<'a>>>,
     {
         check_call_key(request_impl::<K>(
             &description.borrow().description(),
-            None,
-            None,
-        ))
-    }
-
-    /// Requests a key with the given description by searching the thread, process, and session
-    /// keyrings.
-    ///
-    /// If it is not found, the `info` string will be handed off to `/sbin/request-key` to generate
-    /// the key.
-    pub fn request_with_fallback<K, D, I>(description: D, info: I) -> Result<Self>
-    where
-        K: KeyType,
-        D: Borrow<K::Description>,
-        I: AsRef<str>,
-    {
-        check_call_key(request_impl::<keytypes::Keyring>(
-            &description.borrow().description(),
-            Some(info.as_ref()),
-            None,
+            info.into().as_ref().copied(),
+            target.into().map(TargetKeyring::serial),
         ))
     }
 
@@ -909,32 +827,5 @@ impl KeyManager {
                 keyring.into().map(TargetKeyring::serial),
             )
         })
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::tests::utils;
-
-    #[test]
-    fn test_request_key() {
-        let mut keyring = utils::new_test_keyring();
-
-        // Create the key.
-        let description = "test:rust-keyutils:request_key";
-        let payload = "payload";
-        let key = keyring
-            .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
-            .unwrap();
-
-        let found_key = keyring
-            .request_key::<keytypes::User, _>(description)
-            .unwrap();
-        assert_eq!(found_key, key);
-
-        // Clean up.
-        keyring.unlink_key(&key).unwrap();
-        keyring.invalidate().unwrap();
     }
 }
