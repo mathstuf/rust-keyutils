@@ -470,6 +470,11 @@ impl Keyring {
         check_call(unsafe { keyctl_setperm(self.id, perms.bits()) })
     }
 
+    #[cfg(test)]
+    pub(crate) fn set_permissions_raw(&mut self, perms: KeyPermissions) -> Result<()> {
+        check_call(unsafe { keyctl_setperm(self.id, perms) })
+    }
+
     fn description_raw(&self) -> Result<String> {
         let sz = unsafe { keyctl_describe(self.id, ptr::null_mut(), 0) };
         check_call(sz)?;
@@ -626,6 +631,11 @@ impl Key {
     /// user does not own the key.
     pub fn set_permissions(&mut self, perms: Permission) -> Result<()> {
         Keyring::new_impl(self.id).set_permissions(perms)
+    }
+
+    #[cfg(test)]
+    pub(crate) fn set_permissions_raw(&mut self, perms: KeyPermissions) -> Result<()> {
+        Keyring::new_impl(self.id).set_permissions_raw(perms)
     }
 
     /// Retrieve metadata about the key.
@@ -906,32 +916,6 @@ impl KeyManager {
 mod tests {
     use super::*;
     use crate::tests::utils;
-
-    #[test]
-    fn test_chmod_keyring() {
-        let mut keyring = utils::new_test_keyring();
-        let description = keyring.description().unwrap();
-        let perms = description.perms;
-        let new_perms = {
-            let mut tmp_perms = perms.clone();
-            let write_bits = Permission::POSSESSOR_WRITE
-                | Permission::USER_WRITE
-                | Permission::GROUP_WRITE
-                | Permission::OTHER_WRITE;
-            tmp_perms.remove(write_bits);
-            tmp_perms
-        };
-        keyring.set_permissions(new_perms).unwrap();
-        let err = keyring.add_keyring("new_keyring").unwrap_err();
-        assert_eq!(err.0, libc::EACCES);
-
-        keyring.set_permissions(perms).unwrap();
-        let new_keyring = keyring.add_keyring("new_keyring").unwrap();
-
-        // Clean up.
-        new_keyring.invalidate().unwrap();
-        keyring.invalidate().unwrap();
-    }
 
     #[test]
     fn test_request_key() {

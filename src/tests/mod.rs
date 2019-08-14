@@ -35,6 +35,7 @@ mod instantiate;
 mod invalidate;
 mod link;
 mod newring;
+mod permitting;
 mod reading;
 mod revoke;
 mod search;
