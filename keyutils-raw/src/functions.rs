@@ -89,7 +89,7 @@ extern "C" {
         ringid:         KeyringSerial,
         type_:          *const libc::c_char,
         description:    *const libc::c_char,
-        destringid:     KeyringSerial)
+        destringid:     Option<KeyringSerial>)
         -> libc::c_long;
     pub fn keyctl_read(
         id:     KeyringSerial,

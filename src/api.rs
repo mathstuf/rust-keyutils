@@ -218,14 +218,19 @@ impl Keyring {
         check_call(unsafe { keyctl_unlink(keyring.id, self.id) })
     }
 
-    fn search_impl<K>(&self, description: &str) -> KeyringSerial
+    fn search_impl<K>(&self, description: &str, destination: Option<&mut Keyring>) -> KeyringSerial
     where
         K: KeyType,
     {
         let type_cstr = CString::new(K::name()).unwrap();
         let desc_cstr = CString::new(description).unwrap();
         into_serial(unsafe {
-            keyctl_search(self.id, type_cstr.as_ptr(), desc_cstr.as_ptr(), self.id)
+            keyctl_search(
+                self.id,
+                type_cstr.as_ptr(),
+                desc_cstr.as_ptr(),
+                destination.map(|dest| dest.id),
+            )
         })
     }
 
@@ -234,12 +239,15 @@ impl Keyring {
     /// If it is found, it is attached to the keyring (if `write` permission to the keyring and
     /// `link` permission on the key exist) and return it. Requires the `search` permission on the
     /// keyring. Any children keyrings without the `search` permission are ignored.
-    pub fn search_for_key<K, D>(&self, description: D) -> Result<Key>
+    pub fn search_for_key<'a, K, D, DK>(&self, description: D, destination: DK) -> Result<Key>
     where
         K: KeyType,
         D: Borrow<K::Description>,
+        DK: Into<Option<&'a mut Keyring>>,
     {
-        check_call_key(self.search_impl::<K>(&description.borrow().description()))
+        check_call_key(
+            self.search_impl::<K>(&description.borrow().description(), destination.into()),
+        )
     }
 
     /// Recursively search the keyring for a keyring with the matching description.
@@ -248,13 +256,15 @@ impl Keyring {
     /// `link` permission on the found keyring exist) and return it. Requires the `search`
     /// permission on the keyring. Any children keyrings without the `search` permission are
     /// ignored.
-    pub fn search_for_keyring<D>(&self, description: D) -> Result<Self>
+    pub fn search_for_keyring<'a, D, DK>(&self, description: D, destination: DK) -> Result<Self>
     where
         D: Borrow<<keytypes::Keyring as KeyType>::Description>,
+        DK: Into<Option<&'a mut Keyring>>,
     {
-        check_call_keyring(
-            self.search_impl::<keytypes::Keyring>(&description.borrow().description()),
-        )
+        check_call_keyring(self.search_impl::<keytypes::Keyring>(
+            &description.borrow().description(),
+            destination.into(),
+        ))
     }
 
     /// Return all immediate children of the keyring.
@@ -941,46 +951,6 @@ mod tests {
 
         // Clean up.
         keyring.unlink_key(&key).unwrap();
-        keyring.invalidate().unwrap();
-    }
-
-    #[test]
-    fn test_search_key() {
-        let mut keyring = utils::new_test_keyring();
-        let mut new_keyring = keyring.add_keyring("new_keyring").unwrap();
-        let mut new_inner_keyring = new_keyring.add_keyring("new_inner_keyring").unwrap();
-
-        // Create the key.
-        let description = "test:rust-keyutils:search_key";
-        let payload = "payload";
-        let key = new_inner_keyring
-            .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
-            .unwrap();
-
-        let found_key = keyring
-            .search_for_key::<keytypes::User, _>(description)
-            .unwrap();
-        assert_eq!(found_key, key);
-
-        // Clean up.
-        new_inner_keyring.unlink_key(&key).unwrap();
-        new_inner_keyring.invalidate().unwrap();
-        new_keyring.invalidate().unwrap();
-        keyring.invalidate().unwrap();
-    }
-
-    #[test]
-    fn test_search_keyring() {
-        let mut keyring = utils::new_test_keyring();
-        let mut new_keyring = keyring.add_keyring("new_keyring").unwrap();
-        let new_inner_keyring = new_keyring.add_keyring("new_inner_keyring").unwrap();
-
-        let found_keyring = keyring.search_for_keyring("new_inner_keyring").unwrap();
-        assert_eq!(found_keyring, new_inner_keyring);
-
-        // Clean up.
-        new_inner_keyring.invalidate().unwrap();
-        new_keyring.invalidate().unwrap();
         keyring.invalidate().unwrap();
     }
 }
