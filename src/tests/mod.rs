@@ -37,6 +37,7 @@ mod link;
 mod newring;
 mod reading;
 mod revoke;
+mod search;
 mod session;
 mod timeout;
 mod unlink;
