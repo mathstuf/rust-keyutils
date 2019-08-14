@@ -898,50 +898,6 @@ mod tests {
     use crate::tests::utils;
 
     #[test]
-    fn test_link_key() {
-        let mut keyring = utils::new_test_keyring();
-        let mut new_keyring = keyring.add_keyring("new_keyring").unwrap();
-
-        // Create the key.
-        let description = "test:rust-keyutils:link_key";
-        let payload = "payload";
-        let key = keyring
-            .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
-            .unwrap();
-
-        new_keyring.link_key(&key).unwrap();
-
-        let (keys, keyrings) = new_keyring.read().unwrap();
-        assert_eq!(keys.len(), 1);
-        assert_eq!(keys[0], key);
-        assert_eq!(keyrings.len(), 0);
-
-        // Clean up.
-        key.invalidate().unwrap();
-        new_keyring.invalidate().unwrap();
-        keyring.invalidate().unwrap();
-    }
-
-    #[test]
-    fn test_link_keyring() {
-        let mut keyring = utils::new_test_keyring();
-        let mut new_keyring = keyring.add_keyring("new_keyring").unwrap();
-        let new_inner_keyring = keyring.add_keyring("new_inner_keyring").unwrap();
-
-        new_keyring.link_keyring(&new_inner_keyring).unwrap();
-
-        let (keys, keyrings) = new_keyring.read().unwrap();
-        assert_eq!(keys.len(), 0);
-        assert_eq!(keyrings.len(), 1);
-        assert_eq!(keyrings[0], new_inner_keyring);
-
-        // Clean up.
-        new_inner_keyring.invalidate().unwrap();
-        new_keyring.invalidate().unwrap();
-        keyring.invalidate().unwrap();
-    }
-
-    #[test]
     fn test_chmod_keyring() {
         let mut keyring = utils::new_test_keyring();
         let description = keyring.description().unwrap();
