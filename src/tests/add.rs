@@ -147,6 +147,23 @@ fn add_key_to_non_keyring() {
 }
 
 #[test]
+fn add_keyring_to_non_keyring() {
+    let mut keyring = utils::new_test_keyring();
+    let expected = "stuff".as_bytes();
+    let key = keyring
+        .add_key::<User, _, _>("add_keyring_to_non_keyring", expected)
+        .unwrap();
+
+    let mut not_a_keyring = utils::key_as_keyring(&key);
+    let err = not_a_keyring
+        .add_keyring("add_keyring_to_non_keyring")
+        .unwrap_err();
+    assert_eq!(err, errno::Errno(libc::ENOTDIR));
+
+    keyring.invalidate().unwrap()
+}
+
+#[test]
 fn add_key() {
     let mut keyring = utils::new_test_keyring();
 
@@ -158,10 +175,22 @@ fn add_key() {
 }
 
 #[test]
-fn update_key_via_add() {
+fn add_keyring() {
+    let mut keyring = utils::new_test_keyring();
+    let new_keyring = keyring.add_keyring("add_keyring").unwrap();
+
+    let (keys, keyrings) = new_keyring.read().unwrap();
+    assert!(keys.is_empty());
+    assert!(keyrings.is_empty());
+
+    keyring.invalidate().unwrap()
+}
+
+#[test]
+fn add_key_replace() {
     let mut keyring = utils::new_test_keyring();
 
-    let description = "update_key_via_add";
+    let description = "add_key_replace";
 
     let payload = "payload".as_bytes();
     let key = keyring.add_key::<User, _, _>(description, payload).unwrap();
@@ -172,6 +201,27 @@ fn update_key_via_add() {
     assert_eq!(key, key_updated);
     assert_eq!(key.read().unwrap(), payload);
     assert_eq!(key_updated.read().unwrap(), payload);
+
+    keyring.invalidate().unwrap()
+}
+
+#[test]
+fn add_keyring_replace() {
+    let mut keyring = utils::new_test_keyring();
+
+    let description = "add_keyring_replace";
+    let new_keyring = keyring.add_keyring(description).unwrap();
+
+    let (keys, keyrings) = new_keyring.read().unwrap();
+    assert!(keys.is_empty());
+    assert!(keyrings.is_empty());
+
+    let updated_keyring = keyring.add_keyring(description).unwrap();
+    assert_ne!(new_keyring, updated_keyring);
+
+    let (keys, keyrings) = updated_keyring.read().unwrap();
+    assert!(keys.is_empty());
+    assert!(keyrings.is_empty());
 
     keyring.invalidate().unwrap()
 }
