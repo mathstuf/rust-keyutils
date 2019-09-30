@@ -130,11 +130,10 @@ impl Keyring {
     /// If `target` is given, the found keyring will be linked into it. If `target` is not given
     /// and a new key is constructed due to the request, it will be linked into the default
     /// keyring (see `Keyring::set_default`).
-    pub fn request<'a, D, I, IS, T>(description: D, info: I, target: T) -> Result<Self>
+    pub fn request<'s, 'a, D, I, T>(description: D, info: I, target: T) -> Result<Self>
     where
         D: AsRef<str>,
-        I: Into<Option<IS>>,
-        IS: AsRef<str>,
+        I: Into<Option<&'s str>>,
         T: Into<Option<TargetKeyring<'a>>>,
     {
         check_call_keyring(request_impl::<keytypes::Keyring>(
@@ -496,12 +495,11 @@ impl Key {
     /// If `target` is given, the found keyring will be linked into it. If `target` is not given
     /// and a new key is constructed due to the request, it will be linked into the default
     /// keyring (see `Keyring::set_default`).
-    pub fn request<'a, K, D, I, IS, T>(description: D, info: I, target: T) -> Result<Self>
+    pub fn request<'s, 'a, K, D, I, T>(description: D, info: I, target: T) -> Result<Self>
     where
         K: KeyType,
         D: Borrow<K::Description>,
-        I: Into<Option<IS>>,
-        IS: AsRef<str>,
+        I: Into<Option<&'s str>>,
         T: Into<Option<TargetKeyring<'a>>>,
     {
         check_call_key(request_impl::<K>(
