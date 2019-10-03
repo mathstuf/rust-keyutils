@@ -35,7 +35,7 @@ linux_task:
     before_cache_script: rm -rf $CARGO_HOME/registry/index
 
 minimal_version_task:
-    # We make sure we can build with the minimum specificed versions
+    # We make sure we can build with the minimum specified versions
     container:
         image: rustlang/rust:nightly
     lockfile_script: cargo generate-lockfile -Z minimal-versions
