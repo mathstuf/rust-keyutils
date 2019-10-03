@@ -271,7 +271,7 @@ impl Keyring {
 
         let mut keys = Vec::new();
         let mut keyrings = Vec::new();
-        for key in buffer.into_iter().map(|id| Key::new_impl(id)) {
+        for key in buffer.into_iter().map(Key::new_impl) {
             match key.description() {
                 Ok(description) => {
                     if description.type_ == keytypes::Keyring::name() {
