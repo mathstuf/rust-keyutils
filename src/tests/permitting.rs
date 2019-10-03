@@ -84,8 +84,6 @@ fn invalid_key_permissions() {
         .set_permissions_raw(KeyPermissions::max_value())
         .unwrap_err();
     assert_eq!(err, errno::Errno(libc::EINVAL));
-
-    keyring.invalidate().unwrap();
 }
 
 #[test]
@@ -96,8 +94,6 @@ fn invalid_keyring_permissions() {
         .set_permissions_raw(KeyPermissions::max_value())
         .unwrap_err();
     assert_eq!(err, errno::Errno(libc::EINVAL));
-
-    keyring.invalidate().unwrap();
 }
 
 #[test]
@@ -113,8 +109,6 @@ fn unlinked_key_chown() {
 
     let err = key.chown(*UID).unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOKEY));
-
-    keyring.invalidate().unwrap();
 }
 
 #[test]
@@ -130,8 +124,6 @@ fn unlinked_key_chgrp() {
 
     let err = key.chgrp(*GID).unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOKEY));
-
-    keyring.invalidate().unwrap();
 }
 
 #[test]
@@ -147,8 +139,6 @@ fn unlinked_key_chmod() {
 
     let err = key.set_permissions(Permission::POSSESSOR_VIEW).unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOKEY));
-
-    keyring.invalidate().unwrap();
 }
 
 #[test]
@@ -162,8 +152,6 @@ fn chown_keyring() {
         let err = keyring.chown(1).unwrap_err();
         assert_eq!(err, errno::Errno(libc::EACCES));
     }
-
-    keyring.invalidate().unwrap();
 }
 
 #[test]
@@ -179,8 +167,6 @@ fn chown_key() {
         let err = key.chown(1).unwrap_err();
         assert_eq!(err, errno::Errno(libc::EACCES));
     }
-
-    keyring.invalidate().unwrap();
 }
 
 #[test]
@@ -225,8 +211,6 @@ fn set_each_permission_bit() {
         let description = key.description().unwrap();
         assert_eq!(perms, description.perms);
     }
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -242,8 +226,6 @@ fn cannot_view_via_group() {
 
     let err = key.read().unwrap_err();
     assert_eq!(err, errno::Errno(libc::EACCES));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -259,8 +241,6 @@ fn cannot_view_via_other() {
 
     let err = key.read().unwrap_err();
     assert_eq!(err, errno::Errno(libc::EACCES));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -280,6 +260,4 @@ fn remove_setattr() {
 
     let err = key.set_permissions(Permission::all()).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EACCES));
-
-    keyring.invalidate().unwrap()
 }

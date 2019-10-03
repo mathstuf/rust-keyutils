@@ -56,8 +56,6 @@ fn unlinked_key() {
 
     let err = key.read().unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOKEY));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -70,8 +68,6 @@ fn unlinked_keyring() {
 
     let err = new_keyring.read().unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOKEY));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -82,8 +78,6 @@ fn read_key() {
 
     let actual_payload = key.read().unwrap();
     assert_eq!(payload, actual_payload.as_slice());
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -98,8 +92,6 @@ fn read_keyring() {
     assert_eq!(1, keys.len());
     assert_eq!(key, keys[0]);
     assert!(keyrings.is_empty());
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -113,8 +105,6 @@ fn read_key_as_keyring() {
 
     let err = not_a_keyring.read().unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOTDIR));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -124,8 +114,6 @@ fn read_keyring_as_key() {
 
     let payload = not_a_key.read().unwrap();
     assert_eq!(b"", payload.as_slice());
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -143,8 +131,6 @@ fn read_no_read_perm_with_search() {
     // This should still work because we have "search" permission on its keyring.
     let actual_payload = key.read().unwrap();
     assert_eq!(payload, actual_payload.as_slice());
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -161,8 +147,6 @@ fn read_no_read_search_perm_with_search() {
 
     let err = key.read().unwrap_err();
     assert_eq!(err, errno::Errno(libc::EACCES));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -179,8 +163,6 @@ fn read_rely_on_possessor() {
 
     let actual_payload = key.read().unwrap();
     assert_eq!(payload, actual_payload.as_slice());
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -204,6 +186,4 @@ fn reinstated_read_perm() {
 
     let actual_payload = key.read().unwrap();
     assert_eq!(payload, actual_payload.as_slice());
-
-    keyring.invalidate().unwrap()
 }

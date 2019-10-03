@@ -24,6 +24,7 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use std::ops::{Deref, DerefMut};
 use std::sync::atomic;
 
 use crate::{Key, Keyring, KeyringSerial, SpecialKeyring};
@@ -31,9 +32,35 @@ use crate::{Key, Keyring, KeyringSerial, SpecialKeyring};
 pub mod kernel;
 pub mod keys;
 
+#[derive(Debug)]
+pub struct ScopedKeyring {
+    keyring: Keyring,
+}
+
+impl Drop for ScopedKeyring {
+    fn drop(&mut self) {
+        self.keyring.clone().invalidate().unwrap();
+        wait_for_keyring_gc(&self.keyring);
+    }
+}
+
+impl Deref for ScopedKeyring {
+    type Target = Keyring;
+
+    fn deref(&self) -> &Self::Target {
+        &self.keyring
+    }
+}
+
+impl DerefMut for ScopedKeyring {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.keyring
+    }
+}
+
 // For testing, each test gets a new keyring attached to the Thread keyring. This makes sure tests
 // don't interfere with each other, and keys are not prematurely garbage collected.
-pub fn new_test_keyring() -> Keyring {
+pub fn new_test_keyring_manual() -> Keyring {
     let mut thread_keyring = Keyring::attach_or_create(SpecialKeyring::Thread).unwrap();
 
     static KEYRING_COUNT: atomic::AtomicUsize = atomic::AtomicUsize::new(0);
@@ -41,6 +68,14 @@ pub fn new_test_keyring() -> Keyring {
     thread_keyring
         .add_keyring(format!("test:rust-keyutils{}", num))
         .unwrap()
+}
+
+// For testing, each test gets a new keyring attached to the Thread keyring. This makes sure tests
+// don't interfere with each other, and keys are not prematurely garbage collected.
+pub fn new_test_keyring() -> ScopedKeyring {
+    ScopedKeyring {
+        keyring: new_test_keyring_manual(),
+    }
 }
 
 unsafe fn invalid_serial() -> KeyringSerial {

@@ -53,8 +53,6 @@ fn non_existent_key() {
 
     keyring.unlink_key(&key).unwrap();
     utils::wait_for_key_gc(&key);
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -112,8 +110,6 @@ fn describe_key_no_perm() {
 
     let err = key.description().unwrap_err();
     assert_eq!(err, errno::Errno(libc::EACCES));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -128,6 +124,4 @@ fn describe_revoked_key() {
 
     let err = key_mirror.description().unwrap_err();
     assert_eq!(err, errno::Errno(libc::EKEYREVOKED));
-
-    keyring.invalidate().unwrap()
 }

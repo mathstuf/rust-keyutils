@@ -41,8 +41,6 @@ fn empty_key_type() {
         .search_for_key::<EmptyKey, _, _>("empty_key_type", None)
         .unwrap_err();
     assert_eq!(err, errno::Errno(libc::EINVAL));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -53,8 +51,6 @@ fn unsupported_key_type() {
         .search_for_key::<UnsupportedKey, _, _>("unsupported_key_type", None)
         .unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOKEY));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -65,8 +61,6 @@ fn invalid_key_type() {
         .search_for_key::<InvalidKey, _, _>("invalid_key_type", None)
         .unwrap_err();
     assert_eq!(err, errno::Errno(libc::EPERM));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -77,8 +71,6 @@ fn max_key_type() {
         .search_for_key::<MaxLenKey, _, _>("invalid_key_type", None)
         .unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOKEY));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -89,8 +81,6 @@ fn overlong_key_type() {
         .search_for_key::<OverlongKey, _, _>("overlong_key_type", None)
         .unwrap_err();
     assert_eq!(err, errno::Errno(libc::EINVAL));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -103,8 +93,6 @@ fn max_user_description() {
         .search_for_key::<User, _, _>(maxdesc, None)
         .unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOKEY));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -118,8 +106,6 @@ fn overlong_user_description() {
         .search_for_key::<User, _, _>(maxdesc, None)
         .unwrap_err();
     assert_eq!(err, errno::Errno(libc::EINVAL));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -145,8 +131,6 @@ fn search_key() {
         .search_for_key::<User, _, _>("search_key", None)
         .unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOTDIR));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -157,8 +141,6 @@ fn search_key_no_result() {
         .search_for_key::<User, _, _>("search_key_no_result", None)
         .unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOKEY));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -169,8 +151,6 @@ fn search_keyring_no_result() {
         .search_for_keyring("search_keyring_no_result", None)
         .unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOKEY));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -184,8 +164,6 @@ fn search_key_mismatched_type() {
         .search_for_key::<User, _, _>(description, None)
         .unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOKEY));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -202,8 +180,6 @@ fn search_keyring_mismatched_type() {
 
     let err = keyring.search_for_keyring(description, None).unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOKEY));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -223,8 +199,6 @@ fn search_and_find_key() {
 
     let actual_payload = key.read().unwrap();
     assert_eq!(payload, actual_payload.as_slice());
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -236,8 +210,6 @@ fn search_and_find_keyring() {
 
     let found_keyring = keyring.search_for_keyring(description, None).unwrap();
     assert_eq!(found_keyring, target_keyring);
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -266,8 +238,6 @@ fn search_and_find_key_no_search_perm_interm() {
         .search_for_key::<User, _, _>(description, None)
         .unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOKEY));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -291,8 +261,6 @@ fn search_and_find_keyring_no_search_perm_interm() {
 
     let err = keyring.search_for_keyring(description, None).unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOKEY));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -321,8 +289,6 @@ fn search_and_find_key_no_search_perm_direct() {
         .search_for_key::<User, _, _>(description, None)
         .unwrap_err();
     assert_eq!(err, errno::Errno(libc::EACCES));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -346,8 +312,6 @@ fn search_and_find_keyring_no_search_perm_direct() {
 
     let err = keyring.search_for_keyring(description, None).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EACCES));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -379,8 +343,6 @@ fn search_and_find_key_link() {
     assert_eq!(keys.len(), 1);
     assert_eq!(keys[0], key);
     assert!(keyrings.is_empty());
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -406,8 +368,6 @@ fn search_and_find_keyring_link() {
     assert!(keys.is_empty());
     assert_eq!(keyrings.len(), 1);
     assert_eq!(keyrings[0], target_keyring);
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -447,8 +407,6 @@ fn search_and_find_key_link_replace() {
     assert_eq!(keys.len(), 1);
     assert_eq!(keys[0], key);
     assert!(keyrings.is_empty());
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -486,8 +444,6 @@ fn search_and_find_key_link_replace_keyring() {
     assert_eq!(keys[0], key);
     assert_eq!(keyrings.len(), 1);
     assert_eq!(keyrings[0], orig_keyring);
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -518,8 +474,6 @@ fn search_and_find_keyring_link_replace() {
     assert!(keys.is_empty());
     assert_eq!(keyrings.len(), 1);
     assert_eq!(keyrings[0], target_keyring);
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -554,8 +508,6 @@ fn search_and_find_keyring_link_replace_key() {
     assert_eq!(keys[0], orig_key);
     assert_eq!(keyrings.len(), 1);
     assert_eq!(keyrings[0], target_keyring);
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -587,8 +539,6 @@ fn search_and_find_key_no_link_perm_no_dest() {
 
     let actual_payload = key.read().unwrap();
     assert_eq!(payload, actual_payload.as_slice());
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -612,8 +562,6 @@ fn search_and_find_keyring_no_link_perm_no_dest() {
 
     let found_keyring = keyring.search_for_keyring(description, None).unwrap();
     assert_eq!(found_keyring, target_keyring);
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -650,8 +598,6 @@ fn search_and_find_key_no_link_perm() {
     let (keys, keyrings) = destination_keyring.read().unwrap();
     assert!(keys.is_empty());
     assert!(keyrings.is_empty());
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -685,8 +631,6 @@ fn search_and_find_keyring_no_link_perm() {
     let (keys, keyrings) = destination_keyring.read().unwrap();
     assert!(keys.is_empty());
     assert!(keyrings.is_empty());
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -723,8 +667,6 @@ fn search_and_find_key_no_write_perm() {
     let (keys, keyrings) = destination_keyring.read().unwrap();
     assert!(keys.is_empty());
     assert!(keyrings.is_empty());
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -758,6 +700,4 @@ fn search_and_find_keyring_no_write_perm() {
     let (keys, keyrings) = destination_keyring.read().unwrap();
     assert!(keys.is_empty());
     assert!(keyrings.is_empty());
-
-    keyring.invalidate().unwrap()
 }

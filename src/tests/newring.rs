@@ -50,8 +50,6 @@ fn unlinked_keyring() {
         .add_keyring("unlinked_keyring")
         .unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOKEY));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -65,8 +63,6 @@ fn not_a_keyring() {
 
     let err = not_a_keyring.add_keyring("not_a_keyring").unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOTDIR));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -74,8 +70,6 @@ fn empty_keyring_description() {
     let mut keyring = utils::new_test_keyring();
     let err = keyring.add_keyring("").unwrap_err();
     assert_eq!(err, errno::Errno(libc::EINVAL));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -92,8 +86,6 @@ fn max_keyring_description() {
         assert_eq!(keyring.description().unwrap().description, maxdesc);
         keyring.invalidate().unwrap();
     }
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -104,8 +96,6 @@ fn overlong_keyring_description() {
     let maxdesc: String = iter::repeat('a').take(*PAGE_SIZE).collect();
     let err = keyring.add_keyring(maxdesc.as_ref()).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EINVAL));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -117,8 +107,6 @@ fn new_keyring() {
     assert_eq!(keys.len(), 0);
     assert_eq!(keyrings.len(), 1);
     assert_eq!(keyrings[0], new_keyring);
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -141,6 +129,4 @@ fn duplicate_keyring_names() {
     // It should be inaccessible.
     let err = new_keyring1.description().unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOKEY));
-
-    keyring.invalidate().unwrap()
 }

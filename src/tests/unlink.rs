@@ -39,8 +39,6 @@ fn invalid_target_key() {
 
     let err = invalid_keyring.unlink_key(&key).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EINVAL));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -50,8 +48,6 @@ fn invalid_target_keyring() {
 
     let err = invalid_keyring.unlink_keyring(&keyring).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EINVAL));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -61,8 +57,6 @@ fn invalid_source_key() {
 
     let err = keyring.unlink_key(&invalid_key).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EINVAL));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -72,8 +66,6 @@ fn invalid_source_keyring() {
 
     let err = keyring.unlink_keyring(&invalid_keyring).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EINVAL));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -87,8 +79,6 @@ fn unlink_key_from_non_keyring() {
 
     let err = not_a_keyring.unlink_key(&key).unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOTDIR));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -102,8 +92,6 @@ fn unlink_keyring_from_non_keyring() {
 
     let err = not_a_keyring.unlink_keyring(&keyring).unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOTDIR));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -117,8 +105,6 @@ fn unlink_key_as_keyring() {
 
     // This is OK because the kernel doesn't have the type knowledge that our API does.
     keyring.unlink_keyring(&not_a_keyring).unwrap();
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -129,8 +115,6 @@ fn unlink_keyring_as_key() {
 
     // This is OK because the kernel doesn't have the type knowledge that our API does.
     keyring.unlink_key(&not_a_key).unwrap();
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -146,8 +130,6 @@ fn unlink_unlinked_key() {
 
     let err = keyring.unlink_key(&key).unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOKEY));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -160,13 +142,11 @@ fn unlink_unlinked_keyring() {
 
     let err = keyring.unlink_keyring(&new_keyring).unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOKEY));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
 fn unlink_key_from_unlinked_keyring() {
-    let mut keyring = utils::new_test_keyring();
+    let mut keyring = utils::new_test_keyring_manual();
     let mut keyring_observer = keyring.clone();
     let payload = "payload".as_bytes();
     let key = keyring
@@ -182,7 +162,7 @@ fn unlink_key_from_unlinked_keyring() {
 
 #[test]
 fn unlink_keyring_from_unlinked_keyring() {
-    let mut keyring = utils::new_test_keyring();
+    let mut keyring = utils::new_test_keyring_manual();
     let mut keyring_observer = keyring.clone();
     let new_keyring = keyring.add_keyring("unlink_from_unlinked_keyring").unwrap();
 
@@ -204,8 +184,6 @@ fn unlink_unassociated_key() {
 
     let err = new_keyring.unlink_key(&key).unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOENT));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -218,8 +196,6 @@ fn unlink_unassociated_keyring() {
 
     let err = new_keyring.unlink_keyring(&inner_keyring).unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOENT));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -236,8 +212,6 @@ fn unlink_key() {
     let (keys, keyrings) = keyring.read().unwrap();
     assert!(keys.is_empty());
     assert!(keyrings.is_empty());
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -251,6 +225,4 @@ fn unlink_keyring() {
     let (keys, keyrings) = keyring.read().unwrap();
     assert!(keys.is_empty());
     assert!(keyrings.is_empty());
-
-    keyring.invalidate().unwrap()
 }

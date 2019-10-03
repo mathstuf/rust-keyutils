@@ -57,8 +57,6 @@ fn unlinked_key() {
 
     let err = key.revoke().unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOKEY));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -84,8 +82,6 @@ fn revoked_key() {
 
     let err = key_observer.invalidate().unwrap_err();
     assert_eq!(err, errno::Errno(libc::EKEYREVOKED));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -108,6 +104,4 @@ fn revoked_keyring() {
 
     let err = keyring_observer.invalidate().unwrap_err();
     assert_eq!(err, errno::Errno(libc::EKEYREVOKED));
-
-    keyring.invalidate().unwrap()
 }

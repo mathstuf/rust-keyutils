@@ -67,8 +67,6 @@ fn unlinked_key() {
 
     let err = key.invalidate().unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOKEY));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -95,13 +93,11 @@ fn invalidate_key() {
         assert!(keys.is_empty());
         assert!(keyrings.is_empty());
     }
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
 fn invalidate_keyring() {
-    let mut keyring = utils::new_test_keyring();
+    let mut keyring = utils::new_test_keyring_manual();
 
     {
         let (keys, keyrings) = keyring.read().unwrap();

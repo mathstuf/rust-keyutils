@@ -36,8 +36,6 @@ fn keyring() {
     let payload = "payload".as_bytes();
     let err = key.update(payload).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EOPNOTSUPP));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -63,8 +61,6 @@ fn unlinked_key() {
     let payload = "payload".as_bytes();
     let err = key.update(payload).unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOKEY));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -81,6 +77,4 @@ fn user_key() {
 
     let actual_payload = key.read().unwrap();
     assert_eq!(payload, actual_payload.as_slice());
-
-    keyring.invalidate().unwrap()
 }

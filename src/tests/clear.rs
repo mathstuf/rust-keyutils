@@ -49,7 +49,6 @@ fn clear_non_keyring() {
     assert_eq!(err, errno::Errno(libc::ENOTDIR));
 
     keyring.unlink_key(&key).unwrap();
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -68,8 +67,6 @@ fn clear_deleted_keyring() {
         assert_eq!(err, errno::Errno(libc::ENOKEY));
         break;
     }
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -86,9 +83,6 @@ fn clear_empty_keyring() {
     let (keys, keyrings) = keyring.read().unwrap();
     assert_eq!(keys.len(), 0);
     assert_eq!(keyrings.len(), 0);
-
-    // Clean up.
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -117,9 +111,6 @@ fn clear_keyring_one_key() {
     let (keys, keyrings) = keyring.read().unwrap();
     assert_eq!(keys.len(), 0);
     assert_eq!(keyrings.len(), 0);
-
-    // Clean up.
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -160,9 +151,6 @@ fn clear_keyring_many_keys() {
     let (keys, keyrings) = keyring.read().unwrap();
     assert_eq!(keys.len(), 0);
     assert_eq!(keyrings.len(), 0);
-
-    // Clean up.
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -190,7 +178,4 @@ fn clear_keyring_keyring() {
     let (keys, keyrings) = keyring.read().unwrap();
     assert_eq!(keys.len(), 0);
     assert_eq!(keyrings.len(), 0);
-
-    // Clean up.
-    keyring.invalidate().unwrap()
 }

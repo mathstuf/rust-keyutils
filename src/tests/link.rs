@@ -36,8 +36,6 @@ fn invalid_target() {
 
     let err = invalid_keyring.link_keyring(&keyring).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EINVAL));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -47,8 +45,6 @@ fn invalid_source() {
 
     let err = keyring.link_keyring(&invalid_keyring).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EINVAL));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -65,8 +61,6 @@ fn link_to_non_keyring() {
 
     let err = not_a_keyring.link_key(&linked_key).unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOTDIR));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -83,8 +77,6 @@ fn link_unlinked_key() {
 
     let err = target_keyring.link_key(&key).unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOKEY));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -103,8 +95,6 @@ fn link_into_unlinked_keyring() {
 
     let err = target_keyring.link_key(&key).unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOKEY));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -114,8 +104,6 @@ fn link_self() {
 
     let err = keyring.link_keyring(&keyring_observer).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EDEADLK));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -125,8 +113,6 @@ fn link_self_via_child() {
 
     let err = target_keyring.link_keyring(&keyring).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EDEADLK));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -161,8 +147,6 @@ fn link_self_via_child_chains() {
 
     let err = target_keyring.link_keyring(&keyring).unwrap_err();
     assert_eq!(err, errno::Errno(libc::ELOOP));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -198,8 +182,6 @@ fn link_self_via_keyring_stacks() {
 
     let err = keyring_b.link_keyring(&keyring_a_root).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EDEADLK));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -235,8 +217,6 @@ fn link_self_via_keyring_deep_stacks() {
 
     let err = keyring_b.link_keyring(&keyring_a_root).unwrap_err();
     assert_eq!(err, errno::Errno(libc::ELOOP));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -277,8 +257,6 @@ fn multiply_link_key_into_keyring() {
     assert_eq!(keys[0], key);
     assert_eq!(keyrings.len(), 1);
     assert_eq!(keyrings[0], new_keyring);
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -318,6 +296,4 @@ fn multiply_link_keyring_into_keyring() {
     assert_eq!(keyrings.len(), 2);
     assert_eq!(keyrings[0], new_keyring);
     assert_eq!(keyrings[1], inner_keyring);
-
-    keyring.invalidate().unwrap()
 }

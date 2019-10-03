@@ -126,8 +126,6 @@ fn instantiate_already_instantiated() {
 
     let err = manager.instantiate(None, payload).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EPERM));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -143,8 +141,6 @@ fn reject_already_instantiated() {
     let errno = errno::Errno(libc::EKEYREJECTED);
     let err = manager.reject(None, duration, errno).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EPERM));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -159,8 +155,6 @@ fn negate_already_instantiated() {
     let duration = Duration::from_secs(1);
     let err = manager.negate(None, duration).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EPERM));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -178,8 +172,6 @@ fn instantiate_unlinked_key() {
 
     let err = manager.instantiate(None, payload).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EPERM));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -199,8 +191,6 @@ fn reject_unlinked_key() {
     let errno = errno::Errno(libc::EKEYREJECTED);
     let err = manager.reject(None, duration, errno).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EPERM));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -219,6 +209,4 @@ fn negate_unlinked_key() {
     let duration = Duration::from_secs(1);
     let err = manager.negate(None, duration).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EPERM));
-
-    keyring.invalidate().unwrap()
 }

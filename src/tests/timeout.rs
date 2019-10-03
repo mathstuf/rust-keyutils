@@ -61,8 +61,6 @@ fn unlinked_key() {
     let duration = Duration::from_secs(1);
     let err = key.set_timeout(duration).unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOKEY));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -78,8 +76,6 @@ fn big_timeout_key() {
 
     let actual_payload = key.read().unwrap();
     assert_eq!(payload, actual_payload.as_slice());
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -92,8 +88,6 @@ fn big_timeout_keyring() {
     let (keys, keyrings) = keyring.read().unwrap();
     assert!(keys.is_empty());
     assert!(keyrings.is_empty());
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -125,13 +119,11 @@ fn expired_key() {
     assert_eq!(err, errno::Errno(libc::EKEYEXPIRED));
 
     keyring.unlink_key(&key_observer2).unwrap();
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
 fn expired_keyring() {
-    let mut keyring = utils::new_test_keyring();
+    let mut keyring = utils::new_test_keyring_manual();
     let keyring_observer = keyring.clone();
 
     let duration = Duration::from_secs(1);

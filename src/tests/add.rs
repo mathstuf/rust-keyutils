@@ -37,8 +37,6 @@ fn empty_key_type() {
     let mut keyring = utils::new_test_keyring();
     let err = keyring.add_key::<EmptyKey, _, _>("", ()).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EINVAL));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -46,8 +44,6 @@ fn unsupported_key_type() {
     let mut keyring = utils::new_test_keyring();
     let err = keyring.add_key::<UnsupportedKey, _, _>("", ()).unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENODEV));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -55,8 +51,6 @@ fn invalid_key_type() {
     let mut keyring = utils::new_test_keyring();
     let err = keyring.add_key::<InvalidKey, _, _>("", ()).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EPERM));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -64,8 +58,6 @@ fn maxlen_key_type() {
     let mut keyring = utils::new_test_keyring();
     let err = keyring.add_key::<MaxLenKey, _, _>("", ()).unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENODEV));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -73,8 +65,6 @@ fn overlong_key_type() {
     let mut keyring = utils::new_test_keyring();
     let err = keyring.add_key::<OverlongKey, _, _>("", ()).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EINVAL));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -84,8 +74,6 @@ fn keyring_with_payload() {
         .add_key::<KeyringShadow, _, _>("", "payload")
         .unwrap_err();
     assert_eq!(err, errno::Errno(libc::EINVAL));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -102,8 +90,6 @@ fn max_user_description() {
         assert_eq!(key.description().unwrap().description, maxdesc);
         key.invalidate().unwrap();
     }
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -116,8 +102,6 @@ fn overlong_user_description() {
         .add_key::<User, _, _>(toolarge.as_ref(), "payload".as_bytes())
         .unwrap_err();
     assert_eq!(err, errno::Errno(libc::EINVAL));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -142,8 +126,6 @@ fn add_key_to_non_keyring() {
         .add_key::<User, _, _>("add_key_to_non_keyring", expected)
         .unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOTDIR));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -159,8 +141,6 @@ fn add_keyring_to_non_keyring() {
         .add_keyring("add_keyring_to_non_keyring")
         .unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOTDIR));
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -170,8 +150,6 @@ fn add_key() {
     let payload = "payload".as_bytes();
     let key = keyring.add_key::<User, _, _>("add_key", payload).unwrap();
     assert_eq!(key.read().unwrap(), payload);
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -182,8 +160,6 @@ fn add_keyring() {
     let (keys, keyrings) = new_keyring.read().unwrap();
     assert!(keys.is_empty());
     assert!(keyrings.is_empty());
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -201,8 +177,6 @@ fn add_key_replace() {
     assert_eq!(key, key_updated);
     assert_eq!(key.read().unwrap(), payload);
     assert_eq!(key_updated.read().unwrap(), payload);
-
-    keyring.invalidate().unwrap()
 }
 
 #[test]
@@ -222,6 +196,4 @@ fn add_keyring_replace() {
     let (keys, keyrings) = updated_keyring.read().unwrap();
     assert!(keys.is_empty());
     assert!(keyrings.is_empty());
-
-    keyring.invalidate().unwrap()
 }
