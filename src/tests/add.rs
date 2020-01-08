@@ -24,9 +24,12 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use std::borrow::Cow;
 use std::iter;
 
-use crate::keytypes::User;
+use crate::keytype::KeyPayload;
+use crate::keytypes::encrypted::{Format, MasterKeyType, Payload};
+use crate::keytypes::{Encrypted, User};
 use crate::{Keyring, KeyringSerial, SpecialKeyring};
 
 use super::utils::kernel::*;
@@ -128,4 +131,104 @@ fn add_key_to_session() {
     let new_payload = key.read().unwrap();
     assert_eq!(new_payload, new_expected);
     keyring.unlink_key(&key).unwrap();
+}
+
+#[test]
+fn add_encrypted_key_to_session() {
+    let mut keyring = Keyring::attach_or_create(SpecialKeyring::Session).unwrap();
+    let master_key = keyring
+        .add_key::<User, _, _>("foo", "bar".as_bytes())
+        .unwrap();
+    let new_payload = Payload::New {
+        format: Some(Format::default()),
+        keytype: MasterKeyType::User,
+        description: Cow::Borrowed("foo"),
+        keylen: 32,
+    };
+
+    let mut enc_key = keyring
+        .add_key::<Encrypted, _, _>("baz", new_payload)
+        .unwrap();
+
+    // A normal payload update fails
+    assert_eq!(
+        enc_key.update("qux".as_bytes()),
+        Err(errno::Errno(libc::EINVAL))
+    );
+
+    keyring.unlink_key(&enc_key).unwrap();
+    keyring.unlink_key(&master_key).unwrap();
+}
+
+#[test]
+#[should_panic(
+    expected = "called `Result::unwrap()` on an `Err` value: Errno { code: 22, description: Some(\"Invalid argument\") }"
+)]
+fn load_encrypted_key_to_session() {
+    let mut keyring = Keyring::attach_or_create(SpecialKeyring::Session).unwrap();
+    let master_key = keyring
+        .add_key::<User, _, _>("foo", "bar".as_bytes())
+        .unwrap();
+    let new_payload = Payload::New {
+        format: Some(Format::default()),
+        keytype: MasterKeyType::User,
+        description: Cow::Borrowed("foo"),
+        keylen: 32,
+    };
+    let enc_key = keyring
+        .add_key::<Encrypted, _, _>("baz", new_payload)
+        .unwrap();
+    let buf = enc_key.read().unwrap();
+
+    let load_payload = Payload::Load {
+        blob: buf.clone(),
+    };
+
+    keyring.unlink_key(&enc_key).unwrap();
+
+    // This should not panic but currently does due to the use
+    // of ByteBuf when encoding the load payload.
+    let load_key = keyring
+        .add_key::<Encrypted, _, _>("qux", load_payload)
+        .unwrap();
+
+    keyring.unlink_key(&load_key).unwrap();
+    keyring.unlink_key(&master_key).unwrap();
+}
+
+#[test]
+fn update_encrypted_key_in_session() {
+    let mut keyring = Keyring::attach_or_create(SpecialKeyring::Session).unwrap();
+    let old_master_key = keyring
+        .add_key::<User, _, _>("foo", "bar".as_bytes())
+        .unwrap();
+    let new_master_key = keyring
+        .add_key::<User, _, _>("bar", "foo".as_bytes())
+        .unwrap();
+    let new_payload = Payload::New {
+        format: Some(Format::default()),
+        keytype: MasterKeyType::User,
+        description: Cow::Borrowed("foo"),
+        keylen: 32,
+    };
+
+    let mut enc_key = keyring
+        .add_key::<Encrypted, _, _>("baz", new_payload)
+        .unwrap();
+
+    // A normal payload update fails
+    assert_eq!(
+        enc_key.update("qux".as_bytes()),
+        Err(errno::Errno(libc::EINVAL))
+    );
+
+    let update_payload = Payload::Update {
+        keytype: MasterKeyType::User,
+        description: Cow::Borrowed("bar"),
+    };
+    enc_key.update(update_payload.payload()).unwrap();
+
+    keyring.unlink_key(&enc_key).unwrap();
+    keyring.unlink_key(&old_master_key).unwrap();
+    keyring.unlink_key(&new_master_key).unwrap();
 }
