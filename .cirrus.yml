@@ -52,13 +52,13 @@ coverage_task:
         CODECOV_TOKEN: ENCRYPTED[1e221ef78a37c960613ff80db7141f3158e3218031934395466f4720f450b7acfd74e587819435ce9be0b13fa1b68f1b]
     keyutils_script: apt-get update && apt-get install libkeyutils-dev
     tarpaulin_cache:
-        folder: $CARGO_HOME/bin
-        populate_script: cargo install --version 0.10.0 cargo-tarpaulin
-        fingerprint_script: cargo install --list
+        folder: .ci
+        populate_script: .ci/tarpaulin.sh
+        fingerprint_script: cat .ci/tarpaulin.sh
     lockfile_script: cargo generate-lockfile
     cargo_cache:
         folder: $CARGO_HOME/registry
         fingerprint_script: cat Cargo.lock
-    coverage_script: cargo tarpaulin --out Xml
+    coverage_script: PATH=$PATH:$PWD/.ci cargo tarpaulin --out Xml
     upload_script: bash <(curl -s https://codecov.io/bash) -X gcov
     before_cache_script: rm -rf $CARGO_HOME/registry/index
