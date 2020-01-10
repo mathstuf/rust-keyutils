@@ -90,6 +90,10 @@ impl Keyring {
     /// Instantiate a keyring from an ID.
     ///
     /// This is unsafe because no keyring is known to exist with the given ID.
+    ///
+    /// # Safety
+    ///
+    /// This method assumes that the given serial is a valid keyring ID at the kernel level.
     pub unsafe fn new(id: KeyringSerial) -> Self {
         Keyring {
             id,
@@ -471,6 +475,10 @@ impl Key {
     /// Instantiate a key from an ID.
     ///
     /// This is unsafe because no key is known to exist with the given ID.
+    ///
+    /// # Safety
+    ///
+    /// This method assumes that the given serial is a valid key ID at the kernel level.
     pub unsafe fn new(id: KeyringSerial) -> Self {
         Self::new_impl(id)
     }
