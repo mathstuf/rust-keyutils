@@ -66,6 +66,7 @@ fn into_serial(res: libc::c_long) -> KeyringSerial {
     KeyringSerial::new(res as i32).unwrap()
 }
 
+/// Request a key from the kernel.
 fn request_impl<K: KeyType>(
     description: &str,
     info: Option<&str>,
@@ -89,6 +90,10 @@ impl Keyring {
     /// Instantiate a keyring from an ID.
     ///
     /// This is unsafe because no keyring is known to exist with the given ID.
+    ///
+    /// # Safety
+    ///
+    /// This method assumes that the given serial is a valid keyring ID at the kernel level.
     pub unsafe fn new(id: KeyringSerial) -> Self {
         Keyring {
             id,
@@ -99,6 +104,11 @@ impl Keyring {
         Keyring {
             id,
         }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn serial(&self) -> KeyringSerial {
+        self.id
     }
 
     /// Set the default keyring to use when implicit requests on the current thread.
@@ -117,31 +127,23 @@ impl Keyring {
 
     /// Requests a keyring with the given description by searching the thread, process, and session
     /// keyrings.
-    pub fn request<D>(description: D) -> Result<Self>
+    ///
+    /// If it is not found, the `info` string (if provided) will be handed off to
+    /// `/sbin/request-key` to generate the key.
+    ///
+    /// If `target` is given, the found keyring will be linked into it. If `target` is not given
+    /// and a new key is constructed due to the request, it will be linked into the default
+    /// keyring (see `Keyring::set_default`).
+    pub fn request<'s, 'a, D, I, T>(description: D, info: I, target: T) -> Result<Self>
     where
         D: AsRef<str>,
+        I: Into<Option<&'s str>>,
+        T: Into<Option<TargetKeyring<'a>>>,
     {
         check_call_keyring(request_impl::<keytypes::Keyring>(
             description.as_ref(),
-            None,
-            None,
-        ))
-    }
-
-    /// Requests a keyring with the given description by searching the thread, process, and session
-    /// keyrings.
-    ///
-    /// If it is not found, the `info` string will be handed off to `/sbin/request-key` to generate
-    /// the key.
-    pub fn request_with_fallback<D, I>(description: D, info: I) -> Result<Self>
-    where
-        D: Borrow<<keytypes::Keyring as KeyType>::Description>,
-        I: AsRef<str>,
-    {
-        check_call_keyring(request_impl::<keytypes::Keyring>(
-            &description.borrow().description(),
-            Some(info.as_ref()),
-            None,
+            info.into().as_ref().copied(),
+            target.into().map(TargetKeyring::serial),
         ))
     }
 
@@ -213,14 +215,19 @@ impl Keyring {
         check_call(unsafe { keyctl_unlink(keyring.id, self.id) })
     }
 
-    fn search_impl<K>(&self, description: &str) -> KeyringSerial
+    fn search_impl<K>(&self, description: &str, destination: Option<&mut Keyring>) -> KeyringSerial
     where
         K: KeyType,
     {
         let type_cstr = CString::new(K::name()).unwrap();
         let desc_cstr = CString::new(description).unwrap();
         into_serial(unsafe {
-            keyctl_search(self.id, type_cstr.as_ptr(), desc_cstr.as_ptr(), self.id)
+            keyctl_search(
+                self.id,
+                type_cstr.as_ptr(),
+                desc_cstr.as_ptr(),
+                destination.map(|dest| dest.id),
+            )
         })
     }
 
@@ -229,12 +236,15 @@ impl Keyring {
     /// If it is found, it is attached to the keyring (if `write` permission to the keyring and
     /// `link` permission on the key exist) and return it. Requires the `search` permission on the
     /// keyring. Any children keyrings without the `search` permission are ignored.
-    pub fn search_for_key<K, D>(&self, description: D) -> Result<Key>
+    pub fn search_for_key<'a, K, D, DK>(&self, description: D, destination: DK) -> Result<Key>
     where
         K: KeyType,
         D: Borrow<K::Description>,
+        DK: Into<Option<&'a mut Keyring>>,
     {
-        check_call_key(self.search_impl::<K>(&description.borrow().description()))
+        check_call_key(
+            self.search_impl::<K>(&description.borrow().description(), destination.into()),
+        )
     }
 
     /// Recursively search the keyring for a keyring with the matching description.
@@ -243,19 +253,33 @@ impl Keyring {
     /// `link` permission on the found keyring exist) and return it. Requires the `search`
     /// permission on the keyring. Any children keyrings without the `search` permission are
     /// ignored.
-    pub fn search_for_keyring<D>(&self, description: D) -> Result<Self>
+    pub fn search_for_keyring<'a, D, DK>(&self, description: D, destination: DK) -> Result<Self>
     where
         D: Borrow<<keytypes::Keyring as KeyType>::Description>,
+        DK: Into<Option<&'a mut Keyring>>,
     {
-        check_call_keyring(
-            self.search_impl::<keytypes::Keyring>(&description.borrow().description()),
-        )
+        check_call_keyring(self.search_impl::<keytypes::Keyring>(
+            &description.borrow().description(),
+            destination.into(),
+        ))
     }
 
     /// Return all immediate children of the keyring.
     ///
     /// Requires `read` permission on the keyring.
     pub fn read(&self) -> Result<(Vec<Key>, Vec<Keyring>)> {
+        // The `description` check below hides this error code from the kernel.
+        if self.id.get() == 0 {
+            return Err(errno::Errno(libc::ENOKEY));
+        }
+
+        // Avoid a panic in the code below be ensuring that we actually have a keyring. Parsing
+        // a key's payload as a keyring payload.
+        let desc = self.description()?;
+        if desc.type_ != keytypes::Keyring::name() {
+            return Err(errno::Errno(libc::ENOTDIR));
+        }
+
         let sz = unsafe { keyctl_read(self.id, ptr::null_mut(), 0) };
         check_call(sz)?;
         let mut buffer = Vec::with_capacity((sz as usize) / mem::size_of::<KeyringSerial>());
@@ -344,74 +368,6 @@ impl Keyring {
         check_call_keyring(self.add_key_impl::<keytypes::Keyring>(description.borrow(), &()))
     }
 
-    /// Requests a key with the given description by searching the thread, process, and session
-    /// keyrings.
-    ///
-    /// If it is found, it is attached to the keyring.
-    pub fn request_key<K, D>(&self, description: D) -> Result<Key>
-    where
-        K: KeyType,
-        D: Borrow<K::Description>,
-    {
-        check_call_key(request_impl::<K>(
-            &description.borrow().description(),
-            None,
-            Some(self.id),
-        ))
-    }
-
-    /// Requests a keyring with the given description by searching the thread, process, and session
-    /// keyrings.
-    ///
-    /// If it is found, it is attached to the keyring.
-    pub fn request_keyring<D>(&self, description: D) -> Result<Self>
-    where
-        D: Borrow<<keytypes::Keyring as KeyType>::Description>,
-    {
-        check_call_keyring(request_impl::<keytypes::Keyring>(
-            &description.borrow().description(),
-            None,
-            Some(self.id),
-        ))
-    }
-
-    /// Requests a key with the given description by searching the thread, process, and session
-    /// keyrings.
-    ///
-    /// If it is not found, the `info` string will be handed off to `/sbin/request-key` to generate
-    /// the key. If found, it will be attached to the current keyring. Requires `write` permission
-    /// to the keyring.
-    pub fn request_key_with_fallback<K, D, I>(&self, description: D, info: I) -> Result<Key>
-    where
-        K: KeyType,
-        D: Borrow<K::Description>,
-        I: AsRef<str>,
-    {
-        check_call_key(request_impl::<K>(
-            &description.borrow().description(),
-            Some(info.as_ref()),
-            Some(self.id),
-        ))
-    }
-
-    /// Requests a keyring with the given description by searching the thread, process, and session
-    /// keyrings.
-    ///
-    /// If it is not found, the `info` string will be handed off to `/sbin/request-key` to generate
-    /// the key. If found, it will be attached to the current keyring. Requires `write` permission
-    /// to the keyring.
-    pub fn request_keyring_with_fallback<D, I>(&self, description: D, info: I) -> Result<Self>
-    where
-        D: Borrow<<keytypes::Keyring as KeyType>::Description>,
-        I: AsRef<str>,
-    {
-        check_call_keyring(request_impl::<keytypes::Keyring>(
-            &description.borrow().description(),
-            Some(info.as_ref()),
-            Some(self.id),
-        ))
-    }
-
     /// Revokes the keyring.
     ///
     /// Requires `write` permission on the keyring.
@@ -441,6 +397,11 @@ impl Keyring {
     /// user does not own the keyring.
     pub fn set_permissions(&mut self, perms: Permission) -> Result<()> {
         check_call(unsafe { keyctl_setperm(self.id, perms.bits()) })
+    }
+
+    #[cfg(test)]
+    pub(crate) fn set_permissions_raw(&mut self, perms: KeyPermissions) -> Result<()> {
+        check_call(unsafe { keyctl_setperm(self.id, perms) })
     }
 
     fn description_raw(&self) -> Result<String> {
@@ -514,6 +475,10 @@ impl Key {
     /// Instantiate a key from an ID.
     ///
     /// This is unsafe because no key is known to exist with the given ID.
+    ///
+    /// # Safety
+    ///
+    /// This method assumes that the given serial is a valid key ID at the kernel level.
     pub unsafe fn new(id: KeyringSerial) -> Self {
         Self::new_impl(id)
     }
@@ -524,35 +489,31 @@ impl Key {
         }
     }
 
-    /// Requests a key with the given description by searching the thread, process, and session
-    /// keyrings.
-    pub fn request<K, D>(description: D) -> Result<Self>
+    #[cfg(test)]
+    pub(crate) fn serial(&self) -> KeyringSerial {
+        self.id
+    }
+
+    /// Requests a key with the given type and description by searching the thread, process, and
+    /// session keyrings.
+    ///
+    /// If it is not found, the `info` string (if provided) will be handed off to
+    /// `/sbin/request-key` to generate the key.
+    ///
+    /// If `target` is given, the found keyring will be linked into it. If `target` is not given
+    /// and a new key is constructed due to the request, it will be linked into the default
+    /// keyring (see `Keyring::set_default`).
+    pub fn request<'s, 'a, K, D, I, T>(description: D, info: I, target: T) -> Result<Self>
     where
         K: KeyType,
         D: Borrow<K::Description>,
+        I: Into<Option<&'s str>>,
+        T: Into<Option<TargetKeyring<'a>>>,
     {
         check_call_key(request_impl::<K>(
             &description.borrow().description(),
-            None,
-            None,
-        ))
-    }
-
-    /// Requests a key with the given description by searching the thread, process, and session
-    /// keyrings.
-    ///
-    /// If it is not found, the `info` string will be handed off to `/sbin/request-key` to generate
-    /// the key.
-    pub fn request_with_fallback<K, D, I>(description: D, info: I) -> Result<Self>
-    where
-        K: KeyType,
-        D: Borrow<K::Description>,
-        I: AsRef<str>,
-    {
-        check_call_key(request_impl::<keytypes::Keyring>(
-            &description.borrow().description(),
-            Some(info.as_ref()),
-            None,
+            info.into().as_ref().copied(),
+            target.into().map(TargetKeyring::serial),
         ))
     }
 
@@ -594,6 +555,11 @@ impl Key {
     /// user does not own the key.
     pub fn set_permissions(&mut self, perms: Permission) -> Result<()> {
         Keyring::new_impl(self.id).set_permissions(perms)
+    }
+
+    #[cfg(test)]
+    pub(crate) fn set_permissions_raw(&mut self, perms: KeyPermissions) -> Result<()> {
+        Keyring::new_impl(self.id).set_permissions_raw(perms)
     }
 
     /// Retrieve metadata about the key.
@@ -738,6 +704,48 @@ impl Description {
     }
 }
 
+/// The destination keyring of an instantiation request.
+#[derive(Debug)]
+pub enum TargetKeyring<'a> {
+    /// A special keyring.
+    Special(SpecialKeyring),
+    /// A specific keyring.
+    Keyring(&'a mut Keyring),
+}
+
+impl<'a> TargetKeyring<'a> {
+    fn serial(self) -> KeyringSerial {
+        match self {
+            TargetKeyring::Special(special) => special.serial(),
+            TargetKeyring::Keyring(keyring) => keyring.id,
+        }
+    }
+}
+
+impl<'a> From<SpecialKeyring> for TargetKeyring<'a> {
+    fn from(special: SpecialKeyring) -> Self {
+        TargetKeyring::Special(special)
+    }
+}
+
+impl<'a> From<&'a mut Keyring> for TargetKeyring<'a> {
+    fn from(keyring: &'a mut Keyring) -> Self {
+        TargetKeyring::Keyring(keyring)
+    }
+}
+
+impl<'a> From<SpecialKeyring> for Option<TargetKeyring<'a>> {
+    fn from(special: SpecialKeyring) -> Self {
+        Some(special.into())
+    }
+}
+
+impl<'a> From<&'a mut Keyring> for Option<TargetKeyring<'a>> {
+    fn from(keyring: &'a mut Keyring) -> Self {
+        Some(keyring.into())
+    }
+}
+
 /// A manager for a key to respond to instantiate a key request by the kernel.
 #[derive(Debug, PartialEq, Eq)]
 pub struct KeyManager {
@@ -749,6 +757,11 @@ impl KeyManager {
         KeyManager {
             key,
         }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn test_new(key: Key) -> Self {
+        Self::new(key)
     }
 
     /// Requests the authorization key created by `request_key`.
@@ -766,8 +779,9 @@ impl KeyManager {
     }
 
     /// Instantiate the key with the given payload.
-    pub fn instantiate<P>(self, keyring: &Keyring, payload: P) -> Result<()>
+    pub fn instantiate<'a, T, P>(self, keyring: T, payload: P) -> Result<()>
     where
+        T: Into<Option<TargetKeyring<'a>>>,
         P: AsRef<[u8]>,
     {
         let payload = payload.as_ref();
@@ -776,7 +790,7 @@ impl KeyManager {
                 self.key.id,
                 payload.as_ptr() as *const libc::c_void,
                 payload.len(),
-                keyring.id,
+                keyring.into().map(TargetKeyring::serial),
             )
         })
     }
@@ -787,14 +801,17 @@ impl KeyManager {
     /// seconds are ignored). This is to prevent a denial-of-service by
     /// requesting a non-existant key repeatedly. The requester must have
     /// `write` permission on the keyring.
-    pub fn reject(self, keyring: &Keyring, timeout: Duration, error: errno::Errno) -> Result<()> {
+    pub fn reject<'a, T>(self, keyring: T, timeout: Duration, error: errno::Errno) -> Result<()>
+    where
+        T: Into<Option<TargetKeyring<'a>>>,
+    {
         let errno::Errno(errval) = error;
         check_call(unsafe {
             keyctl_reject(
                 self.key.id,
                 timeout.as_secs() as TimeoutSeconds,
                 errval as u32,
-                keyring.id,
+                keyring.into().map(TargetKeyring::serial),
             )
         })
     }
@@ -805,446 +822,16 @@ impl KeyManager {
     /// seconds are ignored). This is to prevent a denial-of-service by
     /// requesting a non-existant key repeatedly. The requester must have
     /// `write` permission on the keyring.
-    pub fn negate(self, keyring: &Keyring, timeout: Duration) -> Result<()> {
+    pub fn negate<'a, T>(self, keyring: T, timeout: Duration) -> Result<()>
+    where
+        T: Into<Option<TargetKeyring<'a>>>,
+    {
         check_call(unsafe {
-            keyctl_negate(self.key.id, timeout.as_secs() as TimeoutSeconds, keyring.id)
+            keyctl_negate(
+                self.key.id,
+                timeout.as_secs() as TimeoutSeconds,
+                keyring.into().map(TargetKeyring::serial),
+            )
         })
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use std::sync::atomic;
-    use std::thread;
-
-    use super::*;
-
-    // For testing, each test gets a new keyring attached to the Thread keyring.
-    // This makes sure tests don't interfere with eachother, and keys are not
-    // prematurely garbage collected.
-    fn new_test_keyring() -> Result<Keyring> {
-        let mut thread_keyring = Keyring::attach_or_create(SpecialKeyring::Thread)?;
-
-        static KEYRING_COUNT: atomic::AtomicUsize = atomic::AtomicUsize::new(0);
-        let num = KEYRING_COUNT.fetch_add(1, atomic::Ordering::SeqCst);
-        thread_keyring.add_keyring(format!("test:rust-keyutils{}", num))
-    }
-
-    #[test]
-    fn test_add_key() {
-        let mut keyring = new_test_keyring().unwrap();
-
-        // Create the key.
-        let description = "test:rust-keyutils:add_key";
-        let payload = "payload";
-        let key = keyring
-            .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
-            .unwrap();
-        assert_eq!(
-            key.read().unwrap(),
-            payload.as_bytes().iter().cloned().collect::<Vec<_>>()
-        );
-
-        // Clean up.
-        keyring.unlink_key(&key).unwrap();
-        keyring.invalidate().unwrap();
-    }
-
-    #[test]
-    fn test_clear_keyring() {
-        let mut keyring = new_test_keyring().unwrap();
-
-        let (keys, keyrings) = keyring.read().unwrap();
-        assert_eq!(keys.len(), 0);
-        assert_eq!(keyrings.len(), 0);
-
-        // Create a key.
-        keyring
-            .add_key::<keytypes::User, _, _>(
-                "test:rust-keyutils:clear_keyring",
-                "payload".as_bytes(),
-            )
-            .unwrap();
-        keyring.add_keyring("description").unwrap();
-
-        let (keys, keyrings) = keyring.read().unwrap();
-        assert_eq!(keys.len(), 1);
-        assert_eq!(keyrings.len(), 1);
-
-        // Clear the keyring.
-        keyring.clear().unwrap();
-
-        let (keys, keyrings) = keyring.read().unwrap();
-        assert_eq!(keys.len(), 0);
-        assert_eq!(keyrings.len(), 0);
-
-        // Clean up.
-        keyring.invalidate().unwrap();
-    }
-
-    #[test]
-    fn test_describe_key() {
-        let mut keyring = new_test_keyring().unwrap();
-
-        // Create the key.
-        let desc = "test:rust-keyutils:describe_key";
-        let payload = "payload";
-        let key = keyring
-            .add_key::<keytypes::User, _, _>(desc, payload.as_bytes())
-            .unwrap();
-
-        // Check its description.
-        let description = key.description().unwrap();
-        assert_eq!(&description.type_, keytypes::User::name());
-        assert_eq!(&description.description, desc);
-
-        // Clean up.
-        keyring.unlink_key(&key).unwrap();
-        keyring.invalidate().unwrap();
-    }
-
-    #[test]
-    fn test_invalidate_key() {
-        let mut keyring = new_test_keyring().unwrap();
-
-        // Create the key.
-        let description = "test:rust-keyutils:invalidate_key";
-        let payload = "payload";
-        let key = keyring
-            .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
-            .unwrap();
-        key.invalidate().unwrap();
-
-        let (keys, keyrings) = keyring.read().unwrap();
-        assert_eq!(keys.len(), 0);
-        assert_eq!(keyrings.len(), 0);
-
-        // Clean up.
-        keyring.invalidate().unwrap();
-    }
-
-    #[test]
-    fn test_link_key() {
-        let mut keyring = new_test_keyring().unwrap();
-        let mut new_keyring = keyring.add_keyring("new_keyring").unwrap();
-
-        // Create the key.
-        let description = "test:rust-keyutils:link_key";
-        let payload = "payload";
-        let key = keyring
-            .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
-            .unwrap();
-
-        new_keyring.link_key(&key).unwrap();
-
-        let (keys, keyrings) = new_keyring.read().unwrap();
-        assert_eq!(keys.len(), 1);
-        assert_eq!(keys[0], key);
-        assert_eq!(keyrings.len(), 0);
-
-        // Clean up.
-        key.invalidate().unwrap();
-        new_keyring.invalidate().unwrap();
-        keyring.invalidate().unwrap();
-    }
-
-    #[test]
-    fn test_link_keyring() {
-        let mut keyring = new_test_keyring().unwrap();
-        let mut new_keyring = keyring.add_keyring("new_keyring").unwrap();
-        let new_inner_keyring = keyring.add_keyring("new_inner_keyring").unwrap();
-
-        new_keyring.link_keyring(&new_inner_keyring).unwrap();
-
-        let (keys, keyrings) = new_keyring.read().unwrap();
-        assert_eq!(keys.len(), 0);
-        assert_eq!(keyrings.len(), 1);
-        assert_eq!(keyrings[0], new_inner_keyring);
-
-        // Clean up.
-        new_inner_keyring.invalidate().unwrap();
-        new_keyring.invalidate().unwrap();
-        keyring.invalidate().unwrap();
-    }
-
-    #[test]
-    fn test_read_keyring() {
-        let mut keyring = new_test_keyring().unwrap();
-
-        let (keys, keyrings) = keyring.read().unwrap();
-        assert_eq!(keys.len(), 0);
-        assert_eq!(keyrings.len(), 0);
-
-        let key = keyring
-            .add_key::<keytypes::User, _, _>(
-                "test:rust-keyutils:read_keyring",
-                "payload".as_bytes(),
-            )
-            .unwrap();
-
-        let (keys, keyrings) = keyring.read().unwrap();
-        assert_eq!(keys.len(), 1);
-        assert_eq!(keys[0], key);
-        assert_eq!(keyrings.len(), 0);
-
-        // Clean up.
-        keyring.unlink_key(&key).unwrap();
-        keyring.invalidate().unwrap();
-    }
-
-    #[test]
-    fn test_read_key() {
-        let mut keyring = new_test_keyring().unwrap();
-
-        // Create the key.
-        let description = "test:rust-keyutils:read_key";
-        let payload = "payload";
-        let key = keyring
-            .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
-            .unwrap();
-        assert_eq!(
-            key.read().unwrap(),
-            payload.as_bytes().iter().cloned().collect::<Vec<_>>()
-        );
-
-        // Clean up.
-        keyring.unlink_key(&key).unwrap();
-        keyring.invalidate().unwrap();
-    }
-
-    #[test]
-    fn test_create_keyring() {
-        let mut keyring = new_test_keyring().unwrap();
-        let new_keyring = keyring.add_keyring("new_keyring").unwrap();
-
-        let (keys, keyrings) = keyring.read().unwrap();
-        assert_eq!(keys.len(), 0);
-        assert_eq!(keyrings.len(), 1);
-        assert_eq!(keyrings[0], new_keyring);
-
-        // Clean up.
-        new_keyring.invalidate().unwrap();
-        keyring.invalidate().unwrap();
-    }
-
-    #[test]
-    fn test_chmod_keyring() {
-        let mut keyring = new_test_keyring().unwrap();
-        let description = keyring.description().unwrap();
-        let perms = description.perms;
-        let new_perms = {
-            let mut tmp_perms = perms.clone();
-            let write_bits = Permission::POSSESSOR_WRITE
-                | Permission::USER_WRITE
-                | Permission::GROUP_WRITE
-                | Permission::OTHER_WRITE;
-            tmp_perms.remove(write_bits);
-            tmp_perms
-        };
-        keyring.set_permissions(new_perms).unwrap();
-        let err = keyring.add_keyring("new_keyring").unwrap_err();
-        assert_eq!(err.0, libc::EACCES);
-
-        keyring.set_permissions(perms).unwrap();
-        let new_keyring = keyring.add_keyring("new_keyring").unwrap();
-
-        // Clean up.
-        new_keyring.invalidate().unwrap();
-        keyring.invalidate().unwrap();
-    }
-
-    #[test]
-    fn test_request_key() {
-        let mut keyring = new_test_keyring().unwrap();
-
-        // Create the key.
-        let description = "test:rust-keyutils:request_key";
-        let payload = "payload";
-        let key = keyring
-            .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
-            .unwrap();
-
-        let found_key = keyring
-            .request_key::<keytypes::User, _>(description)
-            .unwrap();
-        assert_eq!(found_key, key);
-
-        // Clean up.
-        keyring.unlink_key(&key).unwrap();
-        keyring.invalidate().unwrap();
-    }
-
-    #[test]
-    fn test_revoke_key() {
-        let mut keyring = new_test_keyring().unwrap();
-
-        // Create the key.
-        let description = "test:rust-keyutils:revoke_key";
-        let payload = "payload";
-        let key = keyring
-            .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
-            .unwrap();
-        let key_copy = key.clone();
-
-        key.revoke().unwrap();
-
-        let err = key_copy.read().unwrap_err();
-        assert_eq!(err.0, libc::EKEYREVOKED);
-
-        // Clean up.
-        keyring.unlink_key(&key_copy).unwrap();
-        keyring.invalidate().unwrap();
-    }
-
-    #[test]
-    fn test_search_key() {
-        let mut keyring = new_test_keyring().unwrap();
-        let mut new_keyring = keyring.add_keyring("new_keyring").unwrap();
-        let mut new_inner_keyring = new_keyring.add_keyring("new_inner_keyring").unwrap();
-
-        // Create the key.
-        let description = "test:rust-keyutils:search_key";
-        let payload = "payload";
-        let key = new_inner_keyring
-            .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
-            .unwrap();
-
-        let found_key = keyring
-            .search_for_key::<keytypes::User, _>(description)
-            .unwrap();
-        assert_eq!(found_key, key);
-
-        // Clean up.
-        new_inner_keyring.unlink_key(&key).unwrap();
-        new_inner_keyring.invalidate().unwrap();
-        new_keyring.invalidate().unwrap();
-        keyring.invalidate().unwrap();
-    }
-
-    #[test]
-    fn test_search_keyring() {
-        let mut keyring = new_test_keyring().unwrap();
-        let mut new_keyring = keyring.add_keyring("new_keyring").unwrap();
-        let new_inner_keyring = new_keyring.add_keyring("new_inner_keyring").unwrap();
-
-        let found_keyring = keyring.search_for_keyring("new_inner_keyring").unwrap();
-        assert_eq!(found_keyring, new_inner_keyring);
-
-        // Clean up.
-        new_inner_keyring.invalidate().unwrap();
-        new_keyring.invalidate().unwrap();
-        keyring.invalidate().unwrap();
-    }
-
-    #[test]
-    fn test_key_timeout() {
-        let mut keyring = new_test_keyring().unwrap();
-
-        // Create the key.
-        let description = "test:rust-keyutils:key_timeout";
-        let payload = "payload";
-        let mut key = keyring
-            .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
-            .unwrap();
-
-        // Set the timeout on the key.
-        let duration = Duration::from_secs(1);
-        let timeout_duration = duration + duration;
-        key.set_timeout(duration).unwrap();
-
-        // Sleep the timeout away.
-        thread::sleep(timeout_duration);
-
-        // Try to read the key.
-        let err = key.read().unwrap_err();
-        assert_eq!(err.0, libc::EKEYEXPIRED);
-
-        // Clean up.
-        keyring.unlink_key(&key).unwrap();
-        keyring.invalidate().unwrap();
-    }
-
-    #[test]
-    fn test_unlink_keyring() {
-        let mut keyring = new_test_keyring().unwrap();
-
-        // Create the keyring.
-        let description = "test:rust-keyutils:unlink_keyring";
-        let new_keyring = keyring.add_keyring(description).unwrap();
-
-        let (keys, keyrings) = keyring.read().unwrap();
-        assert_eq!(keys.len(), 0);
-        assert_eq!(keyrings.len(), 1);
-
-        // Unlink the key.
-        keyring.unlink_keyring(&new_keyring).unwrap();
-
-        // Use the keyring.
-        let err = new_keyring.read().unwrap_err();
-        assert_eq!(err.0, libc::EACCES);
-
-        let (keys, keyrings) = keyring.read().unwrap();
-        assert_eq!(keys.len(), 0);
-        assert_eq!(keyrings.len(), 0);
-
-        // Clean up.
-        keyring.invalidate().unwrap();
-    }
-
-    #[test]
-    fn test_unlink_key() {
-        let mut keyring = new_test_keyring().unwrap();
-
-        // Create the key.
-        let description = "test:rust-keyutils:unlink_key";
-        let payload = "payload";
-        let key = keyring
-            .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
-            .unwrap();
-
-        let (keys, keyrings) = keyring.read().unwrap();
-        assert_eq!(keys.len(), 1);
-        assert_eq!(keyrings.len(), 0);
-
-        // Unlink the key.
-        keyring.unlink_key(&key).unwrap();
-
-        // Use the key.
-        let err = key.read().unwrap_err();
-        assert_eq!(err.0, libc::EACCES);
-
-        let (keys, keyrings) = keyring.read().unwrap();
-        assert_eq!(keys.len(), 0);
-        assert_eq!(keyrings.len(), 0);
-
-        // Clean up.
-        keyring.invalidate().unwrap();
-    }
-
-    #[test]
-    fn test_update_key() {
-        let mut keyring = new_test_keyring().unwrap();
-
-        // Create the key.
-        let description = "test:rust-keyutils:update_key";
-        let payload = "payload";
-        let key = keyring
-            .add_key::<keytypes::User, _, _>(description, payload.as_bytes())
-            .unwrap();
-
-        // Update the key.
-        let new_payload = "new_payload";
-        let updated_key = keyring
-            .add_key::<keytypes::User, _, _>(description, new_payload.as_bytes())
-            .unwrap();
-        assert_eq!(key, updated_key);
-        assert_eq!(
-            updated_key.read().unwrap(),
-            new_payload.as_bytes().iter().cloned().collect::<Vec<_>>()
-        );
-
-        // Clean up.
-        keyring.unlink_key(&key).unwrap();
-        keyring.invalidate().unwrap();
     }
 }

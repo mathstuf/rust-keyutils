@@ -25,14 +25,61 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use std::collections::HashMap;
+use std::ffi::CStr;
 use std::fs;
+use std::mem;
 use std::str::FromStr;
 
+use lazy_static::lazy_static;
 use regex::{Captures, Regex};
+use semver::{Version, VersionReq};
 
 lazy_static! {
+    pub static ref KERNEL_VERSION: String = kernel_version();
+    pub static ref SEMVER_KERNEL_VERSION: &'static str = semver_kernel_version();
+    pub static ref HAVE_INVALIDATE: bool = have_invalidate();
     pub static ref PAGE_SIZE: usize = page_size();
+    pub static ref UID: libc::uid_t = getuid();
+    pub static ref GID: libc::gid_t = getgid();
     pub static ref KEY_INFO: KeyQuota = key_user_info();
+}
+
+// The full version of the running kernel.
+fn kernel_version() -> String {
+    let mut utsname = unsafe { mem::zeroed() };
+    let ret = unsafe { libc::uname(&mut utsname) };
+    if ret < 0 {
+        panic!("failed to query the kernel version: {}", errno::errno());
+    }
+    let cstr = unsafe { CStr::from_ptr(utsname.release.as_ptr()) };
+    cstr.to_str()
+        .expect("kernel version should be ASCII")
+        .into()
+}
+
+// A semver-compatible string for the kernel version.
+fn semver_kernel_version() -> &'static str {
+    match (*KERNEL_VERSION).find('-') {
+        Some(pos) => &(*KERNEL_VERSION)[..pos],
+        None => &*KERNEL_VERSION,
+    }
+}
+
+// Whether the kernel supports the `invalidate` action on a key.
+fn have_invalidate() -> bool {
+    match Version::parse(*SEMVER_KERNEL_VERSION) {
+        Ok(ver) => {
+            let minver = VersionReq::parse(">=3.5").unwrap();
+            minver.matches(&ver)
+        },
+        Err(err) => {
+            eprintln!(
+                "failed to parse kernel version `{}` ({}): assuming incompatibility",
+                *SEMVER_KERNEL_VERSION, err
+            );
+            false
+        },
+    }
 }
 
 fn page_size() -> usize {
@@ -119,4 +166,12 @@ fn key_user_info() -> KeyQuota {
     *all_key_user_info()
         .get(&uid)
         .expect("the current user has no keys?")
+}
+
+fn getuid() -> libc::uid_t {
+    unsafe { libc::getuid() }
+}
+
+fn getgid() -> libc::gid_t {
+    unsafe { libc::getgid() }
 }

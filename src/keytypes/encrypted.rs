@@ -60,6 +60,11 @@ pub enum Format {
     /// Keys of this format must have a description of exactly 16 hexadecimal characters. The
     /// keylength must also be 64.
     Ecryptfs,
+    /// Encrypted keys with a payload size of 32 bytes.
+    ///
+    /// Intended for nvdimm security, but may be used for other 32-byte payload use cases in the
+    /// future.
+    Enc32,
 }
 
 impl Format {
@@ -68,6 +73,7 @@ impl Format {
         match *self {
             Format::Default => "default",
             Format::Ecryptfs => "ecryptfs",
+            Format::Enc32 => "enc32",
         }
     }
 }

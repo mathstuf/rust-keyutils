@@ -30,10 +30,6 @@
 
 #![warn(missing_docs)]
 
-#[cfg(test)]
-#[macro_use]
-extern crate lazy_static;
-
 mod api;
 mod constants;
 mod keytype;

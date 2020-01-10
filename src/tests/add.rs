@@ -27,49 +27,49 @@
 use std::iter;
 
 use crate::keytypes::User;
-use crate::{Keyring, KeyringSerial, SpecialKeyring};
 
+use super::utils;
 use super::utils::kernel::*;
 use super::utils::keys::*;
 
 #[test]
 fn empty_key_type() {
-    let mut keyring = Keyring::attach_or_create(SpecialKeyring::Process).unwrap();
+    let mut keyring = utils::new_test_keyring();
     let err = keyring.add_key::<EmptyKey, _, _>("", ()).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EINVAL));
 }
 
 #[test]
 fn unsupported_key_type() {
-    let mut keyring = Keyring::attach_or_create(SpecialKeyring::Process).unwrap();
+    let mut keyring = utils::new_test_keyring();
     let err = keyring.add_key::<UnsupportedKey, _, _>("", ()).unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENODEV));
 }
 
 #[test]
 fn invalid_key_type() {
-    let mut keyring = Keyring::attach_or_create(SpecialKeyring::Process).unwrap();
+    let mut keyring = utils::new_test_keyring();
     let err = keyring.add_key::<InvalidKey, _, _>("", ()).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EPERM));
 }
 
 #[test]
 fn maxlen_key_type() {
-    let mut keyring = Keyring::attach_or_create(SpecialKeyring::Process).unwrap();
+    let mut keyring = utils::new_test_keyring();
     let err = keyring.add_key::<MaxLenKey, _, _>("", ()).unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENODEV));
 }
 
 #[test]
 fn overlong_key_type() {
-    let mut keyring = Keyring::attach_or_create(SpecialKeyring::Process).unwrap();
+    let mut keyring = utils::new_test_keyring();
     let err = keyring.add_key::<OverlongKey, _, _>("", ()).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EINVAL));
 }
 
 #[test]
 fn keyring_with_payload() {
-    let mut keyring = Keyring::attach_or_create(SpecialKeyring::Process).unwrap();
+    let mut keyring = utils::new_test_keyring();
     let err = keyring
         .add_key::<KeyringShadow, _, _>("", "payload")
         .unwrap_err();
@@ -78,7 +78,7 @@ fn keyring_with_payload() {
 
 #[test]
 fn max_user_description() {
-    let mut keyring = Keyring::attach_or_create(SpecialKeyring::Process).unwrap();
+    let mut keyring = utils::new_test_keyring();
     // Subtract one because the NUL is added in the kernel API.
     let maxdesc: String = iter::repeat('a').take(*PAGE_SIZE - 1).collect();
     let res = keyring.add_key::<User, _, _>(maxdesc.as_ref(), "payload".as_bytes());
@@ -94,7 +94,7 @@ fn max_user_description() {
 
 #[test]
 fn overlong_user_description() {
-    let mut keyring = Keyring::attach_or_create(SpecialKeyring::Process).unwrap();
+    let mut keyring = utils::new_test_keyring();
     // On MIPS with < 3.19, there is a bug where this is allowed. 3.19 was released in Feb 2015,
     // so this is being ignored here.
     let toolarge: String = iter::repeat('a').take(*PAGE_SIZE).collect();
@@ -106,26 +106,94 @@ fn overlong_user_description() {
 
 #[test]
 fn invalid_keyring() {
-    // Yes, we're explicitly breaking the NonZeroI32 rules here. However, it is not passing
-    // through any bits which care (e.g., `Option`), so this is purely to test that using an
-    // invalid keyring ID gives back `EINVAL` as expected.
-    let mut keyring = unsafe { Keyring::new(KeyringSerial::new_unchecked(0)) };
+    let mut keyring = utils::invalid_keyring();
     let err = keyring
-        .add_key::<User, _, _>("desc", "payload".as_bytes())
+        .add_key::<User, _, _>("invalid_keyring", "payload".as_bytes())
         .unwrap_err();
     assert_eq!(err, errno::Errno(libc::EINVAL));
 }
 
 #[test]
-fn add_key_to_session() {
-    let mut keyring = Keyring::attach_or_create(SpecialKeyring::Session).unwrap();
+fn add_key_to_non_keyring() {
+    let mut keyring = utils::new_test_keyring();
     let expected = "stuff".as_bytes();
-    let mut key = keyring.add_key::<User, _, _>("wibble", expected).unwrap();
-    let payload = key.read().unwrap();
-    assert_eq!(payload, expected);
-    let new_expected = "lizard".as_bytes();
-    key.update(new_expected).unwrap();
-    let new_payload = key.read().unwrap();
-    assert_eq!(new_payload, new_expected);
-    keyring.unlink_key(&key).unwrap();
+    let key = keyring
+        .add_key::<User, _, _>("add_key_to_non_keyring", expected)
+        .unwrap();
+
+    let mut not_a_keyring = utils::key_as_keyring(&key);
+    let err = not_a_keyring
+        .add_key::<User, _, _>("add_key_to_non_keyring", expected)
+        .unwrap_err();
+    assert_eq!(err, errno::Errno(libc::ENOTDIR));
+}
+
+#[test]
+fn add_keyring_to_non_keyring() {
+    let mut keyring = utils::new_test_keyring();
+    let expected = "stuff".as_bytes();
+    let key = keyring
+        .add_key::<User, _, _>("add_keyring_to_non_keyring", expected)
+        .unwrap();
+
+    let mut not_a_keyring = utils::key_as_keyring(&key);
+    let err = not_a_keyring
+        .add_keyring("add_keyring_to_non_keyring")
+        .unwrap_err();
+    assert_eq!(err, errno::Errno(libc::ENOTDIR));
+}
+
+#[test]
+fn add_key() {
+    let mut keyring = utils::new_test_keyring();
+
+    let payload = "payload".as_bytes();
+    let key = keyring.add_key::<User, _, _>("add_key", payload).unwrap();
+    assert_eq!(key.read().unwrap(), payload);
+}
+
+#[test]
+fn add_keyring() {
+    let mut keyring = utils::new_test_keyring();
+    let new_keyring = keyring.add_keyring("add_keyring").unwrap();
+
+    let (keys, keyrings) = new_keyring.read().unwrap();
+    assert!(keys.is_empty());
+    assert!(keyrings.is_empty());
+}
+
+#[test]
+fn add_key_replace() {
+    let mut keyring = utils::new_test_keyring();
+
+    let description = "add_key_replace";
+
+    let payload = "payload".as_bytes();
+    let key = keyring.add_key::<User, _, _>(description, payload).unwrap();
+    assert_eq!(key.read().unwrap(), payload);
+
+    let payload = "updated_payload".as_bytes();
+    let key_updated = keyring.add_key::<User, _, _>(description, payload).unwrap();
+    assert_eq!(key, key_updated);
+    assert_eq!(key.read().unwrap(), payload);
+    assert_eq!(key_updated.read().unwrap(), payload);
+}
+
+#[test]
+fn add_keyring_replace() {
+    let mut keyring = utils::new_test_keyring();
+
+    let description = "add_keyring_replace";
+    let new_keyring = keyring.add_keyring(description).unwrap();
+
+    let (keys, keyrings) = new_keyring.read().unwrap();
+    assert!(keys.is_empty());
+    assert!(keyrings.is_empty());
+
+    let updated_keyring = keyring.add_keyring(description).unwrap();
+    assert_ne!(new_keyring, updated_keyring);
+
+    let (keys, keyrings) = updated_keyring.read().unwrap();
+    assert!(keys.is_empty());
+    assert!(keyrings.is_empty());
 }

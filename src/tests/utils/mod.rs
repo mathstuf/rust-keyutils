@@ -24,5 +24,109 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use std::ops::{Deref, DerefMut};
+use std::sync::atomic;
+
+use crate::{Key, Keyring, KeyringSerial, SpecialKeyring};
+
 pub mod kernel;
 pub mod keys;
+
+#[derive(Debug)]
+pub struct ScopedKeyring {
+    keyring: Keyring,
+}
+
+impl Drop for ScopedKeyring {
+    fn drop(&mut self) {
+        self.keyring.clone().invalidate().unwrap();
+        wait_for_keyring_gc(&self.keyring);
+    }
+}
+
+impl Deref for ScopedKeyring {
+    type Target = Keyring;
+
+    fn deref(&self) -> &Self::Target {
+        &self.keyring
+    }
+}
+
+impl DerefMut for ScopedKeyring {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.keyring
+    }
+}
+
+// For testing, each test gets a new keyring attached to the Thread keyring. This makes sure tests
+// don't interfere with each other, and keys are not prematurely garbage collected.
+pub fn new_test_keyring_manual() -> Keyring {
+    let mut thread_keyring = Keyring::attach_or_create(SpecialKeyring::Thread).unwrap();
+
+    static KEYRING_COUNT: atomic::AtomicUsize = atomic::AtomicUsize::new(0);
+    let num = KEYRING_COUNT.fetch_add(1, atomic::Ordering::SeqCst);
+    thread_keyring
+        .add_keyring(format!("test:rust-keyutils{}", num))
+        .unwrap()
+}
+
+// For testing, each test gets a new keyring attached to the Thread keyring. This makes sure tests
+// don't interfere with each other, and keys are not prematurely garbage collected.
+pub fn new_test_keyring() -> ScopedKeyring {
+    ScopedKeyring {
+        keyring: new_test_keyring_manual(),
+    }
+}
+
+unsafe fn invalid_serial() -> KeyringSerial {
+    // Yes, we're explicitly breaking the NonZeroI32 rules here. However, it is not passing through
+    // any bits which care (e.g., `Option`), so this is purely to test that using an invalid
+    // keyring ID gives back `EINVAL` as expected.
+    KeyringSerial::new_unchecked(0)
+}
+
+pub fn invalid_keyring() -> Keyring {
+    unsafe { Keyring::new(invalid_serial()) }
+}
+
+pub fn invalid_key() -> Key {
+    unsafe { Key::new(invalid_serial()) }
+}
+
+pub fn keyring_as_key(keyring: &Keyring) -> Key {
+    unsafe { Key::new(keyring.serial()) }
+}
+
+pub fn key_as_keyring(key: &Key) -> Keyring {
+    unsafe { Keyring::new(key.serial()) }
+}
+
+/// Keys are deleted asynchronously; describing the key succeeds until it has been garbage
+/// collected.
+pub fn wait_for_key_gc(key: &Key) {
+    loop {
+        match key.description() {
+            Ok(_) => (),
+            Err(errno::Errno(libc::ENOKEY)) => break,
+            e @ Err(_) => {
+                e.unwrap();
+                unreachable!()
+            },
+        }
+    }
+}
+
+/// Keys are deleted asynchronously; describing the key succeeds until it has been garbage
+/// collected.
+pub fn wait_for_keyring_gc(keyring: &Keyring) {
+    loop {
+        match keyring.read() {
+            Ok(_) | Err(errno::Errno(libc::EACCES)) => (),
+            Err(errno::Errno(libc::ENOKEY)) => break,
+            e @ Err(_) => {
+                e.unwrap();
+                unreachable!()
+            },
+        }
+    }
+}
