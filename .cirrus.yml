@@ -53,7 +53,7 @@ coverage_task:
     keyutils_script: apt-get update && apt-get install libkeyutils-dev
     tarpaulin_cache:
         folder: $CARGO_HOME/bin
-        populate_script: cargo install --version 0.8.7 cargo-tarpaulin
+        populate_script: cargo install --version 0.10.0 cargo-tarpaulin
         fingerprint_script: cargo install --list
     lockfile_script: cargo generate-lockfile
     cargo_cache:
