@@ -146,8 +146,12 @@ fn chown_keyring() {
     let mut keyring = utils::new_test_keyring();
 
     if *UID == 0 {
-        keyring.chown(1).unwrap();
-        keyring.chown(0).unwrap();
+        match keyring.chown(1) {
+            // If that worked, make sure we can move it back.
+            Ok(_) => keyring.chown(0).unwrap(),
+            // Otherwise, we got the right error.
+            Err(err) => assert_eq!(err, errno::Errno(libc::EACCES)),
+        }
     } else {
         let err = keyring.chown(1).unwrap_err();
         assert_eq!(err, errno::Errno(libc::EACCES));
@@ -161,9 +165,12 @@ fn chown_key() {
     let mut key = keyring.add_key::<User, _, _>("chown_key", payload).unwrap();
 
     if *UID == 0 {
-        key.chown(1).unwrap();
-        key.chown(0).unwrap();
-    } else {
+        match key.chown(1) {
+            // If that worked, make sure we can move it back.
+            Ok(_) => key.chown(0).unwrap(),
+            // Otherwise, we got the right error.
+            Err(err) => assert_eq!(err, errno::Errno(libc::EACCES)),
+        }
         let err = key.chown(1).unwrap_err();
         assert_eq!(err, errno::Errno(libc::EACCES));
     }
