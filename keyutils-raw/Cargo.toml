@@ -10,5 +10,8 @@ keywords = ["keyutils"]
 links = "keyutils"
 edition = "2018"
 
+[features]
+static = []
+
 [dependencies]
 libc = "0.2"

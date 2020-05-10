@@ -13,6 +13,9 @@ edition = "2018"
 [workspace]
 members = ["keyutils-raw"]
 
+[features]
+static = ["keyutils-raw/static"]
+
 [dev-dependencies]
 lazy_static = "1"
 regex = "1"
