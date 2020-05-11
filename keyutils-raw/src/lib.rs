@@ -37,6 +37,8 @@
 //!   - `keyctl(3)`
 //!   - `keyctl(7)`
 
+// Ignore rustfmt changes in here. The horizontal alignment is too useful to give up.
+#[rustfmt::skip]
 mod constants;
 mod functions;
 mod types;
