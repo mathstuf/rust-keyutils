@@ -2,8 +2,8 @@
 
 set -e
 
-readonly version="0.10.0"
-readonly sha256sum="6843be8384bf14385b36a3118efc1ed2d25d531acb8df954cd3f93d44018b09e"
+readonly version="0.12.4"
+readonly sha256sum="a9537853c7bbc2fa6ffb4b71899b44f3b49dd0a1f2d80819d89c581b961dcdde"
 readonly filename="cargo-tarpaulin-$version-travis"
 readonly tarball="$filename.tar.gz"
 
