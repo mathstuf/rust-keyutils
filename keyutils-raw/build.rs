@@ -25,5 +25,9 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 fn main() {
-    println!("cargo:rustc-link-lib=keyutils");
+    if cfg!(feature = "static") {
+        println!("cargo:rustc-link-lib=static=keyutils");
+    } else {
+        println!("cargo:rustc-link-lib=keyutils");
+    }
 }
