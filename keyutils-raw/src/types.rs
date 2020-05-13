@@ -72,7 +72,7 @@ pub enum DefaultKeyring {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct UnknownDefault(libc::c_long);
+pub struct UnknownDefault(pub libc::c_long);
 
 impl TryFrom<libc::c_long> for DefaultKeyring {
     type Error = UnknownDefault;
