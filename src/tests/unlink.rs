@@ -32,7 +32,7 @@ use super::utils;
 fn invalid_target_key() {
     let mut invalid_keyring = utils::invalid_keyring();
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring
         .add_key::<User, _, _>("invalid_target_key", payload)
         .unwrap();
@@ -71,7 +71,7 @@ fn invalid_source_keyring() {
 #[test]
 fn unlink_key_from_non_keyring() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring
         .add_key::<User, _, _>("unlink_key_from_non_keyring", payload)
         .unwrap();
@@ -84,7 +84,7 @@ fn unlink_key_from_non_keyring() {
 #[test]
 fn unlink_keyring_from_non_keyring() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring
         .add_key::<User, _, _>("unlink_keyring_from_non_keyring", payload)
         .unwrap();
@@ -97,7 +97,7 @@ fn unlink_keyring_from_non_keyring() {
 #[test]
 fn unlink_key_as_keyring() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring
         .add_key::<User, _, _>("unlink_keyring_from_non_keyring", payload)
         .unwrap();
@@ -120,7 +120,7 @@ fn unlink_keyring_as_key() {
 #[test]
 fn unlink_unlinked_key() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring
         .add_key::<User, _, _>("unlink_unlinked_key", payload)
         .unwrap();
@@ -148,7 +148,7 @@ fn unlink_unlinked_keyring() {
 fn unlink_key_from_unlinked_keyring() {
     let mut keyring = utils::new_test_keyring_manual();
     let mut keyring_observer = keyring.clone();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring
         .add_key::<User, _, _>("unlink_key_from_unlinked_keyring", payload)
         .unwrap();
@@ -177,7 +177,7 @@ fn unlink_keyring_from_unlinked_keyring() {
 fn unlink_unassociated_key() {
     let mut keyring = utils::new_test_keyring();
     let mut new_keyring = keyring.add_keyring("unlink_unassociated_key").unwrap();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring
         .add_key::<User, _, _>("unlink_unassociated_key", payload)
         .unwrap();
@@ -201,7 +201,7 @@ fn unlink_unassociated_keyring() {
 #[test]
 fn unlink_key() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring
         .add_key::<User, _, _>("unlink_unlinked_key", payload)
         .unwrap();

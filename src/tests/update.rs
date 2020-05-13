@@ -33,7 +33,7 @@ fn keyring() {
     let keyring = utils::new_test_keyring();
     let mut key = utils::keyring_as_key(&keyring);
 
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let err = key.update(payload).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EOPNOTSUPP));
 }
@@ -42,7 +42,7 @@ fn keyring() {
 fn invalid_key() {
     let mut key = utils::invalid_key();
 
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let err = key.update(payload).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EINVAL));
 }
@@ -50,7 +50,7 @@ fn invalid_key() {
 #[test]
 fn unlinked_key() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let mut key = keyring
         .add_key::<User, _, _>("unlinked_key", payload)
         .unwrap();
@@ -58,7 +58,7 @@ fn unlinked_key() {
     keyring.unlink_key(&key).unwrap();
     utils::wait_for_key_gc(&key);
 
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let err = key.update(payload).unwrap_err();
     assert_eq!(err, errno::Errno(libc::ENOKEY));
 }
@@ -66,13 +66,13 @@ fn unlinked_key() {
 #[test]
 fn user_key() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let mut key = keyring.add_key::<User, _, _>("user_key", payload).unwrap();
 
     let actual_payload = key.read().unwrap();
     assert_eq!(payload, actual_payload.as_slice());
 
-    let payload = "updated_payload".as_bytes();
+    let payload = &b"updated_payload"[..];
     key.update(payload).unwrap();
 
     let actual_payload = key.read().unwrap();

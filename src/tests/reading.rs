@@ -46,7 +46,7 @@ fn invalid_keyring() {
 #[test]
 fn unlinked_key() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring
         .add_key::<User, _, _>("unlinked_key", payload)
         .unwrap();
@@ -73,7 +73,7 @@ fn unlinked_keyring() {
 #[test]
 fn read_key() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring.add_key::<User, _, _>("read_key", payload).unwrap();
 
     let actual_payload = key.read().unwrap();
@@ -83,7 +83,7 @@ fn read_key() {
 #[test]
 fn read_keyring() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring
         .add_key::<User, _, _>("read_keyring", payload)
         .unwrap();
@@ -97,7 +97,7 @@ fn read_keyring() {
 #[test]
 fn read_key_as_keyring() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring
         .add_key::<User, _, _>("read_key_as_keyring", payload)
         .unwrap();
@@ -119,7 +119,7 @@ fn read_keyring_as_key() {
 #[test]
 fn read_no_read_perm_with_search() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let mut key = keyring
         .add_key::<User, _, _>("read_no_read_perm_with_search", payload)
         .unwrap();
@@ -136,7 +136,7 @@ fn read_no_read_perm_with_search() {
 #[test]
 fn read_no_read_search_perm_with_search() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let mut key = keyring
         .add_key::<User, _, _>("read_no_read_search_perm_with_search", payload)
         .unwrap();
@@ -152,7 +152,7 @@ fn read_no_read_search_perm_with_search() {
 #[test]
 fn read_rely_on_possessor() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let mut key = keyring
         .add_key::<User, _, _>("read_rely_on_possessor", payload)
         .unwrap();
@@ -168,7 +168,7 @@ fn read_rely_on_possessor() {
 #[test]
 fn reinstated_read_perm() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let mut key = keyring
         .add_key::<User, _, _>("reinstated_read_perm", payload)
         .unwrap();

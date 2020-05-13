@@ -36,7 +36,7 @@ fn instantiate_invalid_key() {
     let key = utils::invalid_key();
     let manager = KeyManager::test_new(key);
 
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let err = manager.instantiate(None, payload).unwrap_err();
     assert_eq!(err, errno::Errno(libc::EPERM));
 }
@@ -65,14 +65,14 @@ fn negate_invalid_key() {
 #[test]
 fn instantiate_into_not_key() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring
         .add_key::<User, _, _>("instantiate_into_not_key", payload)
         .unwrap();
     let mut not_a_keyring = utils::key_as_keyring(&key);
     let manager = KeyManager::test_new(key);
 
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let err = manager
         .instantiate(&mut not_a_keyring, payload)
         .unwrap_err();
@@ -83,7 +83,7 @@ fn instantiate_into_not_key() {
 #[test]
 fn reject_into_not_key() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring
         .add_key::<User, _, _>("reject_into_not_key", payload)
         .unwrap();
@@ -102,7 +102,7 @@ fn reject_into_not_key() {
 #[test]
 fn negate_into_not_key() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring
         .add_key::<User, _, _>("negate_into_not_key", payload)
         .unwrap();
@@ -118,7 +118,7 @@ fn negate_into_not_key() {
 #[test]
 fn instantiate_already_instantiated() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring
         .add_key::<User, _, _>("instantiate_already_instantiated", payload)
         .unwrap();
@@ -131,7 +131,7 @@ fn instantiate_already_instantiated() {
 #[test]
 fn reject_already_instantiated() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring
         .add_key::<User, _, _>("reject_already_instantiated", payload)
         .unwrap();
@@ -146,7 +146,7 @@ fn reject_already_instantiated() {
 #[test]
 fn negate_already_instantiated() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring
         .add_key::<User, _, _>("negate_already_instantiated", payload)
         .unwrap();
@@ -160,7 +160,7 @@ fn negate_already_instantiated() {
 #[test]
 fn instantiate_unlinked_key() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring
         .add_key::<User, _, _>("instantiate_unlinked_key", payload)
         .unwrap();
@@ -177,7 +177,7 @@ fn instantiate_unlinked_key() {
 #[test]
 fn reject_unlinked_key() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring
         .add_key::<User, _, _>("reject_unlinked_key", payload)
         .unwrap();
@@ -196,7 +196,7 @@ fn reject_unlinked_key() {
 #[test]
 fn negate_unlinked_key() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring
         .add_key::<User, _, _>("negate_unlinked_key", payload)
         .unwrap();

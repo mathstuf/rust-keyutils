@@ -50,7 +50,7 @@ fn invalid_keyring() {
 #[test]
 fn unlinked_key() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let mut key = keyring
         .add_key::<User, _, _>("unlinked_key", payload)
         .unwrap();
@@ -66,7 +66,7 @@ fn unlinked_key() {
 #[test]
 fn big_timeout_key() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let mut key = keyring
         .add_key::<User, _, _>("unlinked_key", payload)
         .unwrap();
@@ -93,7 +93,7 @@ fn big_timeout_keyring() {
 #[test]
 fn expired_key() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let mut key = keyring
         .add_key::<User, _, _>("expired_key", payload)
         .unwrap();

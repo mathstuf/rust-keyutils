@@ -81,7 +81,7 @@ fn max_user_description() {
     let mut keyring = utils::new_test_keyring();
     // Subtract one because the NUL is added in the kernel API.
     let maxdesc: String = iter::repeat('a').take(*PAGE_SIZE - 1).collect();
-    let res = keyring.add_key::<User, _, _>(maxdesc.as_ref(), "payload".as_bytes());
+    let res = keyring.add_key::<User, _, _>(maxdesc.as_ref(), &b"payload"[..]);
     // If the user's quota is smaller than this, it's an error.
     if KEY_INFO.maxbytes < *PAGE_SIZE {
         assert_eq!(res.unwrap_err(), errno::Errno(libc::EDQUOT));
@@ -99,7 +99,7 @@ fn overlong_user_description() {
     // so this is being ignored here.
     let toolarge: String = iter::repeat('a').take(*PAGE_SIZE).collect();
     let err = keyring
-        .add_key::<User, _, _>(toolarge.as_ref(), "payload".as_bytes())
+        .add_key::<User, _, _>(toolarge.as_ref(), &b"payload"[..])
         .unwrap_err();
     assert_eq!(err, errno::Errno(libc::EINVAL));
 }
@@ -108,7 +108,7 @@ fn overlong_user_description() {
 fn invalid_keyring() {
     let mut keyring = utils::invalid_keyring();
     let err = keyring
-        .add_key::<User, _, _>("invalid_keyring", "payload".as_bytes())
+        .add_key::<User, _, _>("invalid_keyring", &b"payload"[..])
         .unwrap_err();
     assert_eq!(err, errno::Errno(libc::EINVAL));
 }
@@ -116,7 +116,7 @@ fn invalid_keyring() {
 #[test]
 fn add_key_to_non_keyring() {
     let mut keyring = utils::new_test_keyring();
-    let expected = "stuff".as_bytes();
+    let expected = &b"stuff"[..];
     let key = keyring
         .add_key::<User, _, _>("add_key_to_non_keyring", expected)
         .unwrap();
@@ -131,7 +131,7 @@ fn add_key_to_non_keyring() {
 #[test]
 fn add_keyring_to_non_keyring() {
     let mut keyring = utils::new_test_keyring();
-    let expected = "stuff".as_bytes();
+    let expected = &b"stuff"[..];
     let key = keyring
         .add_key::<User, _, _>("add_keyring_to_non_keyring", expected)
         .unwrap();
@@ -147,7 +147,7 @@ fn add_keyring_to_non_keyring() {
 fn add_key() {
     let mut keyring = utils::new_test_keyring();
 
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring.add_key::<User, _, _>("add_key", payload).unwrap();
     assert_eq!(key.read().unwrap(), payload);
 }
@@ -168,11 +168,11 @@ fn add_key_replace() {
 
     let description = "add_key_replace";
 
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring.add_key::<User, _, _>(description, payload).unwrap();
     assert_eq!(key.read().unwrap(), payload);
 
-    let payload = "updated_payload".as_bytes();
+    let payload = &b"updated_payload"[..];
     let key_updated = keyring.add_key::<User, _, _>(description, payload).unwrap();
     assert_eq!(key, key_updated);
     assert_eq!(key.read().unwrap(), payload);

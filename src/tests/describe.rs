@@ -48,7 +48,7 @@ fn invalid_keyring() {
 fn non_existent_key() {
     let mut keyring = utils::new_test_keyring();
     let key = keyring
-        .add_key::<User, _, _>("non_existent_key", "payload".as_bytes())
+        .add_key::<User, _, _>("non_existent_key", &b"payload"[..])
         .unwrap();
 
     keyring.unlink_key(&key).unwrap();
@@ -78,7 +78,7 @@ fn describe_key() {
     let mut keyring = utils::new_test_keyring();
     let description = "describe_key";
     let key = keyring
-        .add_key::<User, _, _>(description, "payload".as_bytes())
+        .add_key::<User, _, _>(description, &b"payload"[..])
         .unwrap();
 
     let perms = Permission::POSSESSOR_ALL | Permission::USER_VIEW;
@@ -96,7 +96,7 @@ fn describe_key_no_perm() {
     let mut keyring = utils::new_test_keyring();
     let description = "describe_key_no_perm";
     let mut key = keyring
-        .add_key::<User, _, _>(description, "payload".as_bytes())
+        .add_key::<User, _, _>(description, &b"payload"[..])
         .unwrap();
 
     let old_perms = key.description().unwrap().perms;
@@ -116,7 +116,7 @@ fn describe_key_no_perm() {
 fn describe_revoked_key() {
     let mut keyring = utils::new_test_keyring();
     let key = keyring
-        .add_key::<User, _, _>("describe_revoked_key", "payload".as_bytes())
+        .add_key::<User, _, _>("describe_revoked_key", &b"payload"[..])
         .unwrap();
 
     let key_mirror = unsafe { Key::new(key.serial()) };

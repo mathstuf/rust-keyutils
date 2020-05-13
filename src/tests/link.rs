@@ -50,7 +50,7 @@ fn invalid_source() {
 #[test]
 fn link_to_non_keyring() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring
         .add_key::<User, _, _>("link_to_non_keyring", payload)
         .unwrap();
@@ -66,7 +66,7 @@ fn link_to_non_keyring() {
 #[test]
 fn link_unlinked_key() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring
         .add_key::<User, _, _>("link_unlinked_key", payload)
         .unwrap();
@@ -82,7 +82,7 @@ fn link_unlinked_key() {
 #[test]
 fn link_into_unlinked_keyring() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring
         .add_key::<User, _, _>("link_into_unlinked_keyring", payload)
         .unwrap();
@@ -231,7 +231,7 @@ fn multiply_link_key_into_keyring() {
     assert_eq!(keyrings.len(), 1);
     assert_eq!(keyrings[0], new_keyring);
 
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = new_keyring
         .add_key::<User, _, _>("multiply_link_key_into_keyring_key", payload)
         .unwrap();

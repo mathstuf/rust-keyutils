@@ -75,7 +75,7 @@ fn invalid_keyring_chmod() {
 #[test]
 fn invalid_key_permissions() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let mut key = keyring
         .add_key::<User, _, _>("invalid_key_permissions", payload)
         .unwrap();
@@ -99,7 +99,7 @@ fn invalid_keyring_permissions() {
 #[test]
 fn unlinked_key_chown() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let mut key = keyring
         .add_key::<User, _, _>("unlinked_key_chown", payload)
         .unwrap();
@@ -114,7 +114,7 @@ fn unlinked_key_chown() {
 #[test]
 fn unlinked_key_chgrp() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let mut key = keyring
         .add_key::<User, _, _>("unlinked_key_chgrp", payload)
         .unwrap();
@@ -129,7 +129,7 @@ fn unlinked_key_chgrp() {
 #[test]
 fn unlinked_key_chmod() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let mut key = keyring
         .add_key::<User, _, _>("unlinked_key_chmod", payload)
         .unwrap();
@@ -161,7 +161,7 @@ fn chown_keyring() {
 #[test]
 fn chown_key() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let mut key = keyring.add_key::<User, _, _>("chown_key", payload).unwrap();
 
     if *UID == 0 {
@@ -207,7 +207,7 @@ fn set_each_permission_bit() {
     let required_permissions = Permission::USER_SET_ATTRIBUTE | Permission::USER_VIEW;
 
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let mut key = keyring
         .add_key::<User, _, _>("set_each_permission_bit", payload)
         .unwrap();
@@ -223,7 +223,7 @@ fn set_each_permission_bit() {
 #[test]
 fn cannot_view_via_group() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let mut key = keyring
         .add_key::<User, _, _>("cannot_view_via_group", payload)
         .unwrap();
@@ -238,7 +238,7 @@ fn cannot_view_via_group() {
 #[test]
 fn cannot_view_via_other() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let mut key = keyring
         .add_key::<User, _, _>("cannot_view_via_other", payload)
         .unwrap();
@@ -253,7 +253,7 @@ fn cannot_view_via_other() {
 #[test]
 fn remove_setattr() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let mut key = keyring
         .add_key::<User, _, _>("remove_setattr", payload)
         .unwrap();
