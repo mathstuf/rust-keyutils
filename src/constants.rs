@@ -159,7 +159,7 @@ fn test_keyring_ids() {
 }
 
 #[test]
-fn test_permission_bits() {
+fn test_possessor_permission_bits() {
     assert_eq!(Permission::POSSESSOR_VIEW.bits, KEY_POS_VIEW);
     assert_eq!(Permission::POSSESSOR_READ.bits, KEY_POS_READ);
     assert_eq!(Permission::POSSESSOR_WRITE.bits, KEY_POS_WRITE);
@@ -167,7 +167,10 @@ fn test_permission_bits() {
     assert_eq!(Permission::POSSESSOR_LINK.bits, KEY_POS_LINK);
     assert_eq!(Permission::POSSESSOR_SET_ATTRIBUTE.bits, KEY_POS_SETATTR);
     assert_eq!(Permission::POSSESSOR_ALL.bits, KEY_POS_ALL);
+}
 
+#[test]
+fn test_user_permission_bits() {
     assert_eq!(Permission::USER_VIEW.bits, KEY_USR_VIEW);
     assert_eq!(Permission::USER_READ.bits, KEY_USR_READ);
     assert_eq!(Permission::USER_WRITE.bits, KEY_USR_WRITE);
@@ -175,7 +178,10 @@ fn test_permission_bits() {
     assert_eq!(Permission::USER_LINK.bits, KEY_USR_LINK);
     assert_eq!(Permission::USER_SET_ATTRIBUTE.bits, KEY_USR_SETATTR);
     assert_eq!(Permission::USER_ALL.bits, KEY_USR_ALL);
+}
 
+#[test]
+fn test_group_permission_bits() {
     assert_eq!(Permission::GROUP_VIEW.bits, KEY_GRP_VIEW);
     assert_eq!(Permission::GROUP_READ.bits, KEY_GRP_READ);
     assert_eq!(Permission::GROUP_WRITE.bits, KEY_GRP_WRITE);
@@ -183,7 +189,10 @@ fn test_permission_bits() {
     assert_eq!(Permission::GROUP_LINK.bits, KEY_GRP_LINK);
     assert_eq!(Permission::GROUP_SET_ATTRIBUTE.bits, KEY_GRP_SETATTR);
     assert_eq!(Permission::GROUP_ALL.bits, KEY_GRP_ALL);
+}
 
+#[test]
+fn test_other_permission_bits() {
     assert_eq!(Permission::OTHER_VIEW.bits, KEY_OTH_VIEW);
     assert_eq!(Permission::OTHER_READ.bits, KEY_OTH_READ);
     assert_eq!(Permission::OTHER_WRITE.bits, KEY_OTH_WRITE);
