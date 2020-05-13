@@ -19,13 +19,12 @@ rustfmt_task:
 linux_task:
     matrix:
     - container:
-        image: rust:1.36.0
+        image: rust:1.38.0
     - container:
         image: rust:latest
     - allow_failures: true
       container:
         image: rustlang/rust:nightly
-    keyutils_script: apt-get update && apt-get install libkeyutils-dev
     lockfile_script: cargo generate-lockfile
     cargo_cache:
         folder: $CARGO_HOME/registry
@@ -50,7 +49,6 @@ coverage_task:
         image: rust:latest
     environment:
         CODECOV_TOKEN: ENCRYPTED[1e221ef78a37c960613ff80db7141f3158e3218031934395466f4720f450b7acfd74e587819435ce9be0b13fa1b68f1b]
-    keyutils_script: apt-get update && apt-get install libkeyutils-dev
     tarpaulin_cache:
         folder: .ci
         populate_script: .ci/tarpaulin.sh

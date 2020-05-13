@@ -7,11 +7,11 @@ description = "Raw bindings to Linux keyring syscalls"
 repository = "https://github.com/mathstuf/rust-keyutils.git"
 homepage = "https://github.com/mathstuf/rust-keyutils"
 keywords = ["keyutils"]
-links = "keyutils"
 edition = "2018"
 
-[features]
-static = []
-
 [dependencies]
+log = "0.4.4"
+
+errno = "0.2"
 libc = "0.2"
+uninit = "0.3"
