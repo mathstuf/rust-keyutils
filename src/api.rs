@@ -533,12 +533,22 @@ impl Key {
         .map(Self::new_impl)
     }
 
-    /// Update the payload in the key.
-    pub fn update<D>(&mut self, data: D) -> Result<()>
+    /// Determine whether the key is of a specific implementation or not.
+    pub fn is_keytype<K>(&self) -> Result<bool>
     where
-        D: AsRef<[u8]>,
+        K: KeyType,
     {
-        keyctl_update(self.id, data.as_ref())
+        let desc = self.description()?;
+        Ok(desc.type_ == K::name())
+    }
+
+    /// Update the payload in the key.
+    pub fn update<K, P>(&mut self, payload: P) -> Result<()>
+    where
+        K: KeyType,
+        P: Borrow<K::Payload>,
+    {
+        keyctl_update(self.id, &payload.borrow().payload())
     }
 
     /// Revokes the key. Requires `write` permission on the key.

@@ -33,6 +33,7 @@ mod clear;
 mod describe;
 mod instantiate;
 mod invalidate;
+mod keytype;
 mod link;
 mod newring;
 mod permitting;

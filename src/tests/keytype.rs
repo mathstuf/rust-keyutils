@@ -1,4 +1,4 @@
-// Copyright (c) 2019, Ben Boeckel
+// Copyright (c) 2020, Ben Boeckel
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without modification,
@@ -24,57 +24,27 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::keytypes::User;
+use crate::keytypes::{Keyring, User};
 
 use super::utils;
 
 #[test]
-fn keyring() {
+fn test_keyring_is_keytype() {
     let keyring = utils::new_test_keyring();
-    let mut key = utils::keyring_as_key(&keyring);
+    let key = utils::keyring_as_key(&keyring);
 
-    let payload = &b"payload"[..];
-    let err = key.update::<User, _>(payload).unwrap_err();
-    assert_eq!(err, errno::Errno(libc::EOPNOTSUPP));
+    assert!(!key.is_keytype::<User>().unwrap());
+    assert!(key.is_keytype::<Keyring>().unwrap());
 }
 
 #[test]
-fn invalid_key() {
-    let mut key = utils::invalid_key();
-
-    let payload = &b"payload"[..];
-    let err = key.update::<User, _>(payload).unwrap_err();
-    assert_eq!(err, errno::Errno(libc::EINVAL));
-}
-
-#[test]
-fn unlinked_key() {
+fn test_key_is_keytype() {
     let mut keyring = utils::new_test_keyring();
     let payload = &b"payload"[..];
-    let mut key = keyring
-        .add_key::<User, _, _>("unlinked_key", payload)
+    let key = keyring
+        .add_key::<User, _, _>("test_key_is_keytype", payload)
         .unwrap();
 
-    keyring.unlink_key(&key).unwrap();
-    utils::wait_for_key_gc(&key);
-
-    let payload = &b"payload"[..];
-    let err = key.update::<User, _>(payload).unwrap_err();
-    assert_eq!(err, errno::Errno(libc::ENOKEY));
-}
-
-#[test]
-fn user_key() {
-    let mut keyring = utils::new_test_keyring();
-    let payload = &b"payload"[..];
-    let mut key = keyring.add_key::<User, _, _>("user_key", payload).unwrap();
-
-    let actual_payload = key.read().unwrap();
-    assert_eq!(payload, actual_payload.as_slice());
-
-    let payload = &b"updated_payload"[..];
-    key.update::<User, _>(payload).unwrap();
-
-    let actual_payload = key.read().unwrap();
-    assert_eq!(payload, actual_payload.as_slice());
+    assert!(key.is_keytype::<User>().unwrap());
+    assert!(!key.is_keytype::<Keyring>().unwrap());
 }
