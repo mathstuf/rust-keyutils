@@ -378,3 +378,38 @@ pub fn keyctl_dh_compute(
     }
     .map(size)
 }
+
+pub enum Restriction<'a> {
+    AllLinks,
+    ByType {
+        type_: &'a str,
+        restriction: &'a str,
+    },
+}
+
+pub fn keyctl_restrict_keyring(keyring: KeyringSerial, restriction: Restriction) -> Result<()> {
+    let type_cstr;
+    let restriction_cstr;
+
+    let (type_ptr, restriction_ptr) = match restriction {
+        Restriction::AllLinks => (ptr::null(), ptr::null()),
+        Restriction::ByType {
+            type_,
+            restriction,
+        } => {
+            type_cstr = cstring(type_);
+            restriction_cstr = cstring(restriction);
+
+            (type_cstr.as_ptr(), restriction_cstr.as_ptr())
+        },
+    };
+    unsafe {
+        keyctl!(
+            libc::KEYCTL_RESTRICT_KEYRING,
+            keyring.get(),
+            type_ptr,
+            restriction_ptr,
+        )
+    }
+    .map(ignore)
+}
