@@ -29,7 +29,8 @@ linux_task:
     cargo_cache:
         folder: $CARGO_HOME/registry
         fingerprint_script: cat Cargo.lock
-    build_script: cargo build
+    build_script: RUSTFLAGS="-D warnings" cargo build
+    build_tests_script: RUSTFLAGS="-D warnings" cargo build --tests
     test_script: cargo test -- --test-threads 1
     before_cache_script: rm -rf $CARGO_HOME/registry/index
 
@@ -41,7 +42,7 @@ minimal_version_task:
     cargo_cache:
         folder: $CARGO_HOME/registry
         fingerprint_script: cat Cargo.lock
-    build_script: cargo build
+    build_script: RUSTFLAGS="-D warnings" cargo build
     before_cache_script: rm -rf $CARGO_HOME/registry/index
 
 coverage_task:
