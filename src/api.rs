@@ -101,7 +101,6 @@ impl Keyring {
         }
     }
 
-    #[cfg(test)]
     pub(crate) fn serial(&self) -> KeyringSerial {
         self.id
     }
@@ -530,7 +529,6 @@ impl Key {
         }
     }
 
-    #[cfg(test)]
     pub(crate) fn serial(&self) -> KeyringSerial {
         self.id
     }
