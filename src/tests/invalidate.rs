@@ -57,7 +57,7 @@ fn invalid_keyring() {
 #[test]
 fn unlinked_key() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring
         .add_key::<User, _, _>("unlinked_key", payload)
         .unwrap();
@@ -79,7 +79,7 @@ fn invalidate_key() {
         assert!(keyrings.is_empty());
     }
 
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring
         .add_key::<User, _, _>("invalidate_key", payload)
         .unwrap();
@@ -105,7 +105,7 @@ fn invalidate_keyring() {
         assert!(keyrings.is_empty());
     }
 
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring
         .add_key::<User, _, _>("invalidate_keyring", payload)
         .unwrap();

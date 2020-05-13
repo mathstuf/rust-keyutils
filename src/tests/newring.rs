@@ -55,7 +55,7 @@ fn unlinked_keyring() {
 #[test]
 fn not_a_keyring() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring
         .add_key::<User, _, _>("not_a_keyring_key", payload)
         .unwrap();

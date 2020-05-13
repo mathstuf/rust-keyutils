@@ -6,7 +6,7 @@ clippy_task:
     cargo_cache:
         folder: $CARGO_HOME/registry
         fingerprint_script: cat Cargo.lock
-    clippy_script: cargo clippy -- -D warnings
+    clippy_script: cargo clippy --tests -- -D warnings
     before_cache_script: rm -rf $CARGO_HOME/registry/index
 
 rustfmt_task:

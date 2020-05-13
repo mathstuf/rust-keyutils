@@ -109,14 +109,18 @@ lazy_static! {
     .unwrap();
 }
 
-fn by_name<T: FromStr>(capture: &Captures, name: &str) -> T {
+fn by_name<T>(capture: &Captures, name: &str) -> T
+where
+    T: FromStr,
+    T::Err: std::fmt::Display,
+{
     let cap = capture
         .name(name)
         .expect("name should be captured")
         .as_str();
     match cap.parse() {
         Ok(v) => v,
-        Err(_) => panic!("failed to parse {} as an integer", name),
+        Err(err) => panic!("failed to parse {} as an integer: {}", name, err),
     }
 }
 

@@ -121,7 +121,7 @@ fn invalid_keyring() {
 #[test]
 fn search_key() {
     let mut keyring = utils::new_test_keyring();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = keyring
         .add_key::<User, _, _>("search_key", payload)
         .unwrap();
@@ -173,7 +173,7 @@ fn search_keyring_mismatched_type() {
         .add_keyring("search_keyring_mismatched_type")
         .unwrap();
     let description = "search_keyring_mismatched_type_key";
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let _ = new_keyring
         .add_key::<User, _, _>(description, payload)
         .unwrap();
@@ -187,7 +187,7 @@ fn search_and_find_key() {
     let mut keyring = utils::new_test_keyring();
     let mut new_keyring = keyring.add_keyring("search_and_find_key").unwrap();
     let description = "search_and_find_key_key";
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = new_keyring
         .add_key::<User, _, _>(description, payload)
         .unwrap();
@@ -219,7 +219,7 @@ fn search_and_find_key_no_search_perm_interm() {
         .add_keyring("search_and_find_key_no_search_perm_interm")
         .unwrap();
     let description = "search_and_find_key_no_search_perm_interm_key";
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let _ = new_keyring
         .add_key::<User, _, _>(description, payload)
         .unwrap();
@@ -270,7 +270,7 @@ fn search_and_find_key_no_search_perm_direct() {
         .add_keyring("search_and_find_key_no_search_perm_direct")
         .unwrap();
     let description = "search_and_find_key_no_search_perm_direct_key";
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let mut key = new_keyring
         .add_key::<User, _, _>(description, payload)
         .unwrap();
@@ -322,7 +322,7 @@ fn search_and_find_key_link() {
         .add_keyring("search_and_find_key_link_destination")
         .unwrap();
     let description = "search_and_find_key_link_key";
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = new_keyring
         .add_key::<User, _, _>(description, payload)
         .unwrap();
@@ -380,11 +380,11 @@ fn search_and_find_key_link_replace() {
         .add_keyring("search_and_find_key_link_replace_destination")
         .unwrap();
     let description = "search_and_find_key_link_replace_key";
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = new_keyring
         .add_key::<User, _, _>(description, payload)
         .unwrap();
-    let other_payload = "payload".as_bytes();
+    let other_payload = &b"payload"[..];
     let orig_key = destination_keyring
         .add_key::<User, _, _>(description, other_payload)
         .unwrap();
@@ -419,7 +419,7 @@ fn search_and_find_key_link_replace_keyring() {
         .add_keyring("search_and_find_key_link_replace_keyring_destination")
         .unwrap();
     let description = "search_and_find_key_link_replace_keyring_key";
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let key = new_keyring
         .add_key::<User, _, _>(description, payload)
         .unwrap();
@@ -487,7 +487,7 @@ fn search_and_find_keyring_link_replace_key() {
         .unwrap();
     let description = "search_and_find_keyring_link_replace_key_keyring";
     let target_keyring = new_keyring.add_keyring(description).unwrap();
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let orig_key = destination_keyring
         .add_key::<User, _, _>(description, payload)
         .unwrap();
@@ -517,7 +517,7 @@ fn search_and_find_key_no_link_perm_no_dest() {
         .add_keyring("search_and_find_key_no_link_perm_no_dest")
         .unwrap();
     let description = "search_and_find_key_no_link_perm_no_dest_key";
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let mut key = new_keyring
         .add_key::<User, _, _>(description, payload)
         .unwrap();
@@ -574,7 +574,7 @@ fn search_and_find_key_no_link_perm() {
         .add_keyring("search_and_find_key_no_link_perm_destination")
         .unwrap();
     let description = "search_and_find_key_no_link_perm_key";
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let mut key = new_keyring
         .add_key::<User, _, _>(description, payload)
         .unwrap();
@@ -643,7 +643,7 @@ fn search_and_find_key_no_write_perm() {
         .add_keyring("search_and_find_key_no_write_perm_destination")
         .unwrap();
     let description = "search_and_find_key_no_write_perm_key";
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let _ = new_keyring
         .add_key::<User, _, _>(description, payload)
         .unwrap();

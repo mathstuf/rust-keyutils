@@ -40,7 +40,7 @@ fn invalid_keyring() {
 fn clear_non_keyring() {
     let mut keyring = utils::new_test_keyring();
     let key = keyring
-        .add_key::<User, _, _>("clear_non_keyring", "payload".as_bytes())
+        .add_key::<User, _, _>("clear_non_keyring", &b"payload"[..])
         .unwrap();
 
     // Try clearing a non-keyring.
@@ -96,7 +96,7 @@ fn clear_keyring_one_key() {
     let key_desc = "clear_keyring:key";
 
     // Create a key.
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     keyring.add_key::<User, _, _>(key_desc, payload).unwrap();
 
     let (keys, keyrings) = keyring.read().unwrap();
@@ -122,7 +122,7 @@ fn clear_keyring_many_keys() {
     assert_eq!(keyrings.len(), 0);
 
     let count = 40;
-    let payload = "payload".as_bytes();
+    let payload = &b"payload"[..];
     let mut descs = Vec::with_capacity(count);
     for i in 0..count {
         let key_desc = format!("clear_keyring:key{:02}", i);
