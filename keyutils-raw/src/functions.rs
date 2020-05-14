@@ -359,21 +359,32 @@ pub fn keyctl_session_to_parent() -> Result<()> {
     unsafe { keyctl!(libc::KEYCTL_SESSION_TO_PARENT,) }.map(ignore)
 }
 
+#[repr(C)]
+struct DhComputeParamsKernel {
+    priv_: i32,
+    prime: i32,
+    base: i32,
+}
+
 pub fn keyctl_dh_compute(
     private: KeyringSerial,
     prime: KeyringSerial,
     base: KeyringSerial,
     mut buffer: Option<Out<[u8]>>,
 ) -> Result<usize> {
+    let params = DhComputeParamsKernel {
+        priv_: private.get(),
+        prime: prime.get(),
+        base: base.get(),
+    };
     let capacity = buffer.as_mut().map_or(0, |b| b.len());
     unsafe {
         keyctl!(
             libc::KEYCTL_DH_COMPUTE,
-            private.get(),
-            prime.get(),
-            base.get(),
+            &params as *const DhComputeParamsKernel,
             buffer.as_mut().map_or(ptr::null(), |b| b.as_mut_ptr()),
             capacity,
+            0,
         )
     }
     .map(size)
