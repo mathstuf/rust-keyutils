@@ -90,3 +90,27 @@ impl KeyPayload for Vec<u8> {
         Cow::Borrowed(&self)
     }
 }
+
+/// A key which may be restricted into being added to a keyring.
+pub trait RestrictableKeyType: KeyType {
+    /// The type for representing a restriction for adding keys of this type.
+    type Restriction: KeyRestriction + ?Sized;
+}
+
+/// A restriction for a key.
+pub trait KeyRestriction {
+    /// The restriction string of the key.
+    fn restriction(&self) -> Cow<str>;
+}
+
+impl KeyRestriction for str {
+    fn restriction(&self) -> Cow<str> {
+        Cow::Borrowed(&self)
+    }
+}
+
+impl KeyRestriction for String {
+    fn restriction(&self) -> Cow<str> {
+        Cow::Borrowed(&self)
+    }
+}

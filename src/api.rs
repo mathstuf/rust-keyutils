@@ -101,7 +101,6 @@ impl Keyring {
         }
     }
 
-    #[cfg(test)]
     pub(crate) fn serial(&self) -> KeyringSerial {
         self.id
     }
@@ -403,6 +402,32 @@ impl Keyring {
         keyctl_setperm(self.id, perms)
     }
 
+    /// Restrict all links into the keyring.
+    ///
+    /// Requires the `setattr` permission on the keyring and the SysAdmin capability to change it to
+    /// anything other than the current user.
+    pub fn restrict_all(&mut self) -> Result<()> {
+        keyctl_restrict_keyring(self.id, Restriction::AllLinks)
+    }
+
+    /// Restrict links into the keyring.
+    ///
+    /// Requires the `setattr` permission on the keyring and the SysAdmin capability to change it to
+    /// anything other than the current user.
+    pub fn restrict_by_type<K, R>(&mut self, restriction: R) -> Result<()>
+    where
+        K: RestrictableKeyType,
+        R: Borrow<K::Restriction>,
+    {
+        keyctl_restrict_keyring(
+            self.id,
+            Restriction::ByType {
+                type_: K::name(),
+                restriction: &restriction.borrow().restriction(),
+            },
+        )
+    }
+
     fn description_raw(&self) -> Result<String> {
         // Get the size of the description.
         let mut sz = keyctl_describe(self.id, None)?;
@@ -504,7 +529,6 @@ impl Key {
         }
     }
 
-    #[cfg(test)]
     pub(crate) fn serial(&self) -> KeyringSerial {
         self.id
     }

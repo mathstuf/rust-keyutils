@@ -26,7 +26,10 @@
 
 //! Asymmetric keys
 
+use std::borrow::Cow;
+
 use crate::keytype::*;
+use crate::{Key, Keyring, KeyringSerial};
 
 /// Asymmetric keys support encrypting, decrypting, signing, and verifying data.
 ///
@@ -53,4 +56,63 @@ impl KeyType for Asymmetric {
     fn name() -> &'static str {
         "asymmetric"
     }
+}
+
+/// A restriction that may be placed onto a keyring using an asymmetric key.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AsymmetricRestriction {
+    /// Only allow keys which have been signed by a key on the builtin trusted keyring.
+    BuiltinTrusted,
+    /// Only allow keys which have been signed by a key on the builtin or secondary trusted
+    /// keyrings.
+    BuiltinAndSecondaryTrusted,
+    /// Only allow keys which have been signed by the given key.
+    Key {
+        /// The signing key.
+        key: Key,
+        /// Whether or not chaining should be used (see `Chained`).
+        chained: bool,
+    },
+    /// Only allow keys which have been signed by a key on the given keyring.
+    Keyring {
+        /// The keyring with permitted signing keys.
+        keyring: Keyring,
+        /// Whether or not chaining should be used (see `Chained`).
+        chained: bool,
+    },
+    /// When chaining the destination keyring is also searched for signing keys.
+    ///
+    /// This allows building up a chain of trust in the destination keyring.
+    Chained,
+}
+
+impl AsymmetricRestriction {
+    fn restriction_str(id: KeyringSerial, chained: bool) -> String {
+        let chain_suffix = if chained { ":chain" } else { "" };
+        format!("key_or_keyring:{}{}", id, chain_suffix)
+    }
+}
+
+impl KeyRestriction for AsymmetricRestriction {
+    fn restriction(&self) -> Cow<str> {
+        match self {
+            AsymmetricRestriction::BuiltinTrusted => "builtin_trusted".into(),
+            AsymmetricRestriction::BuiltinAndSecondaryTrusted => {
+                "builtin_and_secondary_trusted".into()
+            },
+            AsymmetricRestriction::Key {
+                key,
+                chained,
+            } => Self::restriction_str(key.serial(), *chained).into(),
+            AsymmetricRestriction::Keyring {
+                keyring,
+                chained,
+            } => Self::restriction_str(keyring.serial(), *chained).into(),
+            AsymmetricRestriction::Chained => "key_or_keyring:0:chain".into(),
+        }
+    }
+}
+
+impl RestrictableKeyType for Asymmetric {
+    type Restriction = AsymmetricRestriction;
 }
