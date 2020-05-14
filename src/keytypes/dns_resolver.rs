@@ -45,6 +45,7 @@ impl KeyType for DnsResolver {
 
 /// The DNS record to lookup.
 #[derive(Debug, Clone, Eq)]
+// #[non_exhaustive]
 pub enum QueryType {
     /// An IPv4 address.
     A,

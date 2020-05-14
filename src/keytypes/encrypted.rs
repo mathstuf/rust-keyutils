@@ -52,6 +52,7 @@ impl KeyType for Encrypted {
 
 /// The format of the encrypted payload.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+// #[non_exhaustive]
 pub enum Format {
     /// A free-form encrypted key.
     Default,
@@ -88,6 +89,7 @@ impl Default for Format {
 ///
 /// This indicates the key type to use for encryting the generatetd key.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+// #[non_exhaustive]
 pub enum MasterKeyType {
     /// A trusted key.
     ///
@@ -111,6 +113,7 @@ impl MasterKeyType {
 
 /// The payload for an encrypted key.
 #[derive(Debug, Clone, PartialEq, Eq)]
+// #[non_exhaustive]
 pub enum Payload {
     /// Create a new key.
     ///

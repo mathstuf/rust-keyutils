@@ -29,6 +29,7 @@ use keyutils_raw::*;
 
 /// Special keyrings predefined for a process.
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
+// #[non_exhaustive]
 pub enum SpecialKeyring {
     /// A thread-specific keyring.
     Thread,

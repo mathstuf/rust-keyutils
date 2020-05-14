@@ -60,6 +60,7 @@ impl KeyType for Asymmetric {
 
 /// A restriction that may be placed onto a keyring using an asymmetric key.
 #[derive(Debug, Clone, PartialEq, Eq)]
+// #[non_exhaustive]
 pub enum AsymmetricRestriction {
     /// Only allow keys which have been signed by a key on the builtin trusted keyring.
     BuiltinTrusted,

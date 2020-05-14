@@ -43,6 +43,7 @@ pub type TimeoutSeconds = libc::c_uint;
 /// Keys which are implicitly required via syscalls and other operations are
 /// placed in the default keyring.
 #[derive(Debug, PartialEq, Eq)]
+// #[non_exhaustive]
 pub enum DefaultKeyring {
     /// Do not change the default keyring.
     ///

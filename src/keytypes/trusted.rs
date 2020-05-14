@@ -48,6 +48,7 @@ impl KeyType for Trusted {
 
 /// Hashes supported by TPM devices.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+// #[non_exhaustive]
 pub enum TpmHash {
     /// SHA-1
     Sha1,
@@ -164,6 +165,7 @@ impl fmt::Display for TrustedOptions {
 
 /// The payload for trusted keys.
 #[derive(Debug, Clone, PartialEq, Eq)]
+// #[non_exhaustive]
 pub enum Payload {
     /// Create a new key.
     ///
