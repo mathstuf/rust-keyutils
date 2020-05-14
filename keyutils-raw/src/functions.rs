@@ -214,8 +214,8 @@ pub fn keyctl_setperm(id: KeyringSerial, perm: KeyPermissions) -> Result<()> {
 }
 
 pub fn keyctl_describe(id: KeyringSerial, mut buffer: Option<Out<[u8]>>) -> Result<usize> {
+    let capacity = buffer.as_mut().map_or(0, |b| b.len());
     unsafe {
-        let capacity = buffer.as_mut().map_or(0, |b| b.len());
         keyctl!(
             libc::KEYCTL_DESCRIBE,
             id.get(),
@@ -259,8 +259,8 @@ pub fn keyctl_search(
 }
 
 pub fn keyctl_read(id: KeyringSerial, mut buffer: Option<Out<[u8]>>) -> Result<usize> {
+    let capacity = buffer.as_mut().map_or(0, |b| b.len());
     unsafe {
-        let capacity = buffer.as_mut().map_or(0, |b| b.len());
         keyctl!(
             libc::KEYCTL_READ,
             id.get(),
@@ -317,8 +317,8 @@ pub fn keyctl_assume_authority(key: Option<KeyringSerial>) -> Result<()> {
 }
 
 pub fn keyctl_get_security(key: KeyringSerial, mut buffer: Option<Out<[u8]>>) -> Result<usize> {
+    let capacity = buffer.as_mut().map_or(0, |b| b.len());
     unsafe {
-        let capacity = buffer.as_mut().map_or(0, |b| b.len());
         keyctl!(
             libc::KEYCTL_GET_SECURITY,
             key.get(),
@@ -365,8 +365,8 @@ pub fn keyctl_dh_compute(
     base: KeyringSerial,
     mut buffer: Option<Out<[u8]>>,
 ) -> Result<usize> {
+    let capacity = buffer.as_mut().map_or(0, |b| b.len());
     unsafe {
-        let capacity = buffer.as_mut().map_or(0, |b| b.len());
         keyctl!(
             libc::KEYCTL_DH_COMPUTE,
             private.get(),
