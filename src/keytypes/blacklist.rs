@@ -48,6 +48,7 @@ impl KeyType for Blacklist {
 
 /// The hash type to blacklist.
 #[derive(Debug, Clone, Eq)]
+// #[non_exhaustive]
 pub enum HashType {
     /// x509 data
     Tbs,

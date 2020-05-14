@@ -29,6 +29,7 @@ use keyutils_raw::*;
 
 /// Special keyrings predefined for a process.
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
+// #[non_exhaustive]
 pub enum SpecialKeyring {
     /// A thread-specific keyring.
     Thread,
@@ -145,6 +146,21 @@ bitflags! {
     }
 }
 
+/// They kernel type for representing support for optional features.
+///
+/// Asymmetric keys might only support a limited set of operations. These flags indicate which
+/// operations are available.
+pub type KeyctlSupportFlags = u32;
+
+bitflags! {
+    struct KeyctlSupportFlag: KeyctlSupportFlags {
+        const SUPPORTS_ENCRYPT  = 0x01;
+        const SUPPORTS_DECRYPT  = 0x02;
+        const SUPPORTS_SIGN     = 0x04;
+        const SUPPORTS_VERIFY   = 0x08;
+    }
+}
+
 #[test]
 fn test_keyring_ids() {
     assert_eq!(SpecialKeyring::Thread.serial(), KEY_SPEC_THREAD_KEYRING);
@@ -200,4 +216,21 @@ fn test_other_permission_bits() {
     assert_eq!(Permission::OTHER_LINK.bits, KEY_OTH_LINK);
     assert_eq!(Permission::OTHER_SET_ATTRIBUTE.bits, KEY_OTH_SETATTR);
     assert_eq!(Permission::OTHER_ALL.bits, KEY_OTH_ALL);
+}
+
+#[test]
+fn test_support_flags() {
+    assert_eq!(
+        KeyctlSupportFlag::SUPPORTS_ENCRYPT.bits,
+        KEYCTL_SUPPORTS_ENCRYPT,
+    );
+    assert_eq!(
+        KeyctlSupportFlag::SUPPORTS_DECRYPT.bits,
+        KEYCTL_SUPPORTS_DECRYPT,
+    );
+    assert_eq!(KeyctlSupportFlag::SUPPORTS_SIGN.bits, KEYCTL_SUPPORTS_SIGN);
+    assert_eq!(
+        KeyctlSupportFlag::SUPPORTS_VERIFY.bits,
+        KEYCTL_SUPPORTS_VERIFY,
+    );
 }

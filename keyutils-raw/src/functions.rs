@@ -472,3 +472,172 @@ pub fn keyctl_restrict_keyring(keyring: KeyringSerial, restriction: Restriction)
     }
     .map(ignore)
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+// #[non_exhaustive]
+pub struct PKeyQuery {
+    pub supported_ops: u32,
+    pub key_size: u32,
+    pub max_data_size: u16,
+    pub max_sig_size: u16,
+    pub max_enc_size: u16,
+    pub max_dec_size: u16,
+}
+
+#[repr(C)]
+pub struct PKeyQueryKernel {
+    supported_ops: u32,
+    key_size: u32,
+    max_data_size: u16,
+    max_sig_size: u16,
+    max_enc_size: u16,
+    max_dec_size: u16,
+    _spare: [u32; 10],
+}
+
+impl PKeyQueryKernel {
+    fn zeroed() -> Self {
+        PKeyQueryKernel {
+            supported_ops: 0,
+            key_size: 0,
+            max_data_size: 0,
+            max_sig_size: 0,
+            max_enc_size: 0,
+            max_dec_size: 0,
+            _spare: [0; 10],
+        }
+    }
+}
+
+impl From<PKeyQueryKernel> for PKeyQuery {
+    fn from(kernel: PKeyQueryKernel) -> Self {
+        PKeyQuery {
+            supported_ops: kernel.supported_ops,
+            key_size: kernel.key_size,
+            max_data_size: kernel.max_data_size,
+            max_sig_size: kernel.max_sig_size,
+            max_enc_size: kernel.max_enc_size,
+            max_dec_size: kernel.max_dec_size,
+        }
+    }
+}
+
+pub fn keyctl_pkey_query(key: KeyringSerial, info: &str) -> Result<PKeyQuery> {
+    let mut query = PKeyQueryKernel::zeroed();
+    let info_cstr = cstring(info);
+    unsafe {
+        keyctl!(
+            libc::KEYCTL_PKEY_QUERY,
+            key.get(),
+            0,
+            info_cstr.as_ptr(),
+            &mut query as *mut PKeyQueryKernel,
+        )
+    }
+    .map(ignore)?;
+
+    Ok(query.into())
+}
+
+#[repr(C)]
+struct PKeyOpParamsKernel {
+    key_id: i32,
+    in_len: u32,
+    out_len: u32,
+    in2_len: u32,
+}
+
+pub fn keyctl_pkey_encrypt(
+    key: KeyringSerial,
+    info: &str,
+    data: &[u8],
+    mut buffer: Out<[u8]>,
+) -> Result<usize> {
+    let params = PKeyOpParamsKernel {
+        key_id: key.get(),
+        in_len: safe_len(data.len())?,
+        out_len: safe_len(buffer.len())?,
+        in2_len: 0,
+    };
+    let info_cstr = cstring(info);
+    unsafe {
+        keyctl!(
+            libc::KEYCTL_PKEY_ENCRYPT,
+            &params as *const PKeyOpParamsKernel,
+            info_cstr.as_ptr(),
+            data.as_ptr(),
+            buffer.as_mut_ptr(),
+        )
+    }
+    .map(size)
+}
+
+pub fn keyctl_pkey_decrypt(
+    key: KeyringSerial,
+    info: &str,
+    data: &[u8],
+    mut buffer: Out<[u8]>,
+) -> Result<usize> {
+    let params = PKeyOpParamsKernel {
+        key_id: key.get(),
+        in_len: safe_len(data.len())?,
+        out_len: safe_len(buffer.len())?,
+        in2_len: 0,
+    };
+    let info_cstr = cstring(info);
+    unsafe {
+        keyctl!(
+            libc::KEYCTL_PKEY_DECRYPT,
+            &params as *const PKeyOpParamsKernel,
+            info_cstr.as_ptr(),
+            data.as_ptr(),
+            buffer.as_mut_ptr(),
+        )
+    }
+    .map(size)
+}
+
+pub fn keyctl_pkey_sign(
+    key: KeyringSerial,
+    info: &str,
+    data: &[u8],
+    mut buffer: Out<[u8]>,
+) -> Result<usize> {
+    let params = PKeyOpParamsKernel {
+        key_id: key.get(),
+        in_len: safe_len(data.len())?,
+        out_len: safe_len(buffer.len())?,
+        in2_len: 0,
+    };
+    let info_cstr = cstring(info);
+    unsafe {
+        keyctl!(
+            libc::KEYCTL_PKEY_SIGN,
+            &params as *const PKeyOpParamsKernel,
+            info_cstr.as_ptr(),
+            data.as_ptr(),
+            buffer.as_mut_ptr(),
+        )
+    }
+    .map(size)
+}
+
+pub fn keyctl_pkey_verify(key: KeyringSerial, info: &str, data: &[u8], sig: &[u8]) -> Result<bool> {
+    let params = PKeyOpParamsKernel {
+        key_id: key.get(),
+        in_len: safe_len(data.len())?,
+        out_len: 0,
+        in2_len: safe_len(sig.len())?,
+    };
+    let info_cstr = cstring(info);
+    unsafe {
+        keyctl!(
+            libc::KEYCTL_PKEY_VERIFY,
+            &params as *const PKeyOpParamsKernel,
+            info_cstr.as_ptr(),
+            data.as_ptr(),
+            sig.as_ptr(),
+        )
+    }
+    .map(|res| res == 0)
+}

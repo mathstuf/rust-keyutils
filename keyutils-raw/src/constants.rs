@@ -40,6 +40,11 @@ pub const KEY_SPEC_USER_SESSION_KEYRING:    KeyringSerial = unsafe { KeyringSeri
 pub const KEY_SPEC_GROUP_KEYRING:           KeyringSerial = unsafe { KeyringSerial::new_unchecked(-6) };
 pub const KEY_SPEC_REQKEY_AUTH_KEY:         KeyringSerial = unsafe { KeyringSerial::new_unchecked(-7) };
 
+pub const KEYCTL_SUPPORTS_ENCRYPT:          u32 = 0x01;
+pub const KEYCTL_SUPPORTS_DECRYPT:          u32 = 0x02;
+pub const KEYCTL_SUPPORTS_SIGN:             u32 = 0x04;
+pub const KEYCTL_SUPPORTS_VERIFY:           u32 = 0x08;
+
 pub const KEY_POS_VIEW:    KeyPermissions = 0x0100_0000;     /* possessor can view a key's attributes */
 pub const KEY_POS_READ:    KeyPermissions = 0x0200_0000;     /* possessor can read key payload / view keyring */
 pub const KEY_POS_WRITE:   KeyPermissions = 0x0400_0000;     /* possessor can update key payload / add link to keyring */
