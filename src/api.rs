@@ -35,7 +35,7 @@ use keyutils_raw::*;
 use log::error;
 use uninit::extension_traits::VecCapacity;
 
-use crate::constants::{Permission, SpecialKeyring};
+use crate::constants::{KeyctlSupportFlags, Permission, SpecialKeyring};
 use crate::keytype::*;
 use crate::keytypes;
 
@@ -511,6 +511,64 @@ pub struct Key {
     id: KeyringSerial,
 }
 
+/// Structure to store results from a query on optional feature support for a key.
+#[derive(Debug, Clone, Copy)]
+pub struct KeySupportInfo {
+    /// Features supported by the key.
+    pub supported_ops: KeyctlSupportFlags,
+    /// The size of the key (in bits).
+    pub key_size: u32,
+    /// The maximum size of a data blob which may be signed.
+    pub max_data_size: u16,
+    /// The maximum size of a signature blob.
+    pub max_sig_size: u16,
+    /// The maximum size of a blob to be encrypted.
+    pub max_enc_size: u16,
+    /// The maximum size of a blob to be decrypted.
+    pub max_dec_size: u16,
+}
+
+impl KeySupportInfo {
+    fn from_c(c_info: PKeyQuery) -> Self {
+        KeySupportInfo {
+            supported_ops: c_info.supported_ops,
+            key_size: c_info.key_size,
+            max_data_size: c_info.max_data_size,
+            max_sig_size: c_info.max_sig_size,
+            max_enc_size: c_info.max_enc_size,
+            max_dec_size: c_info.max_dec_size,
+        }
+    }
+}
+
+/// Encodings supported by the kernel.
+#[derive(Debug, Clone)]
+// #[non_exhaustive]
+pub enum KeyctlEncoding {
+    /// The RSASSA-PKCS1-v1.5 encoding.
+    RsassaPkcs1V15,
+    /// The RSAES-PKCS1-v1.5 encoding.
+    RsaesPkcs1V15,
+    /// The RSASSA-PSS encoding.
+    RsassaPss,
+    /// The RSAES-OAEP encoding.
+    RsaesOaep,
+    /// For extensibility.
+    OtherEncoding(Cow<'static, str>),
+}
+
+impl KeyctlEncoding {
+    fn encoding(&self) -> &str {
+        match *self {
+            KeyctlEncoding::RsassaPkcs1V15 => "pkcs1",
+            KeyctlEncoding::RsaesPkcs1V15 => "pkcs1",
+            KeyctlEncoding::RsassaPss => "pss",
+            KeyctlEncoding::RsaesOaep => "oaep",
+            KeyctlEncoding::OtherEncoding(ref s) => &s,
+        }
+    }
+}
+
 /// Hashes supported by the kernel.
 #[derive(Debug, Clone)]
 // #[non_exhaustive]
@@ -578,6 +636,28 @@ impl KeyctlHash {
             KeyctlHash::Sm3_256 => "sm3-256",
             KeyctlHash::OtherEncoding(ref s) => &s,
         }
+    }
+}
+
+/// Options for output from public key functions (encryption, decryption, signing, and verifying).
+#[derive(Debug, Clone)]
+pub struct PublicKeyOptions {
+    /// The encoding of the encrypted blob or the signature.
+    pub encoding: Option<KeyctlEncoding>,
+    /// Hash algorithm to use (if the encoding uses it).
+    pub hash: Option<KeyctlHash>,
+}
+
+impl PublicKeyOptions {
+    fn info(&self) -> String {
+        let options = [
+            ("enc", self.encoding.as_ref().map(KeyctlEncoding::encoding)),
+            ("hash", self.hash.as_ref().map(KeyctlHash::hash)),
+        ]
+        .iter()
+        .map(|&(key, value)| value.map_or_else(String::new, |v| format!("{}={}", key, v)))
+        .collect::<Vec<_>>();
+        options.join(" ").trim().to_owned()
     }
 }
 
@@ -813,6 +893,60 @@ impl Key {
         }
         buffer.truncate(sz);
         Ok(buffer)
+    }
+
+    fn pkey_query_support_impl(&self, info: &str) -> Result<PKeyQuery> {
+        keyctl_pkey_query(self.id, info)
+    }
+
+    /// Query which optionally supported features may be used by the key.
+    pub fn pkey_query_support(&self, query: &PublicKeyOptions) -> Result<KeySupportInfo> {
+        let info = query.info();
+        self.pkey_query_support_impl(&info)
+            .map(KeySupportInfo::from_c)
+    }
+
+    /// Encrypt data using the key.
+    pub fn encrypt(&self, options: &PublicKeyOptions, data: &[u8]) -> Result<Vec<u8>> {
+        let info = options.info();
+        let support = self.pkey_query_support_impl(&info)?;
+        let mut buffer = Vec::with_capacity(support.max_enc_size as usize);
+        let write_buffer = buffer.get_backing_buffer();
+        let sz = keyctl_pkey_encrypt(self.id, &info, data, write_buffer)?;
+        buffer.truncate(sz);
+        Ok(buffer)
+    }
+
+    /// Decrypt data using the key.
+    pub fn decrypt(&self, options: &PublicKeyOptions, data: &[u8]) -> Result<Vec<u8>> {
+        let info = options.info();
+        let support = self.pkey_query_support_impl(&info)?;
+        let mut buffer = Vec::with_capacity(support.max_dec_size as usize);
+        let write_buffer = buffer.get_backing_buffer();
+        let sz = keyctl_pkey_decrypt(self.id, &info, data, write_buffer)?;
+        buffer.truncate(sz);
+        Ok(buffer)
+    }
+
+    /// Sign data using the key.
+    pub fn sign(&self, options: &PublicKeyOptions, data: &[u8]) -> Result<Vec<u8>> {
+        let info = options.info();
+        let support = self.pkey_query_support_impl(&info)?;
+        let mut buffer = Vec::with_capacity(support.max_sig_size as usize);
+        let write_buffer = buffer.get_backing_buffer();
+        let sz = keyctl_pkey_sign(self.id, &info, data, write_buffer)?;
+        buffer.truncate(sz);
+        Ok(buffer)
+    }
+
+    /// Verify a signature of the data using the key.
+    pub fn verify(
+        &self,
+        options: &PublicKeyOptions,
+        data: &[u8],
+        signature: &[u8],
+    ) -> Result<bool> {
+        keyctl_pkey_verify(self.id, &options.info(), data, signature)
     }
 }
 
