@@ -103,6 +103,13 @@ fn ignore(res: libc::c_long) {
     assert_eq!(res, 0);
 }
 
+fn safe_len<T>(len: usize) -> Result<T>
+where
+    usize: TryInto<T>,
+{
+    len.try_into().map_err(|_| errno::Errno(libc::EINVAL))
+}
+
 macro_rules! syscall {
     ( $( $arg:expr, )* ) => {
         check_syscall(libc::syscall($( $arg, )*))
@@ -366,6 +373,14 @@ struct DhComputeParamsKernel {
     base: i32,
 }
 
+#[repr(C)]
+struct DhKdfParamsKernel {
+    hashname: *const libc::c_char,
+    otherinfo: *const libc::c_void,
+    otherinfolen: u32,
+    _spare: [u32; 8],
+}
+
 pub fn keyctl_dh_compute(
     private: KeyringSerial,
     prime: KeyringSerial,
@@ -384,7 +399,40 @@ pub fn keyctl_dh_compute(
             &params as *const DhComputeParamsKernel,
             buffer.as_mut().map_or(ptr::null(), |b| b.as_mut_ptr()),
             capacity,
-            0,
+            ptr::null() as *const DhKdfParamsKernel,
+        )
+    }
+    .map(size)
+}
+
+pub fn keyctl_dh_compute_kdf(
+    private: KeyringSerial,
+    prime: KeyringSerial,
+    base: KeyringSerial,
+    hashname: &str,
+    otherinfo: Option<&[u8]>,
+    mut buffer: Option<Out<[u8]>>,
+) -> Result<usize> {
+    let params = DhComputeParamsKernel {
+        priv_: private.get(),
+        prime: prime.get(),
+        base: base.get(),
+    };
+    let hash_cstr = cstring(hashname);
+    let kdf_params = DhKdfParamsKernel {
+        hashname: hash_cstr.as_ptr(),
+        otherinfo: otherinfo.map_or(ptr::null(), |d| d.as_ptr()) as *const libc::c_void,
+        otherinfolen: safe_len(otherinfo.map_or(0, |d| d.len()))?,
+        _spare: [0; 8],
+    };
+    let capacity = buffer.as_mut().map_or(0, |b| b.len());
+    unsafe {
+        keyctl!(
+            libc::KEYCTL_DH_COMPUTE,
+            &params as *const DhComputeParamsKernel,
+            buffer.as_mut().map_or(ptr::null(), |b| b.as_mut_ptr()),
+            capacity,
+            &kdf_params as *const DhKdfParamsKernel,
         )
     }
     .map(size)
