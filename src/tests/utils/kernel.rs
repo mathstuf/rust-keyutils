@@ -85,7 +85,7 @@ fn have_invalidate() -> bool {
 
 // Whether the kernel supports the `pkey` APIs on a key.
 fn have_pkey() -> bool {
-    match Version::parse(*SEMVER_KERNEL_VERSION) {
+    match Version::parse(dbg!(*SEMVER_KERNEL_VERSION)) {
         Ok(ver) => {
             let minver = VersionReq::parse(">=4.20").unwrap();
             minver.matches(&ver)
