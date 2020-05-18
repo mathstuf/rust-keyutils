@@ -38,6 +38,7 @@ lazy_static! {
     pub static ref KERNEL_VERSION: String = kernel_version();
     pub static ref SEMVER_KERNEL_VERSION: &'static str = semver_kernel_version();
     pub static ref HAVE_INVALIDATE: bool = have_invalidate();
+    pub static ref HAVE_PKEY: bool = have_pkey();
     pub static ref PAGE_SIZE: usize = page_size();
     pub static ref UID: libc::uid_t = getuid();
     pub static ref GID: libc::gid_t = getgid();
@@ -70,6 +71,23 @@ fn have_invalidate() -> bool {
     match Version::parse(*SEMVER_KERNEL_VERSION) {
         Ok(ver) => {
             let minver = VersionReq::parse(">=3.5").unwrap();
+            minver.matches(&ver)
+        },
+        Err(err) => {
+            eprintln!(
+                "failed to parse kernel version `{}` ({}): assuming incompatibility",
+                *SEMVER_KERNEL_VERSION, err
+            );
+            false
+        },
+    }
+}
+
+// Whether the kernel supports the `pkey` APIs on a key.
+fn have_pkey() -> bool {
+    match Version::parse(*SEMVER_KERNEL_VERSION) {
+        Ok(ver) => {
+            let minver = VersionReq::parse(">=4.20").unwrap();
             minver.matches(&ver)
         },
         Err(err) => {

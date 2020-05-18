@@ -37,6 +37,7 @@ mod keytype;
 mod link;
 mod newring;
 mod permitting;
+mod pkey;
 mod reading;
 mod revoke;
 mod search;
