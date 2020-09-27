@@ -120,7 +120,7 @@ impl RestrictableKeyType for Asymmetric {
 
 #[cfg(test)]
 mod tests {
-    use crate::keytypes::{AsymmetricRestriction, User};
+    use crate::keytypes::{Asymmetric, AsymmetricRestriction, User};
     use crate::tests::utils;
     use crate::KeyRestriction;
 
@@ -178,5 +178,68 @@ mod tests {
         for (restriction, expected) in cases.iter() {
             assert_eq!(restriction.restriction(), expected.as_ref());
         }
+    }
+
+    #[test]
+    fn test_restrict_keyring_chain() {
+        let mut keyring = utils::new_test_keyring();
+
+        // Create and populate a keyring for root certificates.
+        let mut root = keyring.add_keyring("root-certs").unwrap();
+        let root1_certificate = &include_bytes!("data/ca/ca-1.root.crt.der")[..];
+        let root2_certificate = &include_bytes!("data/ca/ca-2.root.crt.der")[..];
+        root.add_key::<Asymmetric, _, _>("root1", root1_certificate)
+            .unwrap();
+        root.add_key::<Asymmetric, _, _>("root2", root2_certificate)
+            .unwrap();
+
+        // Create a keyring to restrict.
+        let mut chain = keyring.add_keyring("chain").unwrap();
+        let restriction = AsymmetricRestriction::Keyring {
+            keyring: root,
+            chained: true,
+        };
+        chain
+            .restrict_by_type::<Asymmetric, _>(restriction)
+            .unwrap();
+
+        // Add certificates in order.
+        let intermediate_a = &include_bytes!("data/ca/ca.intermediate.crt.der")[..];
+        chain
+            .add_key::<Asymmetric, _, _>("intermediate_a", intermediate_a)
+            .unwrap();
+        let intermediate_b = &include_bytes!("data/ca/intermediate.term.crt.der")[..];
+        chain
+            .add_key::<Asymmetric, _, _>("intermediate_b", intermediate_b)
+            .unwrap();
+        let terminal = &include_bytes!("data/ca/ca-1.term.crt.der")[..];
+        chain
+            .add_key::<Asymmetric, _, _>("terminal", terminal)
+            .unwrap();
+    }
+
+    #[test]
+    fn test_restrict_keyring_fail() {
+        let mut keyring = utils::new_test_keyring();
+
+        // Create and populate a keyring for root certificates.
+        let root = keyring.add_keyring("root-certs").unwrap();
+
+        // Create a keyring to restrict.
+        let mut chain = keyring.add_keyring("chain").unwrap();
+        let restriction = AsymmetricRestriction::Keyring {
+            keyring: root,
+            chained: true,
+        };
+        chain
+            .restrict_by_type::<Asymmetric, _>(restriction)
+            .unwrap();
+
+        // Add certificates in order.
+        let terminal = &include_bytes!("data/ca/self.term.crt.der")[..];
+        let err = chain
+            .add_key::<Asymmetric, _, _>("self", terminal)
+            .unwrap_err();
+        assert_eq!(err, errno::Errno(libc::ENOKEY));
     }
 }
