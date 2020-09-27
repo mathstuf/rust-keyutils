@@ -24,15 +24,18 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use serial_test_derive::serial;
+use keyutils::keytypes;
+use keyutils::{KeyType, Keyring, Permission, SpecialKeyring};
 
-use crate::keytypes;
-use crate::{KeyType, Keyring, Permission, SpecialKeyring};
+fn getuid() -> libc::uid_t {
+    unsafe { libc::getuid() }
+}
 
-use super::utils::kernel::*;
+fn getgid() -> libc::gid_t {
+    unsafe { libc::getgid() }
+}
 
 #[test]
-#[serial(join_session)]
 fn join_anonymous_session() {
     let session_before = Keyring::attach_or_create(SpecialKeyring::Session).unwrap();
     let keyring = Keyring::join_anonymous_session().unwrap();
@@ -43,68 +46,13 @@ fn join_anonymous_session() {
 
     let desc = keyring.description().unwrap();
     assert_eq!(desc.type_, keytypes::Keyring::name());
-    assert_eq!(desc.uid, *UID);
-    assert_eq!(desc.gid, *GID);
+    assert_eq!(desc.uid, getuid());
+    assert_eq!(desc.gid, getgid());
     assert_eq!(
         desc.perms,
         Permission::POSSESSOR_ALL | Permission::USER_VIEW | Permission::USER_READ
     );
     assert_eq!(desc.description, "_ses");
-
-    keyring.invalidate().unwrap()
-}
-
-#[test]
-#[serial(join_session)]
-fn join_new_named_session() {
-    let session_before = Keyring::attach_or_create(SpecialKeyring::Session).unwrap();
-    let name = "join_new_named_session";
-    let keyring = Keyring::join_session(name).unwrap();
-    let session_after = Keyring::attach_or_create(SpecialKeyring::Session).unwrap();
-
-    assert_ne!(session_before, keyring);
-    assert_eq!(session_after, keyring);
-
-    let desc = keyring.description().unwrap();
-    assert_eq!(desc.type_, keytypes::Keyring::name());
-    assert_eq!(desc.uid, *UID);
-    assert_eq!(desc.gid, *GID);
-    assert_eq!(
-        desc.perms,
-        Permission::POSSESSOR_ALL
-            | Permission::USER_VIEW
-            | Permission::USER_READ
-            | Permission::USER_LINK
-    );
-    assert_eq!(desc.description, name);
-
-    keyring.invalidate().unwrap()
-}
-
-#[test]
-#[serial(join_session)]
-fn join_existing_named_session() {
-    let name = "join_existing_named_session";
-
-    let session_before = Keyring::attach_or_create(SpecialKeyring::Session).unwrap();
-    let keyring = Keyring::join_session(name).unwrap();
-    let session_after = Keyring::attach_or_create(SpecialKeyring::Session).unwrap();
-
-    assert_ne!(session_before, keyring);
-    assert_eq!(session_after, keyring);
-
-    let desc = keyring.description().unwrap();
-    assert_eq!(desc.type_, keytypes::Keyring::name());
-    assert_eq!(desc.uid, *UID);
-    assert_eq!(desc.gid, *GID);
-    assert_eq!(
-        desc.perms,
-        Permission::POSSESSOR_ALL
-            | Permission::USER_VIEW
-            | Permission::USER_READ
-            | Permission::USER_LINK
-    );
-    assert_eq!(desc.description, name);
 
     keyring.invalidate().unwrap()
 }

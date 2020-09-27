@@ -24,22 +24,39 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-//! The test structure here comes from the structure in libkeyutils.
+use keyutils::keytypes;
+use keyutils::{KeyType, Keyring, Permission, SpecialKeyring};
 
-pub(crate) mod utils;
+fn getuid() -> libc::uid_t {
+    unsafe { libc::getuid() }
+}
 
-mod add;
-mod clear;
-mod describe;
-mod instantiate;
-mod invalidate;
-mod keytype;
-mod link;
-mod newring;
-mod permitting;
-mod reading;
-mod revoke;
-mod search;
-mod timeout;
-mod unlink;
-mod update;
+fn getgid() -> libc::gid_t {
+    unsafe { libc::getgid() }
+}
+
+#[test]
+fn join_new_named_session() {
+    let session_before = Keyring::attach_or_create(SpecialKeyring::Session).unwrap();
+    let name = "join_new_named_session";
+    let keyring = Keyring::join_session(name).unwrap();
+    let session_after = Keyring::attach_or_create(SpecialKeyring::Session).unwrap();
+
+    assert_ne!(session_before, keyring);
+    assert_eq!(session_after, keyring);
+
+    let desc = keyring.description().unwrap();
+    assert_eq!(desc.type_, keytypes::Keyring::name());
+    assert_eq!(desc.uid, getuid());
+    assert_eq!(desc.gid, getgid());
+    assert_eq!(
+        desc.perms,
+        Permission::POSSESSOR_ALL
+            | Permission::USER_VIEW
+            | Permission::USER_READ
+            | Permission::USER_LINK
+    );
+    assert_eq!(desc.description, name);
+
+    keyring.invalidate().unwrap()
+}
