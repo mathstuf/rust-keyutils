@@ -117,3 +117,66 @@ impl KeyRestriction for AsymmetricRestriction {
 impl RestrictableKeyType for Asymmetric {
     type Restriction = AsymmetricRestriction;
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::keytypes::{AsymmetricRestriction, User};
+    use crate::tests::utils;
+    use crate::KeyRestriction;
+
+    #[test]
+    fn test_restriction_str() {
+        let mut keyring = utils::new_test_keyring();
+        let description = &b"description"[..];
+        let key = keyring
+            .add_key::<User, _, _>("test_restriction_str", description)
+            .unwrap();
+
+        let cases = [
+            (
+                AsymmetricRestriction::BuiltinTrusted,
+                "builtin_trusted".into(),
+            ),
+            (
+                AsymmetricRestriction::BuiltinAndSecondaryTrusted,
+                "builtin_and_secondary_trusted".into(),
+            ),
+            (
+                AsymmetricRestriction::Key {
+                    key: key.clone(),
+                    chained: false,
+                },
+                format!("key_or_keyring:{}", key.serial()),
+            ),
+            (
+                AsymmetricRestriction::Key {
+                    key: key.clone(),
+                    chained: true,
+                },
+                format!("key_or_keyring:{}:chain", key.serial()),
+            ),
+            (
+                AsymmetricRestriction::Keyring {
+                    keyring: keyring.clone(),
+                    chained: false,
+                },
+                format!("key_or_keyring:{}", keyring.serial()),
+            ),
+            (
+                AsymmetricRestriction::Keyring {
+                    keyring: keyring.clone(),
+                    chained: true,
+                },
+                format!("key_or_keyring:{}:chain", keyring.serial()),
+            ),
+            (
+                AsymmetricRestriction::Chained,
+                "key_or_keyring:0:chain".into(),
+            ),
+        ];
+
+        for (restriction, expected) in cases.iter() {
+            assert_eq!(restriction.restriction(), expected.as_ref());
+        }
+    }
+}
