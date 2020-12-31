@@ -210,17 +210,12 @@ impl Keyring {
     fn search_impl<K>(
         &self,
         description: &str,
-        destination: Option<&mut Keyring>,
+        destination: Option<KeyringSerial>,
     ) -> Result<KeyringSerial>
     where
         K: KeyType,
     {
-        keyctl_search(
-            self.id,
-            K::name(),
-            description,
-            destination.map(|dest| dest.id),
-        )
+        keyctl_search(self.id, K::name(), description, destination)
     }
 
     /// Recursively search the keyring for a key with the matching description.
@@ -232,10 +227,13 @@ impl Keyring {
     where
         K: KeyType,
         D: Borrow<K::Description>,
-        DK: Into<Option<&'a mut Keyring>>,
+        DK: Into<Option<TargetKeyring<'a>>>,
     {
-        self.search_impl::<K>(&description.borrow().description(), destination.into())
-            .map(Key::new_impl)
+        self.search_impl::<K>(
+            &description.borrow().description(),
+            destination.into().map(TargetKeyring::serial),
+        )
+        .map(Key::new_impl)
     }
 
     /// Recursively search the keyring for a keyring with the matching description.
@@ -247,11 +245,11 @@ impl Keyring {
     pub fn search_for_keyring<'a, D, DK>(&self, description: D, destination: DK) -> Result<Self>
     where
         D: Borrow<<keytypes::Keyring as KeyType>::Description>,
-        DK: Into<Option<&'a mut Keyring>>,
+        DK: Into<Option<TargetKeyring<'a>>>,
     {
         self.search_impl::<keytypes::Keyring>(
             &description.borrow().description(),
-            destination.into(),
+            destination.into().map(TargetKeyring::serial),
         )
         .map(Self::new_impl)
     }
