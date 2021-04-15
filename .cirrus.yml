@@ -49,7 +49,7 @@ coverage_task:
     container:
         image: rust:latest
     environment:
-        CODECOV_TOKEN: ENCRYPTED[1e221ef78a37c960613ff80db7141f3158e3218031934395466f4720f450b7acfd74e587819435ce9be0b13fa1b68f1b]
+        CODECOV_TOKEN: ENCRYPTED[0064853784b30e0b6f74648c237de43e2ef8d37e7146b2fc1b53872feef0519e5b2e9a0862056e400e528e7fdafa0b55]
     tarpaulin_cache:
         folder: .ci
         populate_script: .ci/tarpaulin.sh
