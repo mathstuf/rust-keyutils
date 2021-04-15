@@ -67,7 +67,7 @@ impl KeyPayload for Payload {
         //     uint8_t     ticket[0];      /* the encrypted ticket */
         // };
 
-        payload.extend((2 as u16).to_ne_bytes().iter());
+        payload.extend(2_u16.to_ne_bytes().iter());
         payload.extend((self.ticket.len() as u16).to_ne_bytes().iter());
         payload.extend(self.expiry.to_ne_bytes().iter());
         payload.extend(self.version.to_ne_bytes().iter());
