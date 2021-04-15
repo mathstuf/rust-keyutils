@@ -29,6 +29,7 @@
 //! This crate provides a high-level API for interacting with the Linux keys subsystem.
 
 #![warn(missing_docs)]
+#![allow(clippy::upper_case_acronyms)]
 
 mod api;
 mod constants;
