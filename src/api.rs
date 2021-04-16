@@ -935,7 +935,9 @@ impl Key {
         let mut buffer = Vec::with_capacity(support.max_sig_size as usize);
         let write_buffer = buffer.get_backing_buffer();
         let sz = keyctl_pkey_sign(self.id, &info, data, write_buffer)?;
-        buffer.truncate(sz);
+        unsafe {
+            buffer.set_len(sz);
+        }
         Ok(buffer)
     }
 
