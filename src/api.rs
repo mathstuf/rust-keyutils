@@ -640,7 +640,8 @@ impl KeyctlHash {
 }
 
 /// Options for output from public key functions (encryption, decryption, signing, and verifying).
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone)]
+// #[non_exhaustive]
 pub struct PublicKeyOptions {
     /// The encoding of the encrypted blob or the signature.
     pub encoding: Option<KeyctlEncoding>,
