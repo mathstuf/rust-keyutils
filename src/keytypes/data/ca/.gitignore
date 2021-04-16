@@ -1,0 +1,7 @@
+*.key
+*.crt
+*.csr
+*.pem
+
+certindex*
+serial*

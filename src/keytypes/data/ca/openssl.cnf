@@ -1,0 +1,75 @@
+[ca]
+default_ca = ca-1
+
+[ca_policy]
+
+[ca-1]
+dir = ./
+new_certs_dir = $dir
+certificate = $dir/ca-1.root.crt
+private_key = $dir/ca-1.key
+
+database = $dir/certindex
+serial = $dir/serial
+default_days = 3650
+default_md = sha512
+policy = ca_policy
+
+[intermediate]
+dir = ./
+new_certs_dir = $dir
+certificate = $dir/ca.intermediate.crt
+private_key = $dir/ca.key
+
+database = $dir/certindex
+serial = $dir/serial
+default_days = 3650
+default_md = sha512
+policy = ca_policy
+
+[self]
+dir = ./
+new_certs_dir = $dir
+#certificate = $dir/ca.intermediate.crt
+private_key = $dir/self.term.key
+
+database = $dir/certindex
+serial = $dir/serial
+default_days = 3650
+default_md = sha512
+policy = ca_policy
+
+[req]
+distinguished_name = req_distinguished_name
+prompt = no
+
+[req_distinguished_name]
+countryName = US
+stateOrProvinceName = New York
+localityName = Nowhere
+organizationName = Github
+emailAddress = mathstuf+keyutils@gmail.com
+
+[v3_root_ca]
+# Extensions for a typical CA (`man x509v3_config`).
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always,issuer
+basicConstraints = critical, CA:true
+keyUsage = critical, digitalSignature, cRLSign, keyCertSign
+
+[v3_intermediate_ca]
+# Extensions for a typical intermediate CA (`man x509v3_config`).
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always,issuer
+basicConstraints = critical, CA:true, pathlen:0
+keyUsage = critical, digitalSignature, cRLSign, keyCertSign
+
+[v3_server_cert]
+# Extensions for server certificates (`man x509v3_config`).
+basicConstraints = CA:FALSE
+nsCertType = server
+nsComment = "OpenSSL Generated Server Certificate"
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid,issuer:always
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth

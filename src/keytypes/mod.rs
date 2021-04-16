@@ -33,6 +33,7 @@ use std::fmt;
 
 pub mod asymmetric;
 pub use self::asymmetric::Asymmetric;
+pub use self::asymmetric::AsymmetricRestriction;
 
 pub mod big_key;
 pub use self::big_key::BigKey;
