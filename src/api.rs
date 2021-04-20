@@ -639,6 +639,37 @@ impl KeyctlHash {
     }
 }
 
+/// Hashes supported by the kernel for mask generation functions.
+#[derive(Debug, Clone)]
+// #[non_exhaustive]
+pub enum KeyctlMgfHash {
+    /// The SHA1 hash.
+    Sha1,
+    /// The sha224 hash.
+    Sha224,
+    /// The sha256 hash.
+    Sha256,
+    /// The sha384 hash.
+    Sha384,
+    /// The sha512 hash.
+    Sha512,
+    /// For extensibility.
+    Other(Cow<'static, str>),
+}
+
+impl KeyctlMgfHash {
+    fn hash(&self) -> &str {
+        match *self {
+            KeyctlMgfHash::Sha1 => "sha1",
+            KeyctlMgfHash::Sha224 => "sha224",
+            KeyctlMgfHash::Sha256 => "sha256",
+            KeyctlMgfHash::Sha384 => "sha384",
+            KeyctlMgfHash::Sha512 => "sha512",
+            KeyctlMgfHash::Other(ref s) => &s,
+        }
+    }
+}
+
 /// Options for output from public key functions (encryption, decryption, signing, and verifying).
 #[derive(Debug, Clone)]
 pub struct PublicKeyOptions {
@@ -646,6 +677,10 @@ pub struct PublicKeyOptions {
     pub encoding: Option<KeyctlEncoding>,
     /// Hash algorithm to use (if the encoding uses it).
     pub hash: Option<KeyctlHash>,
+    /// The length of the salt to use (for RSASSA-PSS signatures).
+    pub saltlen: Option<u16>,
+    /// The mask generation function to use.
+    pub mgfhash: Option<KeyctlMgfHash>,
 }
 
 impl PublicKeyOptions {
@@ -653,6 +688,8 @@ impl PublicKeyOptions {
         let options = [
             ("enc", self.encoding.as_ref().map(KeyctlEncoding::encoding)),
             ("hash", self.hash.as_ref().map(KeyctlHash::hash)),
+            ("slen", self.saltlen.map(ToString::to_string)),
+            ("mgfhash", self.mgfhash.as_ref().map(KeyctlHash::hash)),
         ]
         .iter()
         .map(|&(key, value)| value.map_or_else(String::new, |v| format!("{}={}", key, v)))
