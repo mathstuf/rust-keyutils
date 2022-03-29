@@ -24,8 +24,6 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use std::iter;
-
 use crate::keytypes::User;
 
 use super::utils;
@@ -80,7 +78,7 @@ fn keyring_with_payload() {
 fn max_user_description() {
     let mut keyring = utils::new_test_keyring();
     // Subtract one because the NUL is added in the kernel API.
-    let maxdesc: String = iter::repeat('a').take(*PAGE_SIZE - 1).collect();
+    let maxdesc: String = "a".repeat(*PAGE_SIZE - 1);
     let res = keyring.add_key::<User, _, _>(maxdesc.as_ref(), &b"payload"[..]);
     // If the user's quota is smaller than this, it's an error.
     if KEY_INFO.maxbytes < *PAGE_SIZE {
@@ -97,7 +95,7 @@ fn overlong_user_description() {
     let mut keyring = utils::new_test_keyring();
     // On MIPS with < 3.19, there is a bug where this is allowed. 3.19 was released in Feb 2015,
     // so this is being ignored here.
-    let toolarge: String = iter::repeat('a').take(*PAGE_SIZE).collect();
+    let toolarge: String = "a".repeat(*PAGE_SIZE);
     let err = keyring
         .add_key::<User, _, _>(toolarge.as_ref(), &b"payload"[..])
         .unwrap_err();
