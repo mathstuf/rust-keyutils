@@ -45,13 +45,13 @@ pub trait KeyDescription {
 
 impl KeyDescription for str {
     fn description(&self) -> Cow<str> {
-        Cow::Borrowed(&self)
+        Cow::Borrowed(self)
     }
 }
 
 impl KeyDescription for String {
     fn description(&self) -> Cow<str> {
-        Cow::Borrowed(&self)
+        Cow::Borrowed(self)
     }
 }
 
@@ -87,7 +87,7 @@ impl KeyPayload for [u8] {
 
 impl KeyPayload for Vec<u8> {
     fn payload(&self) -> Cow<[u8]> {
-        Cow::Borrowed(&self)
+        Cow::Borrowed(self)
     }
 }
 
@@ -105,12 +105,12 @@ pub trait KeyRestriction {
 
 impl KeyRestriction for str {
     fn restriction(&self) -> Cow<str> {
-        Cow::Borrowed(&self)
+        Cow::Borrowed(self)
     }
 }
 
 impl KeyRestriction for String {
     fn restriction(&self) -> Cow<str> {
-        Cow::Borrowed(&self)
+        Cow::Borrowed(self)
     }
 }

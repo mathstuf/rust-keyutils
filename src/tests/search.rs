@@ -24,8 +24,6 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use std::iter;
-
 use crate::keytypes::User;
 use crate::Permission;
 
@@ -88,7 +86,7 @@ fn max_user_description() {
     let keyring = utils::new_test_keyring();
 
     // Subtract one because the NUL is added in the kernel API.
-    let maxdesc: String = iter::repeat('a').take(*PAGE_SIZE - 1).collect();
+    let maxdesc: String = "a".repeat(*PAGE_SIZE - 1);
     let err = keyring
         .search_for_key::<User, _, _>(maxdesc, None)
         .unwrap_err();
@@ -101,7 +99,7 @@ fn overlong_user_description() {
 
     // On MIPS with < 3.19, there is a bug where this is allowed. 3.19 was released in Feb 2015,
     // so this is being ignored here.
-    let maxdesc: String = iter::repeat('a').take(*PAGE_SIZE).collect();
+    let maxdesc: String = "a".repeat(*PAGE_SIZE);
     let err = keyring
         .search_for_key::<User, _, _>(maxdesc, None)
         .unwrap_err();

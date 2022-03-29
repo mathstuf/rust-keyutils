@@ -168,7 +168,7 @@ impl KeyPayload for Payload {
             },
             Payload::Load {
                 blob,
-            } => format!("load {:x}", ByteBuf(&blob)),
+            } => format!("load {:x}", ByteBuf(blob)),
             Payload::Update {
                 keytype,
                 description,
