@@ -19,8 +19,6 @@ rustfmt_task:
 linux_task:
     matrix:
     - container:
-        image: rust:1.38.0
-    - container:
         image: rust:latest
     - allow_failures: true
       container:
@@ -42,6 +40,7 @@ minimal_version_task:
     cargo_cache:
         folder: $CARGO_HOME/registry
         fingerprint_script: cat Cargo.lock
+    # FIXME: build with 1.38
     build_script: RUSTFLAGS="-D warnings" cargo build
     before_cache_script: rm -rf $CARGO_HOME/registry/index
 
