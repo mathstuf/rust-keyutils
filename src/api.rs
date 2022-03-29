@@ -564,7 +564,7 @@ impl KeyctlEncoding {
             KeyctlEncoding::RsaesPkcs1V15 => "pkcs1",
             KeyctlEncoding::RsassaPss => "pss",
             KeyctlEncoding::RsaesOaep => "oaep",
-            KeyctlEncoding::OtherEncoding(ref s) => &s,
+            KeyctlEncoding::OtherEncoding(ref s) => s,
         }
     }
 }
@@ -634,7 +634,7 @@ impl KeyctlHash {
             KeyctlHash::Tgr160 => "tgr160",
             KeyctlHash::Tgr192 => "tgr192",
             KeyctlHash::Sm3_256 => "sm3-256",
-            KeyctlHash::OtherEncoding(ref s) => &s,
+            KeyctlHash::OtherEncoding(ref s) => s,
         }
     }
 }
