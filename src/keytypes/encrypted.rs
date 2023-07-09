@@ -79,6 +79,8 @@ impl Format {
     }
 }
 
+// XXX(rust-1.57): use `#[default]`
+#[allow(clippy::derivable_impls)]
 impl Default for Format {
     fn default() -> Self {
         Format::Default
