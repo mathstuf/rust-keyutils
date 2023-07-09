@@ -61,7 +61,7 @@ fn kernel_version() -> String {
 fn semver_kernel_version() -> &'static str {
     match (*KERNEL_VERSION).find('-') {
         Some(pos) => &(*KERNEL_VERSION)[..pos],
-        None => &*KERNEL_VERSION,
+        None => &KERNEL_VERSION,
     }
 }
 
