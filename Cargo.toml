@@ -20,7 +20,7 @@ semver = "*"
 
 [dependencies]
 bitflags = "1.0.4"
-errno = "0.2"
+errno = "0.3"
 keyutils-raw = { path = "keyutils-raw" }
 log = "0.4.4"
 uninit = "0.3"
