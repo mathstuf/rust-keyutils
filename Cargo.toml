@@ -16,12 +16,12 @@ members = ["keyutils-raw"]
 [dev-dependencies]
 lazy_static = "1"
 regex = "1"
-semver = "*"
+semver = "1"
 
 [dependencies]
 bitflags = "1.0.4"
 errno = "0.3"
-keyutils-raw = { path = "keyutils-raw" }
+keyutils-raw = { version = "0.4.0", path = "keyutils-raw" }
 log = "0.4.4"
 uninit = "0.3"
 
