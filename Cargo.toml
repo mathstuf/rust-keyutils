@@ -16,7 +16,7 @@ members = ["keyutils-raw"]
 [dev-dependencies]
 lazy_static = "1"
 regex = "1"
-semver = "*"
+semver = "1"
 
 [dependencies]
 bitflags = "1.0.4"
